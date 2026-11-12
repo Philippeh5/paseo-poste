@@ -1,0 +1,24 @@
+{
+  "name": "paseo-lab",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node tools/run-tests.mjs",
+    "start": "node dashboard/server.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@getpaseo/cli": "^0.11.2",
+    "@getpaseo/client": "^0.11.2",
+    "@modelcontextprotocol/sdk": "1.31.0",
+    "telegram": "^2.26.22",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.1"
+  }
+}

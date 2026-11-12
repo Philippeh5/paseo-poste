@@ -1,0 +1,118 @@
+/* Vue Téléphone : liste verticale, cibles tactiles >= 44 px, barre d'onglets fixe en bas. */
+.m-root { max-width: 640px; margin: 0 auto; padding: 12px 12px calc(76px + env(safe-area-inset-bottom, 0px)); }
+.m-body { display: flex; flex-direction: column; gap: 14px; }
+.m-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.m-stat { display: flex; flex-direction: column; align-items: center; padding: 10px 4px; border-radius: 12px; background: var(--panneau); border: 1px solid var(--trait); }
+.m-stat strong { font-size: var(--t-20); line-height: 1.1; }
+.m-stat span { font-size: var(--t-12); color: var(--texte-doux); }
+.m-stat.is-attention strong { color: var(--attention); }
+.m-stat.is-ok strong { color: var(--ok); }
+.m-search { width: 100%; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--trait); background: var(--panneau); color: var(--texte); font: inherit; font-size: 16px; }
+.m-section { display: flex; flex-direction: column; gap: 6px; }
+.m-h { display: flex; align-items: center; gap: 8px; margin: 0; padding: 4px 2px; font-family: var(--police-ui); font-size: var(--t-13); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--texte-doux); background: none; border: 0; text-align: left; }
+.m-h.is-attention { color: var(--attention); }
+.m-fold { min-height: 44px; cursor: pointer; width: 100%; }
+.m-fold > span:first-child { flex: 1; }
+.m-count { padding: 1px 8px; border-radius: 999px; background: var(--panneau-2); font-size: var(--t-12); color: var(--texte-doux); }
+.m-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.m-row { display: flex; align-items: stretch; border-radius: 12px; border: 1px solid var(--trait); background: var(--panneau); overflow: hidden; }
+.m-row.is-wait { border-color: var(--attention); }
+.m-row.is-old { opacity: .72; }
+.m-row-main { flex: 1; min-width: 0; min-height: 56px; display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: none; border: 0; color: inherit; text-align: left; font: inherit; }
+.m-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.m-row-text strong { font-size: var(--t-14); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.m-row-sub, .m-muted { font-size: var(--t-12); color: var(--texte-doux); }
+.m-shelve { flex: none; width: 48px; border: 0; border-left: 1px solid var(--trait); background: var(--panneau-2); color: var(--texte-doux); }
+.m-shelve:active { color: var(--danger); }
+.m-wide { width: 100%; min-height: 48px; justify-content: center; }
+.m-empty, .m-foot, .m-lead { color: var(--texte-doux); font-size: var(--t-13); margin: 0; }
+.m-empty { text-align: center; padding: 24px 0; }
+.m-seg { display: flex; padding: 3px; gap: 3px; border-radius: 12px; background: var(--panneau-2); border: 1px solid var(--trait); }
+.m-seg button { flex: 1; min-height: 40px; border: 0; border-radius: 9px; background: none; color: var(--texte-doux); font: inherit; font-weight: 500; }
+.m-seg button.is-on { background: var(--accent-doux); color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.m-card { display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: 14px; background: var(--panneau); border: 1px solid var(--trait); }
+.m-card-head { display: flex; align-items: center; gap: 8px; }
+.m-card-head .m-muted { margin-left: auto; }
+.m-win { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--trait); }
+.m-win:first-of-type { border-top: 0; padding-top: 0; }
+.m-win-top { display: flex; align-items: center; gap: 14px; }
+.m-win-info { display: flex; flex-direction: column; gap: 2px; }
+.m-ring-bg { fill: none; stroke: var(--panneau-2); stroke-width: 8; }
+.m-ring-fg { fill: none; stroke: var(--ok); stroke-width: 8; stroke-linecap: round; }
+.m-ring.is-attention .m-ring-fg { stroke: var(--attention); }
+.m-ring.is-danger .m-ring-fg { stroke: var(--danger); }
+.m-ring-text { fill: var(--texte); font: 600 15px var(--police-ui); }
+.m-spark { width: 100%; height: 56px; border-radius: 8px; background: var(--panneau-2); }
+.m-spark-line { fill: none; stroke: var(--accent); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.m-spark-limit { stroke: var(--danger); stroke-width: 1; stroke-dasharray: 4 4; opacity: .5; vector-effect: non-scaling-stroke; }
+.m-compact li { display: flex; justify-content: space-between; gap: 8px; font-size: var(--t-13); }
+.m-compact li span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.m-switch { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 14px; border-radius: 14px; background: var(--panneau); border: 1px solid var(--trait); }
+.m-switch input { width: 22px; height: 22px; flex: none; }
+.m-switch span { display: flex; flex-direction: column; gap: 2px; }
+.m-tabbar { position: fixed; z-index: 25; left: 0; right: 0; bottom: 0; display: flex; gap: 4px; padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); background: var(--panneau); border-top: 1px solid var(--trait); }
+.m-tabbar button { flex: 1; min-height: 48px; border: 0; border-radius: 12px; background: none; color: var(--texte-doux); font: inherit; font-weight: 500; font-size: var(--t-13); }
+.m-tabbar button[aria-selected="true"] { background: var(--accent-doux); color: var(--accent); }
+@media (max-width: 720px) {
+  body:has(.m-root) .view { padding-bottom: 0; }
+}
+.m-spark-box { position: relative; }
+.m-spark-note { position: absolute; inset: 0; display: grid; place-items: center; font-size: var(--t-12); color: var(--texte-doux); }
+
+/* ---------- Pages à tableaux (Modèles) : une carte par ligne ---------- */
+@media (max-width: 720px) {
+  .pilot-head { flex-wrap: wrap; gap: 8px; }
+  .pilot-summary { flex-basis: 100%; min-width: 0; }
+  .pilot-tablewrap { overflow: visible; }
+  .modeles-table, .modeles-table tbody { display: block; width: 100%; }
+  .modeles-table thead { display: none; }
+  .modeles-table tr { display: grid; gap: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--trait); border-radius: 12px; background: var(--panneau); }
+  .modeles-table th, .modeles-table td { display: block; padding: 0; border: 0; text-align: left; }
+  .modeles-table select { width: 100%; min-height: 44px; font-size: 16px; }
+  .modeles-table .pilot-actions-cell { display: flex; gap: 8px; }
+  .modeles-table .pilot-actions-cell .btn { flex: 1; min-height: 44px; }
+  .modeles-fallback .qg-engine { min-height: 48px; }
+  .modeles-fallback .icon-btn { width: 44px; height: 44px; }
+  .viewswitch-label { overflow: hidden; text-overflow: ellipsis; max-width: 7ch; }
+  .topbar { min-width: 0; overflow: hidden; }
+  #agentmode-btn { max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+@media (max-width: 480px) {
+  /* Petits téléphones : « Lancer » et la marque se réduisent à leur icône pour que la barre du haut tienne en 360 px. */
+  .launch-text, .brand { display: none; }
+  #launch-open { min-width: 40px; min-height: 36px; justify-content: center; }
+}
+.m-jarvis { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 14px; border-radius: 14px; background: var(--panneau); border: 1px solid var(--trait); color: inherit; text-decoration: none; }
+.m-jarvis.is-on { border-color: var(--ok); }
+.m-jarvis.is-alert { border-color: var(--attention); }
+@media (max-width: 720px) {
+  /* Raccourcis clavier : inutiles sur un écran tactile. */
+  .inbox-help-bar { display: none; }
+}
+@media (max-width: 720px) {
+  /* Bureau : une seule fenêtre en plein écran, donc ni mises en page ni titre : la place revient au terminal / à l'agent. */
+  .desk .desk-layouts, .desk .view-toolbar .view-title { display: none; }
+  .desk .view-toolbar { margin: 0; }
+}
+
+.m-row-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Téléphone : le panneau flottant d'activité recouvrait la page ; la barre du haut a des cibles tactiles d'au moins 40 px. */
+body:has(.m-root) .agentactivity-panel { display: none; }
+@media (max-width: 720px) {
+  .topbar .btn, .topbar .icon-btn, .topbar .pending { min-height: 40px !important; min-width: 40px !important; flex-shrink: 0; }
+}
+
+/* Téléphone : barre du haut réduite à l'essentiel (menu, vue, attentes, lancer, thème). Le bandeau Jarvis a sa carte dans Sessions,
+   les quotas gardent leur bouton (pastille d'état), Hermes et le reste restent dans les vues. Le titre de la vue n'est plus tronqué par un badge. */
+@media (max-width: 720px) {
+  .topbar-actions > .btn:not(.btn-primary):not(.pending):not(.qg-button) { display: none !important; }
+  .topbar .viewswitch { max-width: none; }
+  .topbar .viewswitch-label { overflow: visible; text-overflow: clip; max-width: none; }
+  .topbar .viewswitch-badge { display: none; }
+  .topbar-actions { gap: 6px; }
+  /* Jarvis : simple pastille d'état (accent = mission en cours, orange = quelqu'un attend), le texte est masqué. */
+  .topbar .agentmode-topbar .btn-agentmode-takeover { display: none !important; }
+  .topbar .agentmode-pill, .topbar .agentmode-pill.is-alert { box-sizing: border-box; width: 40px; min-width: 40px; max-width: 40px; height: 40px; padding: 0; justify-content: center; font-size: 0; overflow: hidden; }
+  .topbar .agentmode-pill::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: currentColor; flex: none; }
+}

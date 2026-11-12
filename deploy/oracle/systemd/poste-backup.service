@@ -1,0 +1,5 @@
+[Unit]
+Description=Sauvegarde quotidienne du poste (hors git)
+[Service]
+Type=oneshot
+ExecStart=/bin/bash %h/Projets/paseo-lab/deploy/oracle/backup.sh

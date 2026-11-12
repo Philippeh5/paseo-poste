@@ -1,0 +1,22 @@
+/* Discussion Hermes dans le panneau « Telegram » */
+.hermes-panel { width: min(420px, 94vw); }
+.hermes-chat { display: flex; flex-direction: column; gap: var(--space-2, 8px); max-height: 52vh; overflow-y: auto; padding: 4px 2px; margin: 8px 0; }
+.hermes-msg { display: flex; flex-direction: column; max-width: 88%; }
+.hermes-user { align-self: flex-end; align-items: flex-end; }
+.hermes-assistant { align-self: flex-start; align-items: flex-start; }
+.hermes-bubble { padding: 7px 10px; border-radius: 12px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.4; background: var(--surface-2, rgba(127,127,127,.15)); color: inherit; }
+.hermes-user .hermes-bubble { background: var(--accent, #3b82f6); color: #fff; }
+.hermes-time { font-size: 11px; opacity: .6; margin-top: 2px; }
+
+.hermes-composer { display: flex; gap: 6px; align-items: flex-end; margin-top: 6px; }
+.hermes-input { flex: 1; resize: vertical; min-height: 44px; max-height: 160px; font: inherit; font-size: 13px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border, rgba(127,127,127,.4)); background: var(--surface, transparent); color: inherit; }
+.hermes-info { min-height: 1.2em; margin: 4px 0 0; font-size: 12px; opacity: .75; }
+.hermes-info.is-error { color: var(--danger, #c0392b); opacity: 1; }
+
+/* Questions de direction des agents (Boîte de réception) */
+.inbox-questions { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.inbox-q-text { margin: 0 0 6px; font-weight: 600; }
+.inbox-q-options { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.inbox-q-free { flex: 1; min-width: 160px; font: inherit; font-size: 13px; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--border, rgba(127,127,127,.4)); background: var(--surface, transparent); color: inherit; }
+.inbox-q-freerow { display: flex; gap: 6px; margin-top: 6px; }
+.inbox-q-freerow[hidden] { display: none; }

@@ -1,0 +1,204 @@
+/* Vue « Agent » (T31). Couleurs uniquement via les jetons de tokens.css ; préfixe agv- pour ne rien heurter. */
+.agentview { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; max-width: 1280px; }
+.agentview .view-toolbar { margin-bottom: 0; }
+.agentview .muted { color: var(--texte-doux); }
+.agentview .mono { font-family: var(--police-mono); font-size: var(--t-12); }
+/* Le panneau flottant « Activité de l'agent » fait doublon avec la liste de cette vue. */
+body:has(.agentview) .agentactivity-panel { display: none; }
+
+.agv-head, .agv-panel {
+  min-width: 0; background: var(--panneau); border: 1px solid var(--trait); border-radius: var(--rayon-fenetre);
+}
+.agv-head { display: grid; gap: 12px; padding: 14px 16px; }
+.agv-head-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.agv-head-state { display: inline-flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
+.agv-head-actions { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.agv-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px 16px; margin: 0; }
+.agv-facts > div { min-width: 0; }
+.agv-facts dt { font: 600 11px / 1.2 var(--police-ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-doux); margin-bottom: 3px; }
+.agv-facts dd { margin: 0; font-size: var(--t-13); overflow-wrap: anywhere; }
+.agv-wide { grid-column: 1 / -1; }
+.agv-brief {
+  padding: 8px 10px; background: var(--sol); border: 1px solid var(--trait); border-radius: var(--rayon-controle);
+  white-space: pre-wrap; max-height: 8.5em; overflow: auto;
+}
+.agv-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.agv-orch {
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: var(--rayon-controle);
+  background: var(--panneau-2); border: 1px solid var(--trait); font-size: var(--t-13);
+}
+.agv-orch.is-attention { border-color: color-mix(in srgb, var(--attention) 60%, transparent); }
+.agv-orch.is-danger { border-color: color-mix(in srgb, var(--danger) 60%, transparent); }
+.agv-orch .led { margin-top: 4px; flex: none; }
+.agv-orch-main { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.agv-phrase { margin: 4px 0 0; color: var(--texte-doux); font-style: italic; }
+.agv-empty { display: grid; gap: 8px; justify-items: start; padding: 6px 2px; }
+.agv-empty h2 { font-size: var(--t-16); }
+.agv-empty p { margin: 0; color: var(--texte-doux); }
+
+.agv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.agv-panel { display: flex; flex-direction: column; }
+.agv-panel-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px 6px; }
+.agv-panel-head h2 { margin-right: auto; font: 600 11px / 1.3 var(--police-ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-doux); overflow-wrap: anywhere; }
+.agv-panel-head .col-count { padding: 0 8px; min-width: 24px; text-align: center; border-radius: 999px; background: var(--panneau-2); font-size: var(--t-12); font-variant-numeric: tabular-nums; }
+.agv-list { list-style: none; margin: 0; padding: 4px 8px 10px; display: grid; gap: 6px; min-width: 0; max-height: 420px; overflow: auto; }
+.agv-none { padding: 12px 8px; text-align: center; font-size: var(--t-13); color: var(--texte-doux); border: 1px dashed var(--trait); border-radius: var(--rayon-controle); }
+
+.agv-task { display: grid; gap: 4px; padding: 8px 10px; background: var(--panneau-2); border: 1px solid var(--trait); border-radius: var(--rayon-controle); min-width: 0; }
+.agv-task:hover { border-color: var(--accent); }
+.agv-task-open { display: flex; align-items: flex-start; gap: 8px; padding: 0; text-align: left; background: transparent; border: 0; color: var(--texte); cursor: pointer; min-width: 0; font: inherit; }
+.agv-task-open .led { margin-top: 5px; flex: none; }
+.agv-task-title { font-weight: 600; font-size: var(--t-14); line-height: 1.3; overflow-wrap: anywhere; }
+.agv-task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: var(--t-12); min-width: 0; }
+.agv-task-meta .mono { overflow-wrap: anywhere; }
+
+.agv-row { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 4px 6px 4px 4px; border: 1px solid var(--trait); border-radius: var(--rayon-controle); background: var(--panneau-2); }
+.agv-row.is-selected { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.agv-row-main { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; padding: 4px; text-align: left; background: transparent; border: 0; color: var(--texte); cursor: pointer; font: inherit; }
+.agv-row-text { display: grid; min-width: 0; flex: 1; font-size: var(--t-13); }
+.agv-row-text strong, .agv-row-text span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agv-row-state { font-size: var(--t-12); white-space: nowrap; }
+.agv-row .led { flex: none; }
+
+.agv-preview-box { padding: 4px 12px 12px; border-top: 1px solid var(--trait); }
+.agv-preview-box h3 { margin: 8px 0 6px; font: 600 11px / 1.3 var(--police-ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-doux); }
+.agv-preview {
+  margin: 0; padding: 8px 10px; min-height: 9.5em; max-height: 14em; overflow: auto; background: var(--sol);
+  border: 1px solid var(--trait); border-radius: var(--rayon-controle); font: var(--t-12) / 1.45 var(--police-mono);
+  white-space: pre-wrap; overflow-wrap: anywhere; color: var(--texte);
+}
+
+.agv-activity { max-height: 420px; padding-top: 4px; }
+.agv-perm { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; background: var(--panneau-2); border: 1px solid color-mix(in srgb, var(--attention) 55%, transparent); border-radius: var(--rayon-controle); min-width: 0; }
+.agv-perm-text { display: grid; min-width: 0; flex: 1 1 200px; font-size: var(--t-13); overflow-wrap: anywhere; }
+.agv-perm-actions { display: inline-flex; gap: 6px; }
+
+@media (max-width: 900px) {
+  .agv-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .agentview { gap: 10px; }
+  .agv-head { padding: 12px; }
+  .agv-head-actions { width: 100%; justify-content: space-between; }
+  .agv-list, .agv-activity { max-height: 320px; }
+}
+
+/* Mobile : avec un mandat actif, la pastille et « Reprendre la main » faisaient déborder la barre du haut (T28).
+   « Reprendre la main » reste disponible dans la vue Agent et dans le dialogue ouvert par la pastille. */
+@media (max-width: 720px) {
+  .agentmode-topbar .btn-agentmode-takeover { display: none; }
+  .agentmode-pill, .agentmode-pill.is-alert { max-width: 56px; }
+}
+
+/* T34 : agent bloqué, sessions orphelines, sauvegardes, politique de permissions. */
+.agv-alerts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.agv-alerts[hidden] { display: none; }
+.agv-alert {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 12px; font-size: var(--t-13);
+  border-radius: var(--rayon-controle); background: color-mix(in srgb, var(--attention) 14%, var(--panneau));
+  border: 1px solid color-mix(in srgb, var(--attention) 60%, transparent); overflow-wrap: anywhere;
+}
+.agv-alert.is-orphan, .agv-alert.is-stalled {
+  background: color-mix(in srgb, var(--danger) 10%, var(--panneau));
+  border-color: color-mix(in srgb, var(--danger) 50%, transparent);
+}
+.agv-alert .btn { margin-left: auto; }
+.agv-backup { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; background: var(--panneau-2); border: 1px solid var(--trait); border-radius: var(--rayon-controle); min-width: 0; }
+.agv-backup-text { display: grid; min-width: 0; flex: 1 1 200px; font-size: var(--t-13); overflow-wrap: anywhere; }
+.agv-policy { padding: 4px 12px 12px; }
+.pp-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin: 8px 0; font-size: var(--t-13); }
+.pp-col { min-width: 0; padding: 8px 10px; border: 1px solid var(--trait); border-radius: var(--rayon-controle); background: var(--panneau-2); }
+.pp-col ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 3px; }
+.pp-allow { border-color: color-mix(in srgb, var(--ok, var(--accent)) 50%, transparent); }
+.pp-deny { border-color: color-mix(in srgb, var(--danger) 50%, transparent); }
+.pp-ask { border-color: color-mix(in srgb, var(--attention) 50%, transparent); }
+.pp-title { font: 600 11px / 1.3 var(--police-ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-doux); }
+.agentmode-pill.is-alert { background: color-mix(in srgb, var(--attention) 22%, transparent); color: var(--attention); }
+@media (min-width: 721px) { .agentmode-pill.is-alert { max-width: 360px; } }
+.tab-badge-alert { background: var(--attention); color: var(--sol); }
+.pp-note { margin: 4px 0 0; font-size: var(--t-12); color: var(--texte-doux); }
+
+/* T36 : section « Équipe » (coordination entre sessions). Jetons uniquement ; min-width: 0 partout (mobile 390 px sans débordement). */
+/* Badge « Équipe » : classe distincte de .tab-badge (le sélecteur #tab-agent .tab-badge désigne le seul badge d'alertes). */
+.team-badge {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px; font-family: var(--police-mono); font-size: 11px; font-weight: 600; line-height: 1;
+  font-variant-numeric: tabular-nums; background: var(--accent); color: var(--sol); margin-left: 6px; flex: none;
+}
+.team-badge[hidden] { display: none !important; }
+@media (max-width: 720px) {
+  .viewbar .team-badge { position: absolute; top: 2px; left: calc(50% + 2px); font-size: 10px; min-width: 16px; height: 16px; padding: 0 4px; margin: 0; }
+}
+.agv-team { grid-column: 1 / -1; }
+.team-note { margin: 0; padding: 0 12px 6px; font-size: var(--t-12); overflow-wrap: anywhere; }
+.team-body { display: grid; gap: 12px; padding: 4px 8px 12px; min-width: 0; }
+.team-project { min-width: 0; padding: 10px 12px; background: var(--panneau-2); border: 1px solid var(--trait); border-radius: var(--rayon-controle); display: grid; gap: 8px; }
+.team-project-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-width: 0; }
+.team-project-head h3 { margin: 0; font: 600 var(--t-14) / 1.3 var(--police-ui); overflow-wrap: anywhere; }
+.team-toggle { margin-left: auto; font-size: var(--t-12); white-space: normal; }
+.team-sub { margin: 4px 0 0; font: 600 11px / 1.3 var(--police-ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-doux); }
+.team-list, .team-files { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; min-width: 0; }
+.team-session, .team-res, .team-msg { min-width: 0; padding: 8px 10px; background: var(--panneau); border: 1px solid var(--trait); border-radius: var(--rayon-controle); display: grid; gap: 4px; font-size: var(--t-13); }
+.team-session.is-idle { opacity: 0.8; }
+.team-session-top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+.team-session-name { overflow-wrap: anywhere; }
+.team-engine { overflow-wrap: anywhere; }
+.team-role.is-reader { background: color-mix(in srgb, var(--attention) 22%, transparent); }
+.team-line { margin: 0; overflow-wrap: anywhere; word-break: break-word; }
+.team-said { font-style: italic; }
+.team-warn { margin: 0; padding: 6px 8px; font-size: var(--t-12); overflow-wrap: anywhere; border-radius: var(--rayon-controle); background: color-mix(in srgb, var(--attention) 14%, var(--panneau)); border: 1px solid color-mix(in srgb, var(--attention) 55%, transparent); }
+.team-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.team-form { display: flex; flex-wrap: wrap; gap: 6px; }
+.team-input { flex: 1 1 180px; min-width: 0; padding: 6px 8px; font: inherit; color: var(--texte); background: var(--sol); border: 1px solid var(--trait); border-radius: var(--rayon-controle); }
+.team-res { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.team-res-main { display: grid; min-width: 0; overflow-wrap: anywhere; }
+.team-res-path { overflow-wrap: anywhere; }
+.team-files li { overflow-wrap: anywhere; font-size: var(--t-12); }
+.team-msg { font-size: var(--t-12); overflow-wrap: anywhere; display: block; }
+@media (max-width: 720px) {
+  .team-toggle { margin-left: 0; }
+  .team-res { grid-template-columns: minmax(0, 1fr); }
+  .team-body { padding: 4px 4px 10px; }
+}
+
+.team-msg.is-system { background: transparent; border-style: dashed; font-style: italic; }
+
+.team-start { display: grid; gap: 6px; margin-bottom: 10px; }
+.team-start .team-form select, .team-start .team-form input { min-width: 0; flex: 1 1 180px; }
+
+/* ---------- Vue « Groupes » : une messagerie par projet. Jetons uniquement ; min-width: 0 partout. ---------- */
+.grp { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 14px; max-width: 1280px; height: calc(100vh - var(--haut-barre) - 24px); min-height: 420px; padding-bottom: 12px; }
+.grp .muted { color: var(--texte-doux); }
+.grp-side { min-width: 0; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+.grp-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; overflow: auto; }
+.grp-item { width: 100%; text-align: left; display: grid; gap: 2px; padding: 8px 10px; background: var(--panneau); color: var(--texte);
+  border: 1px solid var(--trait); border-radius: var(--rayon-controle); cursor: pointer; font: inherit; min-width: 0; }
+.grp-item:hover { background: var(--panneau-2); }
+.grp-item.is-selected { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-doux); }
+.grp-item-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; }
+.grp-item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.grp-item-sub { font-size: var(--t-12); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.grp-chat { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 8px; background: var(--panneau); border: 1px solid var(--trait); border-radius: var(--rayon-fenetre); padding: 12px; overflow: hidden; }
+.grp-head { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex-wrap: wrap; }
+.grp-head h2 { margin: 0; font-size: var(--t-16); }
+.grp-back { display: none; }
+.grp-members { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.grp-member { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border: 1px solid var(--trait); border-radius: 999px; font-size: var(--t-12); background: var(--sol); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.grp-member.is-idle { opacity: 0.7; }
+.grp-msgs { list-style: none; margin: 0; padding: 4px; flex: 1 1 auto; min-height: 120px; overflow: auto; display: flex; flex-direction: column; gap: 8px; background: var(--sol); border-radius: var(--rayon-controle); }
+.grp-bubble { align-self: flex-start; max-width: min(78%, 640px); display: grid; gap: 2px; padding: 6px 10px; background: var(--panneau-2); border: 1px solid var(--trait); border-radius: 10px 10px 10px 2px; overflow-wrap: anywhere; font-size: var(--t-13); }
+.grp-bubble.is-me { align-self: flex-end; background: var(--accent-doux); border-color: var(--accent); border-radius: 10px 10px 2px 10px; }
+.grp-from { font-size: var(--t-12); font-weight: 600; color: var(--texte-doux); }
+.grp-text { white-space: pre-wrap; }
+.grp-meta { font-size: 11px; justify-self: end; }
+.grp-sys { align-self: center; font-size: var(--t-12); font-style: italic; text-align: center; max-width: 90%; overflow-wrap: anywhere; }
+.grp-composer { display: flex; gap: 6px; flex-wrap: wrap; }
+.grp-composer .team-input { flex: 1 1 200px; min-width: 0; }
+@media (max-width: 720px) {
+  .grp { grid-template-columns: minmax(0, 1fr); height: auto; min-height: calc(100vh - var(--haut-barre) - 80px); }
+  .grp.is-chat .grp-side { display: none; }
+  .grp:not(.is-chat) .grp-chat { display: none; }
+  .grp-back { display: inline-flex; }
+  .grp-chat { min-height: calc(100vh - var(--haut-barre) - 100px); }
+  .grp-bubble { max-width: 90%; }
+}

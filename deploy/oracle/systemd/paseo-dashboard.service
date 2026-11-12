@@ -1,0 +1,17 @@
+[Unit]
+Description=Poste de commande Paseo
+After=network-online.target
+[Service]
+EnvironmentFile=%h/paseo-dash-data/hermes-api.env
+WorkingDirectory=%h/Projets/paseo-poste/dashboard
+Environment=PATH=%h/.nvm/versions/node/v24.22.1/bin:%h/Projets/bin:/usr/local/bin:/usr/bin:/bin
+Environment=DASHBOARD_DATA_DIR=%h/paseo-dash-data DASHBOARD_PORT=7070 DASHBOARD_TAILSCALE=1
+Environment=DASHBOARD_TAILSCALE_PASSWORD_FILE=%h/paseo-dash-data/tailscale-password.txt DASHBOARD_TAILSCALE_USER=YOUR_USERNAME DASHBOARD_TAILSCALE_MIN_PASSWORD=16
+Environment=DASHBOARD_HOSTS_FILE=%h/paseo-dash-data/hosts.json
+Environment=DASHBOARD_SELF_HOST=YOUR_HOST_NAME
+ExecStart=%h/.nvm/versions/node/v24.22.1/bin/node server.mjs
+Restart=always
+RestartSec=3
+TimeoutStopSec=10
+[Install]
+WantedBy=default.target

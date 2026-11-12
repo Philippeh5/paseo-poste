@@ -1,0 +1,87 @@
+/* ── Journal : ce qui s'est passé un jour donné, projet par projet ───────────────
+   Toutes les couleurs sont des jetons de tokens.css ; aucune couleur en dur.     */
+
+.journal-view { max-width: 920px; }
+.journal-controls { gap: 6px; }
+.journal-date {
+  width: auto; min-height: 30px; padding: 2px 8px; font: inherit; font-size: var(--t-13);
+  color: var(--texte); background: var(--sol); border: 1px solid var(--trait); border-radius: var(--rayon-controle);
+}
+.journal-project-select { max-width: 220px; }
+.journal-label {
+  margin: 0 0 12px; color: var(--texte-doux); font-size: var(--t-13); text-transform: capitalize;
+}
+.journal-note { color: var(--texte-doux); }
+
+.journal-list { display: flex; flex-direction: column; gap: 12px; }
+.journal-project {
+  background: var(--panneau); border: 1px solid var(--trait); border-radius: var(--rayon-fenetre); overflow: hidden;
+}
+.journal-project-title { margin: 0; font: inherit; }
+.journal-project-head {
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 8px 14px;
+  font: inherit; text-align: left; color: var(--texte); background: transparent; border: 0; cursor: pointer;
+}
+.journal-project-head:hover { background: var(--panneau-2); }
+.journal-project-head:focus-visible, .journal-view .btn:focus-visible, .journal-date:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+.journal-chevron { display: inline-flex; color: var(--texte-doux); }
+.journal-chevron svg { width: 16px; height: 16px; }
+.journal-project-name {
+  font-family: var(--police-titre); font-weight: 600; font-size: var(--t-16); overflow-wrap: anywhere;
+}
+.journal-host { font-size: var(--t-12); color: var(--texte-doux); }
+.journal-count {
+  margin-left: auto; font-size: var(--t-12); color: var(--texte-doux); font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.journal-dir {
+  margin: 0; padding: 0 14px 6px 38px; font: var(--t-12) var(--police-mono); color: var(--texte-doux);
+  overflow-wrap: anywhere;
+}
+
+.journal-events { list-style: none; margin: 0; padding: 0 14px 10px; }
+.journal-events[hidden], .journal-report-text[hidden] { display: none; }
+.journal-event, .journal-report {
+  display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 8px; padding: 6px 0;
+  border-top: 1px solid var(--trait);
+}
+.journal-event:first-child, .journal-report:first-child { border-top: 0; }
+.journal-report { background: var(--accent-doux); margin: 0 -14px; padding: 8px 14px; }
+.journal-report + .journal-event { border-top: 0; }
+.journal-time {
+  font: 500 var(--t-12) var(--police-mono); color: var(--texte-doux); font-variant-numeric: tabular-nums;
+  padding-top: 2px;
+}
+.journal-event-body, .journal-report-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; min-width: 0;
+}
+.journal-report-head .btn { margin-left: auto; }
+.journal-kind {
+  display: inline-flex; align-items: center; gap: 4px; flex: none; font-size: 11px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--texte-doux);
+}
+.journal-glyph { display: inline-flex; }
+.journal-glyph svg { width: 12px; height: 12px; }
+.tone-ok { color: var(--ok); }
+.tone-attention { color: var(--attention); }
+.tone-danger { color: var(--danger); }
+.tone-doux { color: var(--texte-doux); }
+.journal-text { min-width: 0; overflow-wrap: anywhere; }
+.journal-report-body { min-width: 0; }
+.journal-report-text {
+  margin: 8px 0 0; padding: 10px 12px; max-height: 360px; overflow: auto; white-space: pre-wrap;
+  overflow-wrap: anywhere; font: var(--t-12) / 1.5 var(--police-mono); color: var(--texte);
+  background: var(--sol); border: 1px solid var(--trait); border-radius: var(--rayon-controle);
+}
+
+@media (max-width: 720px) {
+  .journal-view.view-page { padding: 14px 16px 24px; }
+  .journal-event, .journal-report { grid-template-columns: 40px minmax(0, 1fr); }
+  .journal-report-head .btn { margin-left: 0; }
+  .journal-project-select { max-width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .journal-view * { transition: none !important; animation: none !important; }
+}

@@ -1,0 +1,65 @@
+/* Vue « Bots & serveurs » : lignes de services, formulaires de recherche, tableau de données. Jetons de tokens.css uniquement. */
+.pilot { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; display: grid; gap: 28px; }
+.pilot-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.pilot-head h1 { font: 600 var(--t-28, 28px) var(--police-titre); margin: 0; }
+.pilot-summary { color: var(--texte-doux); font-size: var(--t-13); margin-right: auto; }
+.pilot-section-title { font: 600 var(--t-20, 20px) var(--police-titre); margin: 0 0 12px; }
+.pilot-services { display: grid; gap: 16px; }
+.pilot-group { background: var(--panneau); border: 1px solid var(--trait); border-radius: 10px; }
+.pilot-group-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--trait); }
+.pilot-group-head h2 { margin: 0; font: 600 11px var(--police-ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-doux); }
+.pilot-group-actions { display: inline-flex; gap: 8px; }
+.pilot-list { list-style: none; margin: 0; padding: 0; }
+.pilot-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 4px 12px; padding: 10px 14px; }
+.pilot-row + .pilot-row { border-top: 1px solid color-mix(in srgb, var(--trait) 60%, transparent); }
+.pilot-main { display: flex; flex-direction: column; min-width: 0; }
+.pilot-detail { color: var(--texte-doux); font-size: var(--t-12); overflow-wrap: anywhere; }
+.pilot-actions { display: flex; flex-wrap: nowrap; gap: 6px; justify-content: flex-end; }
+.pilot-mode, .pilot-field select, .pilot-field input[type="text"], .pilot-facet select, .pilot-search {
+  min-height: 30px; background: var(--panneau-2); color: var(--texte); border: 1px solid var(--trait); border-radius: 6px; padding: 0 8px; font: inherit; font-size: var(--t-13);
+}
+.pilot-log { grid-column: 1 / -1; margin: 6px 0 0; max-height: 260px; overflow: auto; background: var(--sol); border: 1px solid var(--trait); border-radius: 6px;
+  padding: 8px 10px; font: 12px/1.45 var(--police-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pilot-cards { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.pilot-card { background: var(--panneau); border: 1px solid var(--trait); border-radius: 10px; padding: 14px; display: grid; gap: 8px; align-content: start; }
+.pilot-card h3 { margin: 0; font-size: var(--t-14, 14px); }
+.pilot-help { margin: 0; color: var(--texte-doux); font-size: var(--t-12); }
+.pilot-form { display: grid; gap: 8px; }
+.pilot-field { display: grid; gap: 3px; font-size: var(--t-12); color: var(--texte-doux); }
+.pilot-field.is-check { grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px; }
+.pilot-form-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.pilot-run-status { font-size: var(--t-12); color: var(--texte-doux); }
+.pilot-run-status.is-run { color: var(--attention); }
+.pilot-run-status.is-ok { color: var(--ok); }
+.pilot-run-status.is-fail { color: var(--danger); }
+.pilot-data { display: grid; gap: 10px; }
+.pilot-tabs { display: inline-flex; gap: 4px; background: var(--panneau-2); padding: 3px; border-radius: 8px; width: fit-content; }
+.pilot-tab { border: 0; background: transparent; color: var(--texte-doux); min-height: 28px; padding: 0 12px; border-radius: 6px; font: inherit; font-size: var(--t-13); cursor: pointer; }
+.pilot-tab[aria-selected="true"] { background: var(--accent-doux); color: var(--accent); font-weight: 600; }
+.pilot-databar { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.pilot-search { flex: 1 1 240px; min-width: 0; }
+.pilot-facet { display: grid; gap: 2px; font-size: 11px; color: var(--texte-doux); }
+.pilot-tablewrap { overflow: auto; border: 1px solid var(--trait); border-radius: 8px; max-height: 60vh; }
+.pilot-table { border-collapse: collapse; width: 100%; font-size: var(--t-13); }
+.pilot-table th { position: sticky; top: 0; background: var(--panneau-2); text-align: left; padding: 7px 10px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-doux); white-space: nowrap; }
+.pilot-table td { padding: 6px 10px; border-top: 1px solid color-mix(in srgb, var(--trait) 60%, transparent); vertical-align: top; }
+.pilot-pager { display: flex; align-items: center; gap: 8px; color: var(--texte-doux); font-size: var(--t-12); }
+.pilot-pager span { margin-right: auto; font-variant-numeric: tabular-nums; }
+.pilot-empty { color: var(--texte-doux); font-size: var(--t-13); margin: 4px 0; }
+.pilot-filesbox { margin-top: 16px; }
+.pilot-filesbox h3 { margin: 0 0 6px; font-size: var(--t-13); }
+.pilot-files { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: var(--t-13); }
+@media (max-width: 720px) {
+  .pilot-row { grid-template-columns: auto 1fr; }
+  .pilot-actions { grid-column: 1 / -1; justify-content: flex-start; flex-wrap: wrap; }
+}
+.pilot-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -12px; }
+.pilot-page { min-height: 32px; padding: 0 14px; border: 1px solid var(--trait); border-radius: 6px; background: var(--panneau); color: var(--texte-doux); font: inherit; font-size: var(--t-13); font-weight: 500; cursor: pointer; }
+.pilot-page:hover { color: var(--texte); border-color: var(--accent); }
+.pilot-page[aria-current="page"] { background: var(--accent-doux); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.pilot-table tr.is-done td { opacity: 0.55; }
+.pilot-detail-row { margin-top: 4px; font-size: var(--t-12); }
+.pilot-detail-row pre { white-space: pre-wrap; max-width: 60ch; margin: 4px 0 0; font: 12px/1.4 var(--police-ui); }
+
+/* Page « Modèles » : zone de filtre lisible */
+.pilot-databar input[type="search"] { min-width: min(320px, 100%); }

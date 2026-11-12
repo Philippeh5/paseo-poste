@@ -1,0 +1,127 @@
+/* Vue Tâches : tableau à colonnes. Couleurs uniquement via les jetons de tokens.css. */
+.tasks-view { display: flex; flex-direction: column; min-height: 100%; padding: 16px 16px 24px; }
+.tasks-view[hidden] { display: none; }
+.tasks-view .view-toolbar { margin-bottom: 12px; }
+.tasks-sub { font-size: var(--t-13); color: var(--texte-doux); }
+
+.board {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px;
+  align-items: start; flex: 1; min-width: 0;
+}
+.col {
+  display: flex; flex-direction: column; min-width: 0; background: var(--panneau);
+  border: 1px solid var(--trait); border-radius: var(--rayon-fenetre);
+}
+.col-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px 8px; }
+.col-head h2 { font: 600 11px / 1.2 var(--police-ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-doux); }
+.col-count { margin-left: auto; padding: 0 8px; min-width: 24px; text-align: center; border-radius: 999px; background: var(--panneau-2); font-size: var(--t-12); font-variant-numeric: tabular-nums; }
+.col-list { list-style: none; margin: 0; padding: 4px 8px 10px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-height: 64px; align-content: start; border-radius: var(--rayon-fenetre); }
+.col-list.is-drop { background: var(--accent-doux); }
+.col-empty { padding: 14px 8px; text-align: center; font-size: var(--t-13); color: var(--texte-doux); border: 1px dashed var(--trait); border-radius: var(--rayon-controle); }
+
+.card {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; min-width: 0; padding: 10px 10px 10px 12px; background: var(--panneau-2);
+  border: 1px solid var(--trait); border-radius: var(--rayon-controle); cursor: grab;
+}
+.card:hover { border-color: var(--accent); }
+.card.is-selected { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.card.is-attention { box-shadow: inset 3px 0 0 var(--attention); }
+.card.is-error { box-shadow: inset 3px 0 0 var(--danger); }
+.card.is-dragging { opacity: 0.4; }
+.card.drop-before::before, .col-list.drop-end::after {
+  content: ""; display: block; height: 3px; border-radius: 2px; background: var(--accent);
+}
+.card.drop-before::before { position: absolute; left: 0; right: 0; top: -6px; }
+.col-list.drop-end::after { margin-top: 0; }
+.card-top { display: flex; align-items: flex-start; gap: 8px; }
+.card-top .led { margin-top: 5px; }
+.card-open {
+  flex: 1; min-width: 0; padding: 0; text-align: left; background: transparent; border: 0; color: var(--texte);
+  cursor: pointer; font-weight: 600; font-size: var(--t-14); line-height: 1.3; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.card-open:focus-visible { outline-offset: 4px; }
+.card-menu { width: 28px; height: 28px; font-size: 18px; margin: -4px -4px 0 0; }
+.card-meta { display: flex; flex-wrap: wrap; gap: 2px 8px; font-size: var(--t-12); color: var(--texte-doux); }
+.card-meta .mono { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; font-size: 11px;
+  font-weight: 600; background: var(--panneau); color: var(--texte-doux); box-shadow: inset 0 0 0 1px var(--trait);
+  overflow-wrap: anywhere; max-width: 100%;
+}
+.tag-blocked { color: var(--attention); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--attention) 55%, transparent); background: color-mix(in srgb, var(--attention) 12%, transparent); }
+.tag-error { color: var(--danger); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 55%, transparent); background: color-mix(in srgb, var(--danger) 12%, transparent); }
+.card-summary { font-size: var(--t-12); color: var(--texte-doux); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+
+/* Menu « Déplacer vers… » */
+.task-menu {
+  position: fixed; z-index: 150; min-width: 200px; max-width: calc(100vw - 16px); padding: 4px; display: grid;
+  background: var(--panneau); border: 1px solid var(--trait); border-radius: var(--rayon-controle); box-shadow: var(--ombre-fenetre);
+}
+.task-menu .label-caps { padding: 6px 10px 4px; }
+.task-menu button {
+  min-height: 34px; padding: 0 10px; text-align: left; background: transparent; border: 0; border-radius: 4px;
+  color: var(--texte); cursor: pointer;
+}
+.task-menu button:hover, .task-menu button:focus-visible { background: var(--accent-doux); }
+
+/* Tiroir de détail */
+.task-detail { padding: 14px 16px 20px; display: grid; gap: 14px; align-content: start; }
+.task-state { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.task-state strong { font-weight: 600; }
+.task-detail .facts dd { font-size: var(--t-13); }
+.task-detail h3 { font: 600 11px / 1.2 var(--police-ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--texte-doux); margin-bottom: 4px; }
+.task-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--t-13); padding: 8px 10px; background: var(--panneau-2); border-radius: var(--rayon-controle); max-height: 220px; overflow: auto; }
+.task-text.is-error { color: var(--danger); }
+.task-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.task-move { display: flex; align-items: center; gap: 8px; font-size: var(--t-13); color: var(--texte-doux); }
+.dep-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: var(--t-13); }
+
+/* Modale de création / modification */
+.task-dialog { overflow: hidden; }
+.task-dialog .dialog-body { max-height: calc(100dvh - 28px); overflow: auto; padding-bottom: 0; }
+.task-dialog .dialog-body > .dialog-foot { position: sticky; bottom: 0; padding: 12px 0 16px; background: var(--panneau); }
+.task-dialog legend { padding: 0; }
+.task-dialog .field { margin: 8px 0; }
+.dep-box { display: grid; gap: 4px; max-height: 112px; overflow: auto; padding: 8px; background: var(--sol); border: 1px solid var(--trait); border-radius: var(--rayon-controle); }
+.dep-box .check { align-items: flex-start; }
+.dep-none { font-size: var(--t-13); color: var(--texte-doux); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+
+/* Chaînes d'agents (T40) : repère sur les cartes et fenêtre « Lancer une chaîne » */
+.tag-chain { color: var(--accent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent); background: var(--accent-doux); }
+.chain-dialog { overflow: hidden; }
+.chain-dialog .dialog-body { max-height: calc(100dvh - 28px); overflow: auto; padding-bottom: 0; }
+.chain-dialog .dialog-body > .dialog-foot { position: sticky; bottom: 0; padding: 12px 0 16px; background: var(--panneau); }
+.chain-dialog .field { margin: 8px 0; }
+.chain-fieldset { border: 0; padding: 0; min-width: 0; }
+.chain-fieldset legend { padding: 0; }
+.chain-choices { display: grid; gap: 8px; }
+.chain-choice {
+  display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; cursor: pointer; min-width: 0;
+  background: var(--sol); border: 1px solid var(--trait); border-radius: var(--rayon-controle);
+}
+.chain-choice:hover { border-color: var(--accent); }
+.chain-choice:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.chain-choice input { width: 16px; height: 16px; margin-top: 3px; accent-color: var(--accent); flex: none; }
+.chain-choice-body { display: grid; gap: 4px; min-width: 0; }
+.chain-desc { font-size: var(--t-12); color: var(--texte-doux); }
+.chain-steps { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.chain-steps li { padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--panneau); color: var(--texte-doux); box-shadow: inset 0 0 0 1px var(--trait); }
+.chain-steps li + li::before { content: "→"; margin-right: 6px; color: var(--texte-doux); }
+
+/* La colonne « Bloquée » (rare) occupe une rangée entière sous les autres. */
+.col[data-status="blocked"] { grid-column: 1 / -1; }
+.col[data-status="blocked"] .col-list { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+@media (max-width: 720px) {
+  .tasks-view { padding: 12px 12px 20px; }
+  .board { grid-template-columns: minmax(0, 1fr); }
+  .field-row { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Avis automatique indicatif sur les cartes « À valider » (T44) : forme (▲ / ✓) + texte, pas seulement la couleur */
+.tag-verify { color: var(--attention); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--attention) 55%, transparent); background: color-mix(in srgb, var(--attention) 12%, transparent); }
+.tag-probable { color: var(--ok); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ok) 55%, transparent); background: color-mix(in srgb, var(--ok) 12%, transparent); }
+.tag-verify:focus-visible, .tag-probable:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.task-hint { font-size: var(--t-13); color: var(--texte-doux); overflow-wrap: anywhere; }

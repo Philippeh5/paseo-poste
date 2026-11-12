@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# postectl pour tous les agents du poste (cerveau, ouvriers) : suit le lien symbolique jusqu'au dépôt.
+REPO="$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)"
+exec node "$REPO/tools/postectl.mjs" "$@"

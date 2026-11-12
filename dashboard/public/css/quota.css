@@ -1,0 +1,91 @@
+/* Jauge de quotas de la barre du haut et son panneau (T41). L'état se lit par la forme du voyant :
+   rond plein = OK, rond cerclé = ralenti, losange = épuisé, rond creux = inconnu. Jetons de tokens.css uniquement. */
+.qg-button { gap: 0; padding: 0 8px; }
+.qg-button[data-state="exhausted"] { border-color: var(--danger); }
+.qg-button[data-state="slow"] { border-color: var(--attention); }
+.qg-pills { display: inline-flex; align-items: center; gap: 10px; }
+.qg-pill { display: inline-flex; align-items: center; gap: 6px; font-size: var(--t-12); }
+.qg-pill[data-state="exhausted"] { color: var(--danger); }
+.qg-pill[data-state="slow"] { color: var(--attention); }
+.qg-pill[data-state="unknown"] { color: var(--texte-doux); }
+.qg-worst { display: none; }
+/* Noms visibles seulement sur grand écran : la barre est déjà dense (voir app.css). */
+.qg-name { display: none; }
+@media (min-width: 1751px) { .qg-name { display: inline; } }
+
+.qg-panel {
+  position: fixed; z-index: 60; top: calc(var(--haut-barre) + 6px); right: 12px;
+  width: min(460px, calc(100vw - 16px)); max-height: calc(100vh - var(--haut-barre) - 20px); overflow: auto;
+  padding: 10px 12px 12px; background: var(--panneau); border: 1px solid var(--trait);
+  border-radius: var(--rayon-fenetre); box-shadow: var(--ombre-fenetre); color: var(--texte); font-size: var(--t-13);
+}
+.qg-panel:focus { outline: none; }
+.qg-panel[hidden] { display: none; }
+.qg-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.qg-head strong { font-size: var(--t-14); }
+.qg-panel h3 { margin: 0; font-size: var(--t-13); font-weight: 600; }
+
+.qg-prov { padding: 10px 0; border-top: 1px solid var(--trait); }
+.qg-prov-head { display: flex; align-items: center; gap: 8px; }
+.qg-prov-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.qg-prov-state { color: var(--texte-doux); font-weight: 500; }
+.qg-prov[data-state="exhausted"] .qg-prov-state { color: var(--danger); }
+.qg-prov[data-state="slow"] .qg-prov-state { color: var(--attention); }
+.qg-prov-detail { margin: 4px 0 6px 18px; color: var(--texte-doux); font-size: var(--t-12); }
+.qg-window { margin: 0 0 8px 18px; }
+.qg-window-head { display: flex; justify-content: space-between; font-size: var(--t-12); color: var(--texte-doux); }
+.qg-num { font-family: var(--police-mono); font-variant-numeric: tabular-nums; color: var(--texte); }
+.qg-bar { height: 6px; margin-top: 3px; border-radius: 3px; background: var(--panneau-2); overflow: hidden; }
+.qg-bar i { display: block; height: 100%; background: var(--accent); }
+.qg-bar.is-warn i { background: var(--attention); }
+.qg-bar.is-danger i { background: var(--danger); }
+.qg-reset { margin-top: 2px; color: var(--texte-doux); font-size: 11px; }
+
+.qg-fallback { padding: 10px 0 4px; border-top: 1px solid var(--trait); }
+.qg-hint { margin: 2px 0 6px; color: var(--texte-doux); font-size: var(--t-12); }
+.qg-order { list-style: none; margin: 0; padding: 0; }
+.qg-engine {
+  display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 0;
+}
+.qg-engine + .qg-engine { border-top: 1px solid color-mix(in srgb, var(--trait) 50%, transparent); }
+.qg-rank { color: var(--texte-doux); font-family: var(--police-mono); font-size: var(--t-12); text-align: right; }
+.qg-engine-main { display: flex; flex-direction: column; min-width: 0; }
+.qg-engine-main code { font-family: var(--police-mono); font-size: var(--t-12); overflow-wrap: anywhere; }
+.qg-engine-status { color: var(--texte-doux); font-size: 11px; }
+.qg-engine.is-resting .qg-engine-status { color: var(--attention); }
+.qg-engine.is-refused .qg-engine-status { color: var(--danger); }
+.qg-move { display: inline-flex; gap: 2px; }
+.qg-move .icon-btn { width: 32px; height: 32px; font-size: var(--t-16); }
+.qg-move .icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.qg-failures { margin-top: 8px; border-top: 1px solid var(--trait); padding-top: 8px; }
+.qg-failures summary { cursor: pointer; font-weight: 600; }
+.qg-failures ul { list-style: none; margin: 6px 0 0; padding: 0; }
+.qg-failures li { padding: 4px 0; font-size: var(--t-12); overflow-wrap: anywhere; }
+.qg-failures code { font-family: var(--police-mono); }
+.qg-fail-reason { color: var(--texte-doux); font-family: var(--police-mono); font-size: 11px; }
+
+@media (max-width: 720px) {
+  .qg-button { padding: 0 6px; min-width: 0; }
+  .qg-pills { display: none; }
+  .qg-worst { display: inline-flex; }
+  #topbar-quota { order: -1; } /* visible sans faire défiler la rangée d'actions */
+  .qg-panel { right: 8px; left: 8px; width: auto; }
+}
+
+/* Bouton compact tout à droite de la barre : un seul voyant (le pire état) + icône ; le détail est dans le panneau. */
+.qg-pills { display: none; }
+.qg-worst { display: inline-flex; align-items: center; gap: 6px; }
+.qg-worst::after { content: "Quotas"; font-size: var(--t-12); color: var(--texte-doux); }
+@media (max-width: 1100px) { .qg-worst::after { content: none; } }
+.qg-link { display: block; padding: 12px 0 4px; color: var(--accent); font-size: var(--t-13); }
+.qg-engine-title { display: block; font-weight: 600; }
+.qg-unused { margin-top: 12px; padding-top: 8px; border-top: 1px dashed var(--trait); display: flex; flex-direction: column; gap: 8px; }
+.qg-unused h4 { margin: 0; font-size: var(--t-13); color: var(--texte-doux); }
+.qg-engine.is-unused { opacity: .85; align-items: center; }
+.qg-move { display: inline-flex; }
+.qg-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+.qg-tab { min-height: 36px; padding: 0 12px; border: 1px solid var(--trait); border-radius: 999px; background: var(--panneau); color: var(--texte-doux); font: inherit; font-size: var(--t-13); }
+.qg-tab.is-on { background: var(--accent-doux); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.qg-tab-dot { margin-left: 4px; color: var(--accent); }
+.qg-reset-role { margin-top: 10px; }

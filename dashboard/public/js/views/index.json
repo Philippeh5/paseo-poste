@@ -1,0 +1,14 @@
+[
+  "mobile.js",
+  "agent.js",
+  "desk.js",
+  "groupes.js",
+  "inbox.js",
+  "journal.js",
+  "machines.js",
+  "pilotage.js",
+  "projects.js",
+  "sessions.js",
+  "tasks.js",
+  "timeline.js"
+]

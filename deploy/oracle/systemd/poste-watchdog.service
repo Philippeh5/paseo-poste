@@ -1,0 +1,5 @@
+[Unit]
+Description=Chien de garde du poste (santé, relance, alerte Telegram)
+[Service]
+Type=oneshot
+ExecStart=/bin/bash %h/Projets/paseo-lab/deploy/oracle/watchdog.sh

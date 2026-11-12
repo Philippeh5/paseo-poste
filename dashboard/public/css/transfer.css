@@ -1,0 +1,314 @@
+/* Styles pour le transfert vers Oracle et le bandeau de reprise automatique */
+
+/* Bandeau de reprise sous la topbar */
+.failover-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--text-sm);
+  color: var(--text);
+  z-index: 40;
+}
+
+.failover-banner[hidden] {
+  display: none !important;
+}
+
+.failover-banner-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.failover-banner-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: var(--text-xs);
+}
+
+.failover-badge-armed {
+  background: var(--surface-3);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.failover-badge-suspect {
+  background: color-mix(in srgb, var(--warning) 15%, transparent);
+  color: var(--warning);
+  border: 1px solid var(--warning);
+}
+
+.failover-badge-unreachable {
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+.failover-badge-resuming {
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+}
+
+.failover-badge-resumed {
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  color: var(--success);
+  border: 1px solid var(--success);
+}
+
+.failover-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* Fenêtre modale de transfert */
+.transfer-dialog {
+  width: min(720px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
+  color: var(--text);
+  box-shadow: var(--shadow-lg);
+}
+
+.transfer-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.transfer-dialog-container {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 48px);
+}
+
+.transfer-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.transfer-dialog-header h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.transfer-dialog-body {
+  padding: var(--space-4);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.transfer-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.transfer-section-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.transfer-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.transfer-item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.transfer-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  background: var(--surface-1);
+}
+
+.transfer-alert {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.transfer-alert-error {
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+
+.transfer-alert-warning {
+  background: color-mix(in srgb, var(--warning) 15%, transparent);
+  border: 1px solid var(--warning);
+  color: var(--warning);
+}
+
+.transfer-alert-info {
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  border: 1px solid var(--primary);
+  color: var(--text);
+}
+
+/* Étapes de progression */
+.transfer-stepper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.transfer-step-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: var(--text-sm);
+}
+
+.transfer-step-item.is-active {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface-2));
+}
+
+.transfer-step-item.is-done {
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+.transfer-step-item.is-done .transfer-step-status {
+  color: var(--success);
+}
+
+.transfer-step-item.is-failed {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.transfer-step-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.transfer-step-status {
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+
+/* Journal des événements */
+.transfer-events-log {
+  max-height: 180px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.transfer-event-line {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.transfer-event-time {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.transfer-event-msg {
+  word-break: break-all;
+}
+
+.transfer-event-error {
+  color: var(--danger);
+}
+
+.transfer-event-warn {
+  color: var(--warning);
+}
+
+.transfer-dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.transfer-footer-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.transfer-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Adaptation petits écrans 390px */
+@media (max-width: 480px) {
+  .transfer-dialog-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .transfer-footer-actions {
+    justify-content: flex-end;
+  }
+  .failover-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .failover-banner-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

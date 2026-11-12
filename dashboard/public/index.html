@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <title>Poste de commande Paseo</title>
+  <script>
+    /* Thème appliqué avant le premier rendu, pour éviter l'éclair. */
+    try {
+      var saved = window.localStorage.getItem("paseo-theme");
+      if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+    } catch (error) { /* stockage indisponible : le thème système s'applique */ }
+  </script>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600&amp;display=swap">
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.css">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/timeline.css">
+  <link rel="stylesheet" href="css/inbox.css">
+  <link rel="stylesheet" href="css/widgets.css">
+  <link rel="stylesheet" href="css/feed.css">
+  <link rel="stylesheet" href="css/llmchat.css">
+  <link rel="stylesheet" href="css/projects-view.css">
+  <link rel="stylesheet" href="css/transfer.css">
+  <link rel="stylesheet" href="css/telegram.css">
+  <link rel="stylesheet" href="css/hermeschat.css">
+  <link rel="stylesheet" href="css/groupes-agents.css">
+  <link rel="stylesheet" href="css/quota.css">
+  <link rel="stylesheet" href="css/agentactivity.css">
+  <link rel="stylesheet" href="css/agentview.css">
+  <link rel="stylesheet" href="css/pilotage.css">
+  <link rel="stylesheet" href="css/viewmenu.css">
+  <link rel="stylesheet" href="css/mobile.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#view">Aller au contenu</a>
+  <div class="app">
+    <header id="topbar" class="topbar"></header>
+    <div id="failover-banner" class="failover-banner" hidden></div>
+    <div class="shell">
+      <aside id="rail" class="rail" aria-label="Machines et projets"></aside>
+      <main id="view" class="view" role="tabpanel" tabindex="-1"></main>
+      <aside id="drawer" class="drawer" aria-label="Détail" hidden></aside>
+      <aside id="sidechat" class="sidechat" aria-label="Discussion avec un LLM" hidden></aside>
+    </div>
+    <div class="rail-backdrop" aria-hidden="true"></div>
+  </div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <noscript>Le poste de commande a besoin de JavaScript.</noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

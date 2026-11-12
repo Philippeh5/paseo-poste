@@ -1,0 +1,13 @@
+[Unit]
+Description=Paseo daemon
+After=network-online.target
+
+[Service]
+Environment=PATH=%h/.local/node/bin:/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=%h/.config/paseo/env
+ExecStart=%h/.local/node/bin/paseo daemon run
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,79 @@
+/* Bouton « Telegram » de la barre du haut et son panneau (T32). Pastille : verte = bot en marche, grise = arrêté. */
+#topbar-telegram { gap: 6px; }
+#topbar-telegram[data-state="stopped"] { color: var(--texte-doux); }
+.telegram-panel {
+  position: fixed; z-index: 60; top: calc(var(--haut-barre) + 6px); right: 12px;
+  width: min(440px, calc(100vw - 16px)); max-height: calc(100vh - var(--haut-barre) - 20px); overflow: auto;
+  padding: 10px 12px 12px; background: var(--panneau); border: 1px solid var(--trait);
+  border-radius: var(--rayon-fenetre); box-shadow: var(--ombre-fenetre); color: var(--texte); font-size: var(--t-13);
+}
+.telegram-panel[hidden] { display: none; }
+.telegram-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.telegram-head strong { font-size: var(--t-14); }
+.telegram-status { margin: 6px 0 2px; font-size: var(--t-14); font-weight: 600; }
+.telegram-status.is-stopped { color: var(--attention); }
+.telegram-hint { margin: 0 0 8px; color: var(--texte-doux); font-size: var(--t-12); }
+.telegram-panel h3 { margin: 10px 0 4px; font-size: var(--t-13); color: var(--texte-doux); font-weight: 600; }
+.telegram-recent { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--trait); }
+.telegram-item {
+  display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 5px 2px;
+}
+.telegram-item + .telegram-item { border-top: 1px solid color-mix(in srgb, var(--trait) 50%, transparent); }
+.telegram-time { color: var(--texte-doux); font-size: var(--t-12); white-space: nowrap; }
+.telegram-text { min-width: 0; overflow-wrap: anywhere; }
+.telegram-result { color: var(--texte-doux); font-size: var(--t-12); }
+.telegram-item.is-failed .telegram-result { color: var(--danger); }
+.telegram-empty { padding: 8px 2px; color: var(--texte-doux); }
+.telegram-cheat { margin-top: 10px; border-top: 1px solid var(--trait); padding-top: 8px; }
+.telegram-cheat summary { cursor: pointer; font-weight: 600; }
+.telegram-cheat dl { margin: 8px 0 0; }
+.telegram-cheat dt { margin-top: 6px; font-family: var(--police-mono); font-size: var(--t-12); overflow-wrap: anywhere; }
+.telegram-cheat dd { margin: 2px 0 0; color: var(--texte-doux); }
+
+@media (max-width: 720px) {
+  /* Téléphone : la pastille seule, sans cadre ni marge, pour ne pas faire déborder la barre (390 px). */
+  #topbar-telegram { padding: 0 4px; min-width: 0; gap: 0; border-color: transparent; background: transparent; }
+  #topbar-telegram .telegram-label { display: none; }
+  .telegram-panel { right: 8px; left: 8px; width: auto; }
+  .telegram-item { grid-template-columns: minmax(0, 1fr) auto; }
+  .telegram-time { grid-column: 1 / -1; }
+}
+
+/* Supervision du bot (T48) : état du processus, « Relancer Telegram », « Journal ».
+   L'état se lit au texte ET à la forme du voyant. */
+.telegram-ctl {
+  margin: 4px 0 10px; padding: 8px 10px; background: var(--panneau-2); border: 1px solid var(--trait);
+  border-left: 3px solid var(--inactif); border-radius: var(--rayon-controle);
+}
+.telegram-ctl[data-tone="ok"] { border-left-color: var(--ok); }
+.telegram-ctl[data-tone="attention"] { border-left-color: var(--attention); }
+.telegram-ctl[data-tone="danger"] { border-left-color: var(--danger); }
+.telegram-ctl[hidden], .telegram-ctl-error[hidden] { display: none; }
+.telegram-ctl-state { display: flex; align-items: center; gap: 8px; margin: 0; font-size: var(--t-14); }
+.telegram-ctl-label { min-width: 0; overflow-wrap: anywhere; }
+.telegram-ctl-detail {
+  display: block; margin: 2px 0 0 18px; color: var(--texte-doux); font-size: var(--t-12); overflow-wrap: anywhere;
+}
+.telegram-ctl-error {
+  margin: 6px 0 0; padding: 6px 8px; font-size: var(--t-13); overflow-wrap: anywhere;
+  color: var(--texte); background: color-mix(in srgb, var(--danger) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 55%, var(--trait)); border-radius: var(--rayon-controle);
+}
+.telegram-ctl-error::before { content: "Problème : "; font-weight: 600; color: var(--danger); }
+.telegram-ctl-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
+.telegram-log-dialog { width: min(720px, calc(100vw - 24px)); }
+.telegram-log {
+  margin: 0; max-height: min(50vh, 420px); overflow: auto; padding: 8px 10px; background: var(--sol);
+  border: 1px solid var(--trait); border-radius: var(--rayon-controle); color: var(--texte);
+  font-family: var(--police-mono); font-size: var(--t-12); line-height: 1.45; white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.telegram-log:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+@media (max-width: 720px) {
+  .telegram-ctl-actions .btn { flex: 1 1 auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .telegram-ctl .led-pulse { animation: none; }
+}

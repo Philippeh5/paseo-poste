@@ -1,0 +1,271 @@
+/* ── Chronologie : frise par machine ─────────────────────────────────────────
+   Toutes les couleurs sont des jetons de tokens.css ; aucune couleur en dur.   */
+
+/* ── Conteneur principal ────────────────────────────────────────────────────── */
+.chrono-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--police-ui);
+  background: var(--sol);
+  color: var(--texte);
+}
+
+/* ── Barre d'outils ─────────────────────────────────────────────────────────── */
+.chrono-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--panneau);
+  border-bottom: 1px solid var(--trait);
+  flex-shrink: 0;
+  min-height: 48px;
+}
+
+.chrono-toolbar h1 {
+  font-family: var(--police-titre);
+  font-size: var(--t-20);
+  font-weight: 600;
+  margin: 0;
+  margin-right: 8px;
+}
+
+.chrono-window-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.chrono-window-btns button {
+  font: inherit;
+  font-size: var(--t-12);
+  padding: 4px 10px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-controle);
+  background: var(--panneau-2);
+  color: var(--texte-doux);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.chrono-window-btns button:hover {
+  background: var(--accent-doux);
+  color: var(--texte);
+  border-color: var(--accent);
+}
+
+.chrono-window-btns button.is-active {
+  background: var(--accent-doux);
+  color: var(--accent);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.chrono-toolbar-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--trait);
+}
+
+.chrono-nav-btns {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.chrono-nav-btns button {
+  font: inherit;
+  font-size: var(--t-12);
+  padding: 4px 10px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-controle);
+  background: var(--panneau-2);
+  color: var(--texte-doux);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.chrono-nav-btns button:hover {
+  background: var(--accent-doux);
+  color: var(--texte);
+}
+
+/* ── Zone de dessin : règle collée en haut, puis étiquettes fixes + frise ────────── */
+.chrono-view { --chrono-label-w: 140px; }
+.chrono-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  position: relative;
+}
+.chrono-scroll:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.chrono-rulerrow {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  height: 28px;
+  background: var(--panneau);
+  border-bottom: 1px solid var(--trait);
+}
+.chrono-corner {
+  flex: none;
+  width: var(--chrono-label-w);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border-right: 1px solid var(--trait);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--texte-doux);
+}
+.chrono-tracksrow { display: flex; align-items: flex-start; min-height: calc(100% - 28px); }
+.chrono-canvas-box { flex: 1; min-width: 0; position: relative; }
+.chrono-ruler, .chrono-canvas { display: block; width: 100%; }
+.chrono-canvas { cursor: grab; touch-action: pan-y; }
+
+/* Étiquettes fixes à gauche */
+.chrono-labels {
+  flex: none;
+  width: var(--chrono-label-w);
+  border-right: 1px solid var(--trait);
+  background: var(--panneau);
+  align-self: stretch;
+}
+.chrono-label-list { overflow: hidden; }
+.chrono-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--trait);
+  cursor: default;
+  user-select: none;
+  background: var(--panneau);
+  box-sizing: border-box;
+}
+.chrono-label .led { flex-shrink: 0; }
+.chrono-label-name {
+  font-size: var(--t-13);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chrono-summary { margin-left: auto; font-size: var(--t-12); color: var(--texte-doux); }
+
+/* ── Infobulle ───────────────────────────────────────────────────────────────── */
+.chrono-tooltip {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  background: var(--panneau);
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-controle);
+  padding: 8px 12px;
+  font-size: var(--t-13);
+  max-width: 280px;
+  box-shadow: var(--ombre-fenetre);
+  line-height: 1.5;
+  display: none;
+}
+
+.chrono-tooltip.is-visible { display: block; }
+.chrono-tooltip strong { display: block; font-size: var(--t-14); margin-bottom: 2px; }
+.chrono-tooltip .tt-meta { color: var(--texte-doux); font-size: var(--t-12); }
+.chrono-tooltip .tt-status { margin-top: 4px; }
+
+/* ── Légende ─────────────────────────────────────────────────────────────────── */
+.chrono-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 6px 12px;
+  border-top: 1px solid var(--trait);
+  background: var(--panneau);
+  font-size: var(--t-12);
+  flex-shrink: 0;
+}
+
+.chrono-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--texte-doux);
+  white-space: nowrap;
+}
+
+/* Pastilles de statut */
+.chrono-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.chrono-dot.ok { background: var(--ok); }
+.chrono-dot.wait { background: var(--attention); }
+.chrono-dot.fail { background: var(--danger); }
+.chrono-dot.done { background: var(--inactif); }
+.chrono-marker-glyph { font-size: 12px; line-height: 1; }
+
+/* Formes des marqueurs (pour la légende et accessibilité) */
+.chrono-marker-legend {
+  display: inline-block;
+  width: 10px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* ── État vide ───────────────────────────────────────────────────────────────── */
+.chrono-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--texte-doux);
+  font-size: var(--t-14);
+  padding: 32px;
+  text-align: center;
+}
+
+.chrono-empty svg { opacity: 0.35; }
+
+/* ── Tableau récapitulatif accessible (masqué visuellement, lu par les lecteurs d'écran) ── */
+.chrono-sr-table {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Mobile ≤ 720 px ─────────────────────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .chrono-view { --chrono-label-w: 84px; }
+  .chrono-toolbar { padding: 8px; gap: 6px; }
+  .chrono-summary { margin-left: 0; flex-basis: 100%; }
+  .chrono-hint { display: none; }
+  .chrono-toolbar h1 { font-size: var(--t-16); }
+  .chrono-window-btns button { padding: 3px 7px; }
+}
+
+/* ── Réduction de mouvement ──────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .led-pulse { animation: none !important; }
+}

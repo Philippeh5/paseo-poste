@@ -1,0 +1,75 @@
+/* Jetons du poste de commande : thème sombre par défaut, thème clair redéfini.
+   Le thème suit prefers-color-scheme ; l'attribut data-theme sur <html> le force. */
+:root {
+  color-scheme: dark;
+  --sol: #0e1218;
+  --panneau: #151b24;
+  --panneau-2: #1b232f;
+  --trait: #2a3442;
+  --texte: #e6ebf2;
+  --texte-doux: #98a4b5;
+  --accent: #6cb6ff;
+  --accent-doux: rgba(108, 182, 255, 0.16);
+  --ok: #4cc38a;
+  --attention: #e5a93b;
+  --danger: #f0686a;
+  --inactif: #6b778a;
+  --sur-accent: #0e1218;
+  --ombre-fenetre: 0 10px 30px rgba(0, 0, 0, 0.45);
+
+  --police-titre: "Bricolage Grotesque", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --police-ui: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --police-mono: "JetBrains Mono", "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
+
+  --t-12: 12px;
+  --t-13: 13px;
+  --t-14: 14px;
+  --t-16: 16px;
+  --t-20: 20px;
+  --t-28: 28px;
+
+  --pas: 4px;
+  --rayon-controle: 6px;
+  --rayon-fenetre: 10px;
+  --haut-barre: 52px;
+  --larg-rail: 264px;
+  --larg-tiroir: 400px;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --sol: #eef1f5;
+  --panneau: #ffffff;
+  --panneau-2: #f4f6f9;
+  --trait: #d5dbe4;
+  --texte: #18202b;
+  --texte-doux: #566274;
+  --accent: #1f6fd1;
+  --accent-doux: rgba(31, 111, 209, 0.16);
+  --ok: #17803d;
+  --attention: #a15c00;
+  --danger: #c0262d;
+  --inactif: #8893a3;
+  --sur-accent: #ffffff;
+  --ombre-fenetre: 0 10px 28px rgba(24, 32, 43, 0.18);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --sol: #eef1f5;
+    --panneau: #ffffff;
+    --panneau-2: #f4f6f9;
+    --trait: #d5dbe4;
+    --texte: #18202b;
+    --texte-doux: #566274;
+    --accent: #1f6fd1;
+    --accent-doux: rgba(31, 111, 209, 0.16);
+    --ok: #17803d;
+    --attention: #a15c00;
+    --danger: #c0262d;
+    --inactif: #8893a3;
+    --sur-accent: #ffffff;
+    --ombre-fenetre: 0 10px 28px rgba(24, 32, 43, 0.18);
+  }
+}

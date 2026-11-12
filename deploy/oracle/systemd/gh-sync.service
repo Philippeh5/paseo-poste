@@ -1,0 +1,5 @@
+[Unit]
+Description=Synchronisation GitHub des projets
+[Service]
+Type=oneshot
+ExecStart=/bin/bash %h/Projets/bin/gh-sync %h/Projets Bot_Stage "Automatisation PME" TelegramAssistant BlastWin paseo-lab TestAgentMode VentureOS

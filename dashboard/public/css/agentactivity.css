@@ -1,0 +1,47 @@
+/* « Activité de l'agent » (T29) : panneau flottant du Mode Agent et section de la Chronologie. */
+.agentactivity-panel {
+  position: fixed; z-index: 35; left: calc(var(--larg-rail) + 16px); bottom: 16px;
+  width: min(420px, calc(100vw - var(--larg-rail) - 32px)); max-height: 46vh; display: flex; flex-direction: column;
+  background: var(--panneau); border: 1px solid var(--trait); border-radius: var(--rayon-fenetre);
+  box-shadow: var(--ombre-fenetre); color: var(--texte); font-size: var(--t-13);
+}
+.agentactivity-panel[hidden] { display: none; }
+.agentactivity-toggle {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 8px 12px;
+  background: none; border: 0; color: inherit; font: inherit; cursor: pointer; text-align: left;
+}
+.agentactivity-toggle strong { font-size: var(--t-13); }
+.agentactivity-chevron::before { content: "▾"; color: var(--texte-doux); }
+.agentactivity-panel.is-collapsed .agentactivity-chevron::before { content: "▸"; }
+.agentactivity-panel.is-collapsed .agentactivity-list { display: none; }
+.agentactivity-list {
+  list-style: none; margin: 0; padding: 0 4px 6px; overflow: auto; border-top: 1px solid var(--trait);
+}
+.agentactivity-item { display: flex; gap: 10px; align-items: baseline; padding: 5px 8px; border-radius: var(--rayon-controle); }
+.agentactivity-item + .agentactivity-item { border-top: 1px solid color-mix(in srgb, var(--trait) 50%, transparent); }
+.agentactivity-time { flex: none; min-width: 84px; color: var(--texte-doux); font-size: var(--t-12); white-space: nowrap; }
+.agentactivity-text { min-width: 0; overflow-wrap: anywhere; }
+.agentactivity-item.is-refused { color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.agentactivity-item.is-refused .agentactivity-time { color: inherit; }
+.agentactivity-empty { padding: 8px; color: var(--texte-doux); }
+
+/* Section dans la vue Chronologie. */
+.agentactivity-section {
+  flex: none; display: flex; flex-direction: column; max-height: 32%; margin: 8px 16px 12px;
+  border: 1px solid var(--trait); border-radius: var(--rayon-fenetre); background: var(--panneau);
+}
+.agentactivity-section h2 { margin: 0; padding: 8px 12px; font-size: var(--t-14); }
+.agentactivity-section .agentactivity-list { flex: 1; min-height: 0; padding-top: 4px; }
+
+@media (max-width: 720px) {
+  .agentactivity-panel { left: 8px; right: 8px; width: auto; bottom: calc(68px + env(safe-area-inset-bottom, 0px)); max-height: 40vh; }
+}
+
+/* La Chronologie affiche déjà la liste : le panneau flottant s'efface pour ne pas la recouvrir. */
+body:has(.agentactivity-section) .agentactivity-panel { display: none; }
+
+/* Bureau : le dock (fenêtres réduites, FreeBuff) est en bas de la vue ; le panneau flottant se place au-dessus au lieu de le recouvrir. */
+body:has(.desk-dock:not([hidden])) .agentactivity-panel { bottom: 72px; max-height: 38vh; }
+@media (max-width: 720px) {
+  body:has(.desk-dock:not([hidden])) .agentactivity-panel { bottom: calc(124px + env(safe-area-inset-bottom, 0px)); max-height: 30vh; }
+}

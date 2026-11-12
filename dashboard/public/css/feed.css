@@ -1,0 +1,271 @@
+/* Fil d'agent lisible : réflexions repliées, en-têtes structurés, outils discrets. */
+
+.agent-panel-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 6px 12px;
+  background: var(--panneau-2);
+  border-bottom: 1px solid var(--trait);
+  flex: none;
+}
+
+.agent-toggle-reasoning {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--t-12);
+  color: var(--texte-doux);
+  cursor: pointer;
+  user-select: none;
+}
+
+.agent-toggle-reasoning input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.agent-toggle-reasoning:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--rayon-controle);
+}
+
+/* Bloc Réflexion (<details>) */
+details.thread-reasoning {
+  max-width: 100%;
+  border-radius: var(--rayon-controle);
+  background: var(--panneau-2);
+  border: 1px solid var(--trait);
+  padding: 6px 10px;
+  color: var(--texte-doux);
+  font-size: var(--t-12);
+  transition: background 0.12s ease;
+}
+
+details.thread-reasoning[open] {
+  background: color-mix(in srgb, var(--panneau-2) 85%, var(--sol));
+}
+
+details.thread-reasoning summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  outline: none;
+  list-style: none;
+  font-size: var(--t-12);
+}
+
+details.thread-reasoning summary::-webkit-details-marker {
+  display: none;
+}
+
+details.thread-reasoning summary::before {
+  content: "▸";
+  display: inline-block;
+  font-size: 11px;
+  color: var(--texte-doux);
+  transition: transform 0.15s ease;
+}
+
+details.thread-reasoning[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details.thread-reasoning summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.thread-reasoning-title {
+  color: var(--texte);
+  font-weight: 600;
+  flex: none;
+}
+
+.thread-reasoning-preview {
+  color: var(--texte-doux);
+  font-size: var(--t-11);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.thread-reasoning-body {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--trait);
+}
+
+.thread-reasoning-text {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  font-family: var(--police-mono);
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--texte-doux);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+/* En-tête des messages Agent et Utilisateur */
+.thread-msg-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.thread-msg-header .who {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.thread-msg-header .who-agent {
+  color: var(--accent);
+}
+
+.thread-msg-header .who-user {
+  color: var(--accent);
+}
+
+.thread-agent-name {
+  font-size: 11px;
+  color: var(--texte-doux);
+}
+
+.thread-model-badge {
+  font-size: 10px;
+  line-height: 1.2;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--accent-doux);
+  color: var(--accent);
+  font-family: var(--police-mono);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.thread-item.thread-assistant_message {
+  max-width: 95%;
+  background: var(--panneau-2);
+  border: 1px solid var(--trait);
+  border-left: 3px solid var(--accent);
+}
+
+.thread-item.thread-user_message {
+  max-width: 90%;
+  align-self: flex-end;
+  background: var(--accent-doux);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* Outils en lignes discrètes repliables */
+details.thread-tool {
+  max-width: 100%;
+  background: transparent;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-controle);
+  padding: 4px 8px;
+  font-size: var(--t-12);
+}
+
+details.thread-tool[open] {
+  background: var(--panneau-2);
+}
+
+details.thread-tool.is-failed {
+  border-color: var(--danger);
+}
+
+details.thread-tool summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  outline: none;
+  color: var(--texte-doux);
+  font-size: var(--t-12);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  list-style: none;
+}
+
+details.thread-tool summary::-webkit-details-marker {
+  display: none;
+}
+
+details.thread-tool summary::before {
+  content: "▸";
+  display: inline-block;
+  font-size: 10px;
+  color: var(--texte-doux);
+  transition: transform 0.15s ease;
+}
+
+details.thread-tool[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details.thread-tool summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.thread-tool-label {
+  font-family: var(--police-mono);
+  font-size: 11px;
+  color: var(--texte);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.thread-tool-status {
+  font-size: 10px;
+  color: var(--texte-doux);
+  margin-left: auto;
+  flex: none;
+}
+
+.thread-tool-body {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--trait);
+}
+
+.thread-tool-body pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  color: var(--texte-doux);
+  font-family: var(--police-mono);
+  font-size: 11px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+/* Mobile 390 px */
+@media (max-width: 720px) {
+  .thread-item {
+    max-width: 100% !important;
+  }
+}

@@ -1,0 +1,203 @@
+/* ============================================================
+   Barre de widgets : lanceurs rapides au-dessus du Bureau.
+   Utilise exclusivement les jetons de tokens.css.
+   ============================================================ */
+
+/* ---------- Conteneur principal ---------- */
+.widget-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--panneau);
+  border-bottom: 1px solid var(--trait);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  flex-shrink: 0;
+  min-height: 40px;
+  max-height: 40px;
+  position: relative;
+}
+.widget-bar::-webkit-scrollbar { display: none; }
+
+/* Indicateur de défilement latéral */
+.widget-bar-fade-right {
+  pointer-events: none;
+  position: absolute;
+  right: 36px;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  background: linear-gradient(to right, transparent, var(--panneau));
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.widget-bar.has-overflow .widget-bar-fade-right { opacity: 1; }
+
+/* ---------- Boutons de widget ---------- */
+.widget-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px 4px 7px;
+  background: var(--panneau-2);
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-controle);
+  color: var(--texte);
+  font: 400 var(--t-13) var(--police-ui);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color 0.12s, background 0.12s;
+  outline: none;
+  user-select: none;
+}
+.widget-btn:hover { border-color: var(--accent); background: var(--accent-doux); }
+.widget-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.widget-btn:active { opacity: 0.82; }
+.widget-btn.is-dragging-source { opacity: 0.4; }
+.widget-btn.is-drag-over { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-doux); }
+
+.widget-btn .btn-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--texte-doux);
+  flex-shrink: 0;
+}
+.widget-btn .btn-icon svg { width: 14px; height: 14px; }
+
+/* ---------- Bouton « Modifier la barre » ---------- */
+.widget-bar-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin-left: auto;
+  flex-shrink: 0;
+  position: sticky; /* reste visible quand la barre défile (390 px) */
+  right: 0;
+  background: var(--panneau);
+  border: 1px solid transparent;
+  border-radius: var(--rayon-controle);
+  color: var(--texte-doux);
+  cursor: pointer;
+  outline: none;
+  transition: color 0.12s, border-color 0.12s;
+}
+.widget-bar-edit-btn:hover { color: var(--texte); border-color: var(--trait); }
+.widget-bar-edit-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.widget-bar-edit-btn .btn-icon svg { width: 14px; height: 14px; }
+
+/* ---------- Dialogue « Modifier la barre » ---------- */
+.widget-editor {
+  width: min(520px, calc(100vw - 24px));
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  color: var(--texte);
+  background: var(--panneau);
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-fenetre);
+  box-shadow: var(--ombre-fenetre);
+}
+.widget-editor::backdrop { background: color-mix(in srgb, var(--sol) 70%, transparent); }
+
+.widget-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--trait);
+}
+.widget-editor-head h2 { font-size: var(--t-16); margin: 0; }
+
+.widget-editor-body {
+  overflow-y: auto;
+  max-height: calc(100dvh - 48px - 56px - 52px);
+  padding: 8px 0;
+}
+
+.widget-editor-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px 14px;
+  border-top: 1px solid var(--trait);
+}
+.widget-editor-foot .btn-add { margin-right: auto; }
+
+/* ---------- Liste de widgets dans l'éditeur ---------- */
+.widget-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 8px;
+  display: grid;
+  gap: 4px;
+}
+
+.widget-item {
+  display: grid;
+  grid-template-columns: 20px auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--panneau-2);
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-controle);
+  font-size: var(--t-13);
+  cursor: default;
+}
+.widget-item.is-dragging { opacity: 0.4; }
+.widget-item.is-drag-over { border-color: var(--accent); }
+.widget-item-handle {
+  cursor: grab;
+  color: var(--texte-doux);
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+}
+.widget-item-handle:active { cursor: grabbing; }
+.widget-item-icon { color: var(--texte-doux); display: inline-flex; align-items: center; }
+.widget-item-icon svg { width: 14px; height: 14px; }
+.widget-item-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.widget-item-type { color: var(--texte-doux); font-size: var(--t-12); font-family: var(--police-mono); }
+.widget-item.is-hidden { opacity: 0.5; }
+.widget-item.is-hidden .widget-item-label { text-decoration: line-through; }
+
+.widget-item-actions { display: flex; gap: 4px; }
+
+/* ---------- Formulaire d'édition d'un widget ---------- */
+.widget-form {
+  display: grid;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--panneau);
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-controle);
+  margin: 8px;
+}
+.widget-form-row { display: grid; gap: 4px; }
+.widget-form label { font-size: var(--t-12); color: var(--texte-doux); font-weight: 500; }
+.widget-form-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.widget-form-dyn { display: grid; gap: 12px; }
+.widget-form-foot { display: flex; gap: 8px; justify-content: flex-end; }
+.widget-form input[type="text"], .widget-form select { width: 100%; }
+.widget-editor-foot { flex-wrap: wrap; }
+
+/* ---------- Responsive 390 px ---------- */
+@media (max-width: 720px) {
+  .widget-bar { padding: 4px; gap: 4px; }
+  .widget-btn { padding: 4px 8px 4px 6px; font-size: var(--t-12); }
+  .widget-form-cols { grid-template-columns: 1fr; }
+}
+
+/* ---------- Mouvement réduit ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .widget-btn, .widget-bar-fade-right { transition: none !important; }
+}

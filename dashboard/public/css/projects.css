@@ -1,0 +1,106 @@
+/* Projets suivis, navigateur de dossiers, menu et fenêtres GitHub. Couleurs : uniquement les jetons de tokens.css. */
+
+/* ---------- Rail : barre d'outils, appel à l'action, ligne d'état ---------- */
+.proj-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 8px; padding: 0 8px 8px; }
+.proj-cta {
+  margin: 0 8px 10px; padding: 10px; border: 1px dashed var(--trait); border-radius: var(--rayon-controle);
+  background: var(--panneau-2); display: grid; gap: 8px; font-size: var(--t-13); color: var(--texte-doux);
+}
+.proj-cta .btn { justify-self: start; }
+.proj-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 0 8px 4px 14px; font-size: var(--t-12); color: var(--texte-doux); }
+.proj-branch { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proj-flag { padding: 0 6px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--trait); font-size: 11px; }
+.proj-swatch { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.rail-project-head .icon-btn[aria-expanded="true"] { color: var(--texte); background: var(--panneau-2); border-color: var(--trait); }
+
+/* Pastille GitHub : forme (voyant) + texte, jamais la couleur seule. */
+.gh-pill {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 22px; padding: 0 8px 0 6px; border-radius: 999px;
+  border: 0; background: var(--panneau-2); color: var(--texte); font-size: 11px; font-weight: 600; cursor: pointer;
+  box-shadow: inset 0 0 0 1px var(--trait);
+}
+.gh-pill:hover { box-shadow: inset 0 0 0 1px var(--accent); }
+.gh-linked { color: var(--ok); }
+.gh-disconnected { color: var(--attention); }
+.gh-unlinked, .gh-unknown { color: var(--texte-doux); }
+
+/* ---------- Menu contextuel ---------- */
+.menu {
+  position: fixed; z-index: 70; min-width: 220px; max-width: calc(100vw - 16px); padding: 4px; display: grid;
+  background: var(--panneau); border: 1px solid var(--trait); border-radius: var(--rayon-fenetre); box-shadow: var(--ombre-fenetre);
+}
+.menu hr { width: 100%; height: 0; margin: 4px 0; border: 0; border-top: 1px solid var(--trait); }
+.menu-item {
+  display: flex; align-items: center; min-height: 34px; padding: 4px 10px; text-align: left; border: 0; border-radius: var(--rayon-controle);
+  background: transparent; color: var(--texte); font-size: var(--t-13); cursor: pointer;
+}
+.menu-item:hover:not(:disabled), .menu-item:focus-visible { background: var(--accent-doux); }
+.menu-item:disabled { color: var(--texte-doux); opacity: 0.55; cursor: not-allowed; }
+.menu-item.is-danger { color: var(--danger); }
+
+/* ---------- Navigateur de dossiers ---------- */
+.fp-dialog { width: min(640px, calc(100vw - 24px)); }
+.fp-body { display: grid; gap: 10px; }
+.fp-top { display: grid; gap: 8px; }
+.fp-host { display: grid; gap: 4px; max-width: 260px; }
+.fp-roots { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  min-height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--trait); background: var(--panneau-2);
+  color: var(--texte); font-size: var(--t-12); cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.chip:hover { border-color: var(--accent); }
+.fp-crumbs ol { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.fp-crumbs li { display: inline-flex; align-items: center; min-width: 0; }
+.fp-crumbs li + li::before { content: "›"; color: var(--texte-doux); padding: 0 2px; }
+.crumb {
+  min-height: 28px; padding: 0 6px; border: 0; border-radius: var(--rayon-controle); background: transparent; color: var(--accent);
+  font-size: var(--t-13); cursor: pointer; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.crumb:hover { background: var(--accent-doux); }
+.crumb[aria-current="location"] { color: var(--texte); font-weight: 600; }
+.fp-path { display: flex; gap: 6px; }
+.fp-path input { min-width: 0; flex: 1; }
+.fp-list {
+  margin: 0; padding: 4px; list-style: none; height: min(320px, 38dvh); overflow-y: auto; background: var(--sol);
+  border: 1px solid var(--trait); border-radius: var(--rayon-controle);
+}
+.fp-item, .qs-item {
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 4px 8px; border: 0; border-radius: var(--rayon-controle);
+  background: transparent; color: var(--texte); text-align: left; cursor: pointer; font-size: var(--t-13);
+}
+.fp-item:hover, .qs-item:hover { background: var(--panneau-2); }
+.fp-icon { display: inline-flex; color: var(--accent); flex: none; }
+.fp-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fp-empty { padding: 12px 8px; font-size: var(--t-13); }
+.fp-info { min-height: 1.2em; font-size: var(--t-12); }
+.fp-new { display: flex; gap: 6px; }
+.fp-new input { min-width: 0; flex: 1; }
+.fp-foot { flex-wrap: wrap; }
+.fp-foot > .btn:first-child { margin-right: auto; }
+.tag {
+  padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 600; color: var(--texte-doux);
+  box-shadow: inset 0 0 0 1px var(--trait); flex: none;
+}
+.tag-git { color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.qs-list { margin: 0; padding: 4px; list-style: none; max-height: min(340px, 42dvh); overflow-y: auto; background: var(--sol); border: 1px solid var(--trait); border-radius: var(--rayon-controle); }
+.qs-item input { width: 16px; height: 16px; accent-color: var(--accent); flex: none; }
+
+/* ---------- Fenêtres GitHub ---------- */
+.gh-dialog { width: min(520px, calc(100vw - 24px)); }
+.gh-dialog .dialog-body { display: grid; gap: 10px; }
+.gh-message { padding: 8px 10px; border-radius: var(--rayon-controle); background: var(--panneau-2); font-size: var(--t-13); }
+.gh-message.warn { border-left: 3px solid var(--attention); }
+.gh-message.error { border-left: 3px solid var(--danger); color: var(--danger); }
+.gh-sentence { font-size: var(--t-16); font-weight: 600; line-height: 1.35; padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--accent-doux); border-radius: var(--rayon-controle); }
+.gh-help pre { margin: 6px 0; padding: 8px 10px; background: var(--sol); border: 1px solid var(--trait); border-radius: var(--rayon-controle); overflow-x: auto; }
+.gh-files { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 160px; overflow-y: auto; }
+.gh-files li { display: flex; justify-content: space-between; gap: 8px; }
+.gh-files small { color: var(--texte-doux); flex: none; }
+.gh-form .field { margin: 6px 0; }
+
+@media (max-width: 720px) {
+  .fp-dialog, .gh-dialog { width: calc(100vw - 16px); }
+  .fp-list { height: 34dvh; }
+  .fp-foot .btn { flex: 1 1 auto; }
+  .menu { min-width: 200px; }
+}

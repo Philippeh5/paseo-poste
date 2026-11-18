@@ -438,10 +438,10 @@ Poste vu d'ici : http://127.0.0.1:7070   Dossier personnel : C:\Users\Philippe
 [hermes] EXÉCUTER (sauvegarde avant)
     hermes mcp add paseo-coord --command "C:\Program Files\nodejs\node.exe" --env PASEO_COORD_URL=http://127.0.0.1:7070 --args D:\Projets\AI-OS\paseo-poste\tools\paseo-coord-mcp.mjs
 [claude] MANUEL   claude mcp add --scope user paseo-coord --env PASEO_COORD_URL=http://127.0.0.1:7070 -- "C:\Program Files\nodejs\node.exe" D:\Projets\AI-OS\paseo-poste\tools\paseo-coord-mcp.mjs
-[wsl] MANUEL      wsl.exe -- hermes mcp add paseo-coord --command node --env PASEO_COORD_URL=http://<TAILSCALE_IP>:7070 --args /mnt/d/Projets/AI-OS/paseo-poste/tools/paseo-coord-mcp.mjs
+[wsl] MANUEL      wsl.exe -- hermes mcp add paseo-coord --command node --env PASEO_COORD_URL=http://100.64.0.1:7070 --args /mnt/d/Projets/AI-OS/paseo-poste/tools/paseo-coord-mcp.mjs
 [oracle] MANUEL   ssh … 'mkdir -p ~/paseo-coord' ; scp tools/paseo-coord-mcp.mjs tools/coord-lib.mjs tools/coord.mjs … ;
                   ssh … 'cd ~/paseo-coord && npm install @modelcontextprotocol/sdk@1.31.0' ;
-                  ssh … 'hermes mcp add paseo-coord --command node --env PASEO_COORD_URL=http://<TAILSCALE_IP>:7070 --args ~/paseo-coord/paseo-coord-mcp.mjs'
+                  ssh … 'hermes mcp add paseo-coord --command node --env PASEO_COORD_URL=http://100.64.0.1:7070 --args ~/paseo-coord/paseo-coord-mcp.mjs'
 ```
 
 - **FreeBuff** : exemple dans `tools/freebuff-mcp.example.json` (`{"mcpServers": {"paseo-coord": {"command": "node", "args": [".../tools/paseo-coord-mcp.mjs"], "env": {"PASEO_COORD_URL": "http://127.0.0.1:7070"}}}}`). L'emplacement lu par FreeBuff n'a pas pu être vérifié (test payant en Freebucks, non lancé).

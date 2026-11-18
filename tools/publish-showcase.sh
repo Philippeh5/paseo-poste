@@ -72,12 +72,14 @@ is_text() {
 sanitize() {
   local rel="$1" dst="$2"
   is_text "$rel" || return 0
+  # Placeholders VALIDES : des chevrons (<IP>) casseraient la syntaxe shell/JS des fichiers copiés
+  # et les tests qui vérifient le format d'une IP ou d'un nom d'hôte.
   sed -i \
-    -e 's|100\.78\.38\.61|<TAILSCALE_IP>|g' \
-    -e 's|100\.103\.172\.69|<TAILSCALE_IP>|g' \
-    -e 's|<WINDOWS_HOSTNAME>|<WINDOWS_HOSTNAME>|g' \
-    -e 's|<ORACLE_HOSTNAME>|<ORACLE_HOSTNAME>|g' \
-    -e 's|philippep\.business@gmail\.com|<email>@example.com|g' \
+    -e 's|100\.78\.38\.61|100.64.0.1|g' \
+    -e 's|100\.103\.172\.69|100.64.0.1|g' \
+    -e 's|example-windows-host|example-windows-host|g' \
+    -e 's|example-oracle-host|example-oracle-host|g' \
+    -e 's|philippep\.business@gmail\.com|user@example.com|g' \
     -e 's|paseo-poste|paseo-poste|g' \
     -e 's|DASHBOARD_TAILSCALE_USER=YOUR_USERNAME|DASHBOARD_TAILSCALE_USER=YOUR_USERNAME|g' \
     -e 's|DASHBOARD_SELF_HOST=YOUR_HOST_NAME|DASHBOARD_SELF_HOST=YOUR_HOST_NAME|g' \

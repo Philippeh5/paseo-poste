@@ -60,7 +60,7 @@ const FREQTRADE_DIR = "/home/USERNAME/Projets/freqtrade";
 const FREQTRADE_USERDIR = join(FREQTRADE_DIR, "user_data");
 const FREQTRADE_STRATEGY_DIR = join(FREQTRADE_USERDIR, "strategies");
 const FREQTRADE_BIN = join(FREQTRADE_DIR, ".venv", "bin", "freqtrade");
-const FREQTRADE_HOST = "<TAILSCALE_IP>"; // même adresse que les autres liens du poste (Tailscale)
+const FREQTRADE_HOST = "100.64.0.1"; // même adresse que les autres liens du poste (Tailscale)
 
 // Une variante de lancement par fichier de config : « config.json (port 8085) ».
 function freqtradeConfigModes() {
@@ -125,7 +125,7 @@ const WINDOWS_SERVICES = [
 // base que le PC : ils restent « optionnels » et ne se lancent qu'après décision explicite (jamais deux instances en production).
 const LINUX_SERVICES = [
   { id: "blastwin-frontend", group: "BlastWin", name: "Site (frontend, test)", cwd: join(BLASTWIN, "blastwin-frontend"),
-    port: 3100, url: "http://<TAILSCALE_IP>:3100", unit: "blastwin-frontend",
+    port: 3100, url: "http://100.64.0.1:3100", unit: "blastwin-frontend",
     modes: [{ id: "prod", label: "Production (port 3100)", cmd: "npm run build && node node_modules/next/dist/bin/next start -p 3100 -H 0.0.0.0" }] },
   { id: "blastwin-tunnel", group: "BlastWin", name: "Tunnel Cloudflare", cwd: BLASTWIN,
     match: ["cloudflared", "config.yml"],

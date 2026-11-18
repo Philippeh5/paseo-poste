@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 // Redirection du mini-PC vers LE poste de commande (Oracle) : un seul poste, plus de doublon qui prête à confusion.
-// Répond à toute requête par « 302 Location: http://<TAILSCALE_IP>:7070<chemin+requête> » (le navigateur garde le #fragment)
+// Répond à toute requête par « 302 Location: http://100.64.0.1:7070<chemin+requête> » (le navigateur garde le #fragment)
 // et une courte page en français avec le lien. Aucune dépendance.
 // Écoute : l'adresse Tailscale du PC (100.64.0.0/10) sur le port 7070, et aussi 127.0.0.1:7070 si ce port est libre
 // (il peut être tenu par un tunnel SSH vers Oracle : on n'échoue jamais pour ça). Si Tailscale n'a pas encore d'adresse au démarrage
 // (ouverture de session), on écoute d'abord sur 127.0.0.1 puis on la recherche toutes les 30 s et on écoute dessus dès qu'elle apparaît.
-// Variables : POSTE_URL (cible, défaut http://<TAILSCALE_IP>:7070), REDIRECT_LISTEN (« hôte:port », remplace l'écoute par défaut).
+// Variables : POSTE_URL (cible, défaut http://100.64.0.1:7070), REDIRECT_LISTEN (« hôte:port », remplace l'écoute par défaut).
 import http from "node:http";
 import { networkInterfaces } from "node:os";
 import { fileURLToPath } from "node:url";
 
-export const DEFAULT_TARGET = "http://<TAILSCALE_IP>:7070";
+export const DEFAULT_TARGET = "http://100.64.0.1:7070";
 
 /** Adresse Tailscale (CGNAT 100.64.0.0/10) de cette machine, ou null. */
 export function tailscaleIp(ifaces = networkInterfaces()) {

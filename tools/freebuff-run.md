@@ -3,7 +3,7 @@ Lance FreeBuff dans un vrai terminal PTY du daemon Paseo, tape l'invite, renvoie
 Usage (depuis `paseo-poste`, resout `@getpaseo/client` via `node_modules`):
 `node tools/freebuff-run.mjs --cwd <dossier> --prompt "<texte>" [--url ws://127.0.0.1:6767/ws] [--password-file f] [--wait-seconds 90] [--keep] [--terminal-id <id>] [--json] [--command freebuff] [--debug]`
 Code retour 0 = reponse terminee detectee, 1 = echec/timeout (l'ecran est quand meme imprime). `--json`: {terminalId, ready, completed, killed, reply, screen, error}.
-Hote Oracle (verifie 2026-11-07): le daemon ecoute sur l'adresse Tailscale, pas sur 127.0.0.1 : `--url ws://<TAILSCALE_IP>:6767/ws`, mot de passe via `PASEO_PASSWORD` (lu automatiquement, ou `FREEBUFF_DAEMON_PASSWORD` / `--password-file`).
+Hote Oracle (verifie 2026-11-07): le daemon ecoute sur l'adresse Tailscale, pas sur 127.0.0.1 : `--url ws://100.64.0.1:6767/ws`, mot de passe via `PASEO_PASSWORD` (lu automatiquement, ou `FREEBUFF_DAEMON_PASSWORD` / `--password-file`).
 `--terminal-id <id>` : suite dans un FreeBuff deja ouvert (1er tour avec `--keep`, tours suivants avec l'id ; le dernier sans `--keep` tue le terminal). Verifie : 'retiens 4721' puis question suivante -> `4721`.
 Delai avant saisie : 10 s par defaut (`FREEBUFF_SETTLE_MS`) ; plus court, la saisie est parfois avalee.
 

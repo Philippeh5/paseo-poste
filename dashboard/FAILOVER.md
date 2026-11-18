@@ -17,7 +17,7 @@ téléphone / PC ──Tailscale──► dashboard + cerveau (Oracle)
 ```
 
 ## Prérequis (certains demandent une action de Philippe)
-1. Daemon du mini-PC joignable par Tailscale (écoute sur <TAILSCALE_IP>:6767), mot de passe, démarrage automatique
+1. Daemon du mini-PC joignable par Tailscale (écoute sur 100.64.0.1:6767), mot de passe, démarrage automatique
    (tâche planifiée Windows), pare-feu Windows limité à l'interface Tailscale.
 2. GitHub connecté sur Oracle (`gh auth login` — action de Philippe, je ne copie aucun jeton) + identité git.
 3. Dashboard installé sur Oracle (service utilisateur, écoute sur l'adresse Tailscale, `DASHBOARD_PASSWORD` obligatoire).

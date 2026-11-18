@@ -1,7 +1,7 @@
 ﻿# Démarre ce qui doit tourner sur ce PC à l'ouverture de session Windows (tâche planifiée « PosteDeCommande »).
 # - Toujours : le daemon Paseo (:6767, local) — il exécute les sessions de ce PC ; le tunnel inverse vers Oracle n'est pas géré ici (voir plus bas).
 # - Poste de commande (PC principal) : le dashboard (:7070 + écouteur Tailscale).
-# - Mini-PC « ouvrier » (COMPUTERNAME = <WINDOWS_HOSTNAME>, ou POSTE_ROLE=ouvrier) : PAS de dashboard (le poste unique est sur Oracle) ;
+# - Mini-PC « ouvrier » (COMPUTERNAME = example-windows-host, ou POSTE_ROLE=ouvrier) : PAS de dashboard (le poste unique est sur Oracle) ;
 #   à la place, tools\redirect-poste.mjs répond sur :7070 par une redirection vers Oracle. Voir deploy\mini-pc\README.md.
 # Ne relance que ce qui ne tourne pas.
 $ErrorActionPreference = 'Continue'
@@ -23,7 +23,7 @@ function OldDashboard {
   }
   return $null
 }
-$ouvrier = ($env:COMPUTERNAME -eq '<WINDOWS_HOSTNAME>') -or ($env:POSTE_ROLE -eq 'ouvrier')
+$ouvrier = ($env:COMPUTERNAME -eq 'example-windows-host') -or ($env:POSTE_ROLE -eq 'ouvrier')
 
 Set-Location $lab
 if (-not (Listening 6767)) {

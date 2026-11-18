@@ -123,7 +123,10 @@ export function redact(value) {
   if (typeof value === "object" && value !== null) {
     if (Array.isArray(value)) return value.map(redact);
     const out = {};
-    for (const [k, v] of Object.entries(value)) out[k] = redact(v);
+    const sensitive = /^(password|token|secret|api[_-]?key|authorization|mnemonic|private[_-]?key)$/i;
+    for (const [k, v] of Object.entries(value)) {
+      out[k] = sensitive.test(k) && typeof v === "string" ? `${v.slice(0, 4)}…` : redact(v);
+    }
     return out;
   }
   return String(value)

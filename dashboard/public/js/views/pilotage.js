@@ -244,7 +244,49 @@ function taskCard(t) {
     button("Journal", () => toggleLogs(`task-${t.id}`)),
     el("span", { class: "pilot-run-status", id: `status-${t.id}`, "aria-live": "polite" })));
   return el("article", { class: "pilot-card", id: `task-${t.id}` }, el("h3", {}, t.name), el("p", { class: "pilot-help" }, t.help), form,
+    el("div", { class: "pilot-session", id: `tasksession-${t.id}` }),
+    el("div", { class: "pilot-report", id: `taskreport-${t.id}` }),
     el("div", { class: "pilot-help", id: `taskhist-${t.id}` }), el("div", { id: `tasklog-${t.id}` }));
+}
+
+// Session EDHEC Alumni : prête, ou « en attente de toi » (captcha / reconnexion dans Chrome sur le bureau à distance).
+function renderSession(t) {
+  const box = document.getElementById(`tasksession-${t.id}`);
+  if (!box) return;
+  const s = t.session;
+  if (!s) { box.replaceChildren(); return; }
+  const wait = s.waiting;
+  box.className = `pilot-session ${wait ? "is-wait" : "is-ready"}`;
+  box.replaceChildren(el("strong", {}, wait
+    ? `En attente de toi : ${wait === "captcha" ? "valide le captcha" : "reconnecte-toi à EDHEC Alumni"} dans la fenêtre Chrome du bureau à distance`
+    : "Session EDHEC Alumni prête (Chrome gardé ouvert, connexion vérifiée toutes les 10 min)"),
+    ...(wait ? [el("span", { class: "pilot-help" }, " — le bot reprend tout seul dès que c'est fait.")] : []));
+}
+
+// Bilan du dernier lancement : ce qui s'est passé, les chiffres, l'action à faire, un bouton pour réessayer.
+function renderReport(t, running) {
+  const box = document.getElementById(`taskreport-${t.id}`);
+  if (!box) return;
+  const r = t.report;
+  const lastParams = t.lastRun?.params;
+  if (!r || running) { box.replaceChildren(); return; }
+  const icon = { ok: "OK ·", empty: "Rien trouvé ·", needs_action: "Action requise ·", error: "Erreur ·" }[r.status] || "";
+  const kids = [el("strong", {}, `${icon} ${r.headline}${r.dry_run ? " (essai à blanc : rien écrit)" : ""}`)];
+  if (r.details?.length) kids.push(el("ul", {}, r.details.map((d) => el("li", {}, d))));
+  if (r.action?.text) kids.push(el("p", { class: "pilot-report-action" }, `→ À faire : ${r.action.text}`));
+  if (r.suggestions?.length) {
+    kids.push(el("p", { class: "pilot-help" }, "Noms proches (clic = remplir le champ entreprise/pays) : ",
+      ...r.suggestions.map((s) => el("button", { class: "btn btn-sm", type: "button", style: "margin:0 4px 4px 0", onclick: () => {
+        const f = document.getElementById(`f-${t.id}-${/pays|bas|france|kingdom|singap|hong/i.test(s) ? "country" : "company"}`);
+        if (f) { f.value = s; f.focus(); }
+      } }, s))));
+  }
+  const retry = r.status === "needs_action" || r.status === "error";
+  if (retry && lastParams) kids.push(el("button", { class: "btn btn-sm btn-primary", type: "button",
+    title: "Relance exactement la même demande (après avoir réglé la connexion ou le captcha)",
+    onclick: () => call({ type: "svc.task.run", id: t.id, params: lastParams }) }, "↻ Réessayer"));
+  box.className = `pilot-report is-${r.status}`;
+  box.replaceChildren(...kids);
 }
 
 function updateTaskStatus(t) {
@@ -265,6 +307,8 @@ function updateTaskStatus(t) {
   }
   status.textContent = text;
   status.className = `pilot-run-status ${tone}`.trim();
+  renderSession(t);
+  renderReport(t, running);
   const hist = document.getElementById(`taskhist-${t.id}`);
   if (hist) hist.textContent = (t.history ?? []).length
     ? "Derniers lancements du bot : " + t.history.map((h) => `${h.label} ${ago(h.ended)} ${h.code === 0 ? "✓" : "✗"}`).join(" · ")
@@ -548,6 +592,38 @@ function requestData() {
   call({ type: "svc.data.query", dataset: data.dataset, q: data.q, facets: data.facets, marked: data.marked, offset: data.offset, limit: PAGE, ref: "pilot-data" });
 }
 
+// Filtre cumulable : plusieurs valeurs cochées (« ou »), champ de recherche en haut de la liste, filtres entre eux en « et ».
+const facetOpen = new Set();
+const facetQuery = {};
+let facetTimer = null;
+function facetPicker(key, f) {
+  const picked = Array.isArray(data.facets[key]) ? data.facets[key] : (data.facets[key] ? [data.facets[key]] : []);
+  const labelOf = (v) => (key === "status" ? (STATUS_LABEL[v] ?? v) : v);
+  const list = el("ul", { class: "pilot-facet-list" });
+  const paint = () => {
+    const q = (facetQuery[key] || "").toLowerCase();
+    const shown = f.values.filter((v) => !q || labelOf(v.value).toLowerCase().includes(q) || v.value.toLowerCase().includes(q));
+    list.replaceChildren(...(shown.length ? shown.map((v) => el("li", {}, el("label", {},
+      el("input", { type: "checkbox", checked: picked.includes(v.value), onchange: (e) => {
+        const cur = new Set(Array.isArray(data.facets[key]) ? data.facets[key] : (data.facets[key] ? [data.facets[key]] : []));
+        if (e.target.checked) cur.add(v.value); else cur.delete(v.value);
+        if (cur.size) data.facets[key] = [...cur]; else delete data.facets[key];
+        data.offset = 0; facetOpen.add(key);
+        clearTimeout(facetTimer); facetTimer = setTimeout(requestData, 250);
+      } }), ` ${labelOf(v.value)} `, el("span", { class: "pilot-detail" }, `(${v.count})`))))
+      : [el("li", { class: "pilot-detail" }, "Aucune valeur")]));
+  };
+  const search = el("input", { type: "search", class: "pilot-facet-search", placeholder: `Chercher (${f.values.length})…`, value: facetQuery[key] || "",
+    "aria-label": `Chercher dans ${f.label}`, oninput: (e) => { facetQuery[key] = e.target.value; paint(); } });
+  paint();
+  const clear = el("button", { class: "btn btn-sm", type: "button", disabled: !picked.length, onclick: () => { delete data.facets[key]; data.offset = 0; facetOpen.add(key); requestData(); } }, "Effacer");
+  const det = el("details", { class: "pilot-facet-pick", open: facetOpen.has(key) },
+    el("summary", { class: picked.length ? "has-value" : "" }, `${f.label}${picked.length ? ` · ${picked.length}` : ""}`),
+    el("div", { class: "pilot-facet-panel" }, search, list, clear));
+  det.addEventListener("toggle", () => { if (det.open) facetOpen.add(key); else facetOpen.delete(key); });
+  return det;
+}
+
 function renderData() {
   if (!els.data) return;
   const r = data.result;
@@ -557,10 +633,7 @@ function renderData() {
   const search = el("input", { type: "search", class: "pilot-search", id: "pilot-q", value: data.q, placeholder: "Rechercher (ville, entreprise, poste…)",
     "aria-label": "Rechercher", maxlength: 80 });
   search.addEventListener("keydown", (e) => { if (e.key === "Enter") { data.q = search.value.trim(); data.offset = 0; requestData(); } });
-  const filters = Object.entries(r?.facets ?? {}).map(([key, f]) => el("label", { class: "pilot-facet" }, el("span", {}, f.label),
-    el("select", { onchange: (e) => { if (e.target.value) data.facets[key] = e.target.value; else delete data.facets[key]; data.offset = 0; requestData(); } },
-      el("option", { value: "" }, "Tous"),
-      f.values.map((v) => el("option", { value: v.value, selected: data.facets[key] === v.value }, `${key === "status" ? (STATUS_LABEL[v.value] ?? v.value) : v.value} (${v.count})`)))));
+  const filters = Object.entries(r?.facets ?? {}).map(([key, f]) => facetPicker(key, f));
   if (r?.marks) {
     filters.push(el("label", { class: "pilot-facet" }, el("span", {}, "Traitement"),
       el("select", { onchange: (e) => { data.marked = e.target.value; data.offset = 0; requestData(); } },

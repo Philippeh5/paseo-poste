@@ -192,17 +192,17 @@ if (part("a")) {
   section("a.1 : reconnaissance du bot (fonction pure, mêmes formes que le vrai poste)");
   const real = [
     { pid: 3832, ppid: 1, name: "sh", cmd: "/bin/sh" },
-    { pid: 2204, ppid: 3832, name: "sh", cmd: "sh /home/ubuntu/Projets/TelegramAssistant/start_telegram_assistant.sh" },
+    { pid: 2204, ppid: 3832, name: "sh", cmd: "sh /home/USERNAME/Projets/TelegramAssistant/start_telegram_assistant.sh" },
     { pid: 2848, ppid: 2204, name: "node", cmd: "node main.js" },
     { pid: 11572, ppid: 2848, name: "node", cmd: "node main.js" },
-    { pid: 9001, ppid: 1, name: "node", cmd: "node /home/ubuntu/autre/projet/main.js" },
-    { pid: 9002, ppid: 1, name: "cat", cmd: "cat /home/ubuntu/Projets/TelegramAssistant/main.js" },
-    { pid: 9003, ppid: 1, name: "node", cmd: "node /home/ubuntu/Projets/TelegramAssistant2/.venv/bin/node main.js" },
-    { pid: 9004, ppid: 1, name: "node", cmd: "node -e x /home/ubuntu/Projets/TelegramAssistant/notmain.js" },
+    { pid: 9001, ppid: 1, name: "node", cmd: "node /home/USERNAME/autre/projet/main.js" },
+    { pid: 9002, ppid: 1, name: "cat", cmd: "cat /home/USERNAME/Projets/TelegramAssistant/main.js" },
+    { pid: 9003, ppid: 1, name: "node", cmd: "node /home/USERNAME/Projets/TelegramAssistant2/.venv/bin/node main.js" },
+    { pid: 9004, ppid: 1, name: "node", cmd: "node -e x /home/USERNAME/Projets/TelegramAssistant/notmain.js" },
     { pid: 9005, ppid: 1, name: "node", cmd: "node main.js" },
     { pid: 9007, ppid: 1, name: "node", cmd: "node autre.js" },
   ];
-  const opts = { dir: "/home/ubuntu/Projets/TelegramAssistant", script: "main.js", hbPid: 11572, selfPid: 1 };
+  const opts = { dir: "/home/USERNAME/Projets/TelegramAssistant", script: "main.js", hbPid: 11572, selfPid: 1 };
   const f = findBot(real, opts);
   expect(json([...f.matched.keys()].sort((a, b) => a - b)) === "[2848,11572]", "forme réelle (ligne de commande relative, parent .sh) : 2848 et 11572 reconnus",
     json([...f.matched.keys()]));

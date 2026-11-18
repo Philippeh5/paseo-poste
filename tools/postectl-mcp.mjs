@@ -207,7 +207,7 @@ const TOOLS = [
     name: "post_open_terminal",
     destructive: false,
     description: "Ouvre un terminal sur une machine (par défaut oracle ; local = Mini PC) dans un dossier de projet, avec un outil : claude (Claude Code), freebuff, hermes, pi, codex, ou terminal (shell seul).",
-    schema: object({ host: HOST, cwd: str("Dossier du projet (ex. /home/ubuntu/Projets/BlastWin) ; sans lui : le dossier des projets de la machine"), tool: { type: "string", enum: ["terminal", "claude", "freebuff", "hermes", "pi", "codex"] } }),
+    schema: object({ host: HOST, cwd: str("Dossier du projet (ex. /home/USERNAME/Projets/BlastWin) ; sans lui : le dossier des projets de la machine"), tool: { type: "string", enum: ["terminal", "claude", "freebuff", "hermes", "pi", "codex"] } }),
     run: (a) => ["POST", "/terminals", { host: a.host, cwd: a.cwd, tool: a.tool || "terminal" }],
   },
   {

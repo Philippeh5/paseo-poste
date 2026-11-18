@@ -13,7 +13,7 @@
 param([Parameter(Mandatory = $true)][string]$At)
 
 $when = [datetime]::Parse($At, [System.Globalization.CultureInfo]::InvariantCulture)
-$script = 'D:\Projets\AI-OS\paseo-lab\tools\resume-autopilot.ps1'
+$script = 'D:\Projets\AI-OS\paseo-poste\tools\resume-autopilot.ps1'
 $arg = "-NoProfile -ExecutionPolicy Bypass -File `"$script`""
 
 foreach ($pair in @(@('ClaudeAutopilotResume-A', $when), @('ClaudeAutopilotResume-B', $when.AddMinutes(45)))) {
@@ -25,6 +25,6 @@ foreach ($pair in @(@('ClaudeAutopilotResume-A', $when), @('ClaudeAutopilotResum
         -ExecutionTimeLimit (New-TimeSpan -Minutes 5)
     $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Limited
     Register-ScheduledTask -TaskName $name -Action $action -Trigger $trigger -Settings $settings -Principal $principal `
-        -Description 'Relance automatique de la session Claude (autopilot paseo-lab)' | Out-Null
+        -Description 'Relance automatique de la session Claude (autopilot paseo-poste)' | Out-Null
     '{0}: {1:yyyy-MM-dd HH:mm}' -f $name, $time
 }

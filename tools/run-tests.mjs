@@ -37,7 +37,7 @@ const run = async f => {
   try {
     const hostsDummy = join(tmp, "hosts.json");
     writeFileSync(hostsDummy, JSON.stringify({ hosts: [{ label: "local", url: "ws://127.0.0.1:9/ws" }] }));
-    // Dépôt bac à sable jetable (remplace D:/Projets/AI-OS/paseo-lab/sandbox-repo des suites écrites sous Windows).
+    // Dépôt bac à sable jetable (remplace D:/Projets/AI-OS/paseo-poste/sandbox-repo des suites écrites sous Windows).
     const sandbox = join(tmp, "sandbox-repo");
     mkdirSync(sandbox, { recursive: true });
     writeFileSync(join(sandbox, "README.md"), "# sandbox-repo\n");

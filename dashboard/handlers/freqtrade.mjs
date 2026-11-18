@@ -12,10 +12,10 @@ import {
 } from "node:fs";
 import { join, basename } from "node:path";
 
-const FREQTRADE_DIR = "/home/ubuntu/Projets/freqtrade";
+const FREQTRADE_DIR = "/home/USERNAME/Projets/freqtrade";
 const USERDIR = join(FREQTRADE_DIR, "user_data");
 const STRATEGY_DIR = join(USERDIR, "strategies");
-const LOG_DIR = join("/home/ubuntu/paseo-dash-data", "services-logs");
+const LOG_DIR = join("/home/USERNAME/paseo-dash-data", "services-logs");
 // Fichiers de donnees : <PAIR>-<TF>-<type>.feather dans user_data/data/<exchange>/<trading_mode>/.
 const DATA_ROOT = join(USERDIR, "data");
 const TF_MS = { "1m": 60000, "3m": 180000, "5m": 300000, "15m": 900000, "30m": 1800000, "1h": 3600000, "2h": 7200000, "4h": 14400000, "6h": 21600000, "8h": 28800000, "12h": 43200000, "1d": 86400000, "1w": 604800000 };

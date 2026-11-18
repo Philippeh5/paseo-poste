@@ -63,3 +63,25 @@
 
 /* Page « Modèles » : zone de filtre lisible */
 .pilot-databar input[type="search"] { min-width: min(320px, 100%); }
+.pilot-report { margin-top: 8px; font-size: var(--t-14, 14px); }
+.pilot-report:empty { display: none; }
+.pilot-report ul { margin: 4px 0 4px 18px; padding: 0; }
+.pilot-report.is-ok strong { color: var(--ok); }
+.pilot-report.is-empty strong, .pilot-report.is-needs_action strong { color: var(--attention); }
+.pilot-report.is-error strong { color: var(--danger, #c0392b); }
+.pilot-report-action { margin: 4px 0 8px; font-weight: 600; }
+.pilot-session { margin: 10px 0 4px; padding: 8px 12px; border-radius: 8px; border-left: 4px solid var(--ok); background: var(--panneau-2); font-size: var(--t-14, 14px); }
+.pilot-session.is-wait { border-left-color: var(--attention); }
+.pilot-report { padding: 10px 12px; border-radius: 8px; border-left: 4px solid var(--trait); background: var(--panneau-2); }
+.pilot-report.is-ok { border-left-color: var(--ok); }
+.pilot-report.is-empty, .pilot-report.is-needs_action { border-left-color: var(--attention); }
+.pilot-report.is-error { border-left-color: var(--danger, #c0392b); }
+.pilot-facet-pick { position: relative; }
+.pilot-facet-pick > summary { color: var(--texte); cursor: pointer; list-style: none; padding: 6px 10px; border: 1px solid var(--trait); border-radius: 8px; background: var(--panneau-2); font-size: var(--t-14, 14px); white-space: nowrap; }
+.pilot-facet-pick > summary.has-value { border-color: var(--accent, #2563eb); font-weight: 600; }
+.pilot-facet-panel { color: var(--texte); position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; min-width: 260px; max-width: 90vw; padding: 8px; display: grid; gap: 6px; border: 1px solid var(--trait); border-radius: 10px; background: var(--panneau-2); box-shadow: 0 8px 24px rgba(0,0,0,.18); }
+.pilot-facet-search { background: var(--panneau); color: var(--texte); border: 1px solid var(--trait); border-radius: 6px; min-height: 30px; width: 100%; padding: 6px 8px; box-sizing: border-box; }
+.pilot-facet-list { list-style: none; margin: 0; padding: 0; max-height: 260px; overflow: auto; }
+.pilot-facet-list li label { display: flex; gap: 4px; align-items: baseline; padding: 3px 2px; cursor: pointer; }
+
+.pilot-session, .pilot-report { color: var(--texte); }

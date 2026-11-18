@@ -181,7 +181,7 @@ expect(projErr && /projet/i.test(projErr.message), "Cap projet <= 200 car. respe
 const enableReply = await wsClient.rpc(
   {
     type: "agentmode.enable",
-    project: "paseo-lab",
+    project: "paseo-poste",
     brief: "Implémenter le Mode Agent T28",
     forbidden: ["supprimer", "pousser sur GitHub", "éteindre une machine"],
     ref: "g2",
@@ -190,7 +190,7 @@ const enableReply = await wsClient.rpc(
   "agentmode.enable valide"
 );
 expect(enableReply?.enabled === true, "agentmode.enable passe enabled à true");
-expect(enableReply?.project === "paseo-lab", "Projet correctement enregistré");
+expect(enableReply?.project === "paseo-poste", "Projet correctement enregistré");
 expect(enableReply?.brief === "Implémenter le Mode Agent T28", "Brief correctement enregistré");
 expect(enableReply?.forbidden?.length === 3, "3 interdictions enregistrées");
 expect(typeof enableReply?.since === "string" && enableReply.since.length > 0, "since renseigné (date ISO)");
@@ -223,7 +223,7 @@ expect(
 const savedPath = join(scratchDir, "agent-mode.json");
 expect(existsSync(savedPath), "Fichier agent-mode.json créé sur le disque");
 const diskJson = JSON.parse(readFileSync(savedPath, "utf8"));
-expect(diskJson.enabled === true && diskJson.project === "paseo-lab", "agent-mode.json contient l'état actif");
+expect(diskJson.enabled === true && diskJson.project === "paseo-poste", "agent-mode.json contient l'état actif");
 
 // (f) Relecture après redémarrage du serveur
 wsClient.ws.close();
@@ -239,7 +239,7 @@ const restoredReply = await wsClient.rpc(
   "agentmode.get après redémarrage"
 );
 expect(restoredReply?.enabled === true, "État enabled restauré après relecture du fichier");
-expect(restoredReply?.project === "paseo-lab", "Projet restauré après relecture du fichier");
+expect(restoredReply?.project === "paseo-poste", "Projet restauré après relecture du fichier");
 expect(restoredReply?.brief === "Implémenter le Mode Agent T28", "Brief restauré après relecture du fichier");
 expect(
   restoredReply?.answers?.some((a) => a.question === "Où exécuter les tests ?"),
@@ -258,7 +258,7 @@ const mandateBody = await mandateRes.json();
 expect(mandateBody.ok === true, "GET /api/v1/mandate payload ok = true");
 const mandate = mandateBody.data;
 expect(mandate.enabled === true, "Mandat enabled = true");
-expect(mandate.project === "paseo-lab", "Mandat project = 'paseo-lab'");
+expect(mandate.project === "paseo-poste", "Mandat project = 'paseo-poste'");
 expect(mandate.brief === "Implémenter le Mode Agent T28", "Mandat brief conforme");
 expect(Array.isArray(mandate.forbidden) && mandate.forbidden.includes("supprimer"), "Mandat forbidden contient 'supprimer'");
 
@@ -293,7 +293,7 @@ const postectlText = spawnSync(process.execPath, [postectlPath, "--url", BASE_UR
   encoding: "utf8",
 });
 expect(postectlText.status === 0, "postectl mandate termine avec code 0");
-expect(postectlText.stdout.includes("Mode Agent actif sur paseo-lab"), "postectl mandate affiche le projet actif");
+expect(postectlText.stdout.includes("Mode Agent actif sur paseo-poste"), "postectl mandate affiche le projet actif");
 expect(postectlText.stdout.includes("Interdictions : supprimer"), "postectl mandate affiche les interdictions");
 
 const postectlJson = spawnSync(process.execPath, [postectlPath, "--url", BASE_URL, "--json", "mandate"], {
@@ -301,7 +301,7 @@ const postectlJson = spawnSync(process.execPath, [postectlPath, "--url", BASE_UR
 });
 expect(postectlJson.status === 0, "postectl --json mandate termine avec code 0");
 const postectlParsed = JSON.parse(postectlJson.stdout.trim());
-expect(postectlParsed.enabled === true && postectlParsed.project === "paseo-lab", "postectl --json renvoie le mandat");
+expect(postectlParsed.enabled === true && postectlParsed.project === "paseo-poste", "postectl --json renvoie le mandat");
 
 // (e) Désactivation du mode Agent -> suppression autorisée avec confirm
 const disableReply = await wsClient.rpc(

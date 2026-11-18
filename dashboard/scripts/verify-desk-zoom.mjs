@@ -65,7 +65,7 @@ async function seedWindows(page) {
   await page.evaluate(() => {
     const list = window.__getWindows();
     list.length = 0;
-    const mk = (id, x, y) => ({ id, type: "terminal", host: "local", terminalId: `fake-${id}`, cwd: "D:/Projets/AI-OS/paseo-lab/sandbox-repo",
+    const mk = (id, x, y) => ({ id, type: "terminal", host: "local", terminalId: `fake-${id}`, cwd: "D:/Projets/AI-OS/paseo-poste/sandbox-repo",
       x, y, w: 360, h: 240, z: 10 + list.length, minimized: false, maximized: false });
     list.push(mk("t30-a", 40, 40), mk("t30-b", 460, 60), mk("t30-c", 200, 360));
     window.__changed("add");

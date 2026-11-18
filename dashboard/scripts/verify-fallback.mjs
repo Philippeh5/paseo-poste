@@ -28,7 +28,7 @@ mkdirSync(scratch, { recursive: true });
 const PORT = Number(process.env.VERIFY_PORT || 7089);
 if (PORT === 7070) throw new Error("VERIFY_PORT ne doit jamais être 7070 (serveur réel)");
 const SANDBOX = join(rootDir, "sandbox-repo");
-const P = "D:/Projets/AI-OS/paseo-lab/fake-proj";
+const P = "D:/Projets/AI-OS/paseo-poste/fake-proj";
 const X = "claude-openrouter/sonnet";
 const NVIDIA = "claude-nvidia/sonnet";
 const PI = "pi/nvidia-proxy/nvidia/nemotron-3-ultra-550b-a55b";

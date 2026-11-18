@@ -5,7 +5,7 @@ import { ApiError } from "./agentapi.mjs";
 import { SELF_HOST } from "../lib/selfhost.mjs";
 
 // Dossier des projets par machine, utilisé quand aucun projet n'est précisé.
-const ROOTS = { oracle: "/home/ubuntu/Projets", local: "D:/Projets" };
+const ROOTS = { oracle: "/home/USERNAME/Projets", local: "D:/Projets" };
 const TOOLS = { terminal: "", claude: "claude", freebuff: "freebuff", hermes: "hermes", pi: "pi", codex: "codex" };
 const START_DELAY_MS = 1500;
 

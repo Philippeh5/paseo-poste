@@ -41,7 +41,7 @@ function locateHostsFile() {
 const PORT = Number(process.env.VERIFY_PORT || 7099);
 if (PORT === 7070) throw new Error("VERIFY_PORT ne doit jamais être 7070 (serveur réel)");
 const SANDBOX = join(rootDir, "sandbox-repo");
-const P = "D:/Projets/AI-OS/paseo-lab/fake-proj";
+const P = "D:/Projets/AI-OS/paseo-poste/fake-proj";
 const ENGINE = "claude-openrouter/sonnet";
 const PONG = "Reply with the single word PONG and do nothing else.";
 

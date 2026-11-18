@@ -18,7 +18,7 @@ const url = process.env.DASHBOARD_VERIFY_URL || "ws://127.0.0.1:7070/ui";
 const origin = new URL(url).origin.replace("ws:", "http:").replace("wss:", "https:");
 const daemonUrl = process.env.PASEO_LOCAL_URL || "ws://127.0.0.1:6767/ws";
 const here = fileURLToPath(new URL(".", import.meta.url));
-const SANDBOX = process.env.VERIFY_SANDBOX || "D:/Projets/AI-OS/paseo-lab/sandbox-repo";
+const SANDBOX = process.env.VERIFY_SANDBOX || "D:/Projets/AI-OS/paseo-poste/sandbox-repo";
 const HELLO = join(SANDBOX, "hello.txt");
 
 const fail = (message) => { throw new Error(message); };

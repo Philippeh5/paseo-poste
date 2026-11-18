@@ -49,7 +49,7 @@ Les boutons `clarify` sont limités à 4 choix : propose les 4 actions les plus 
 - **Projets** : liste ceux de la machine choisie (`host` = `oracle` pour Oracle, `local` pour Mini PC), les favoris (champ `starred`) d'abord.
   Boutons `clarify` limités à 4 : montre les 3 premiers + « Autres projets… » qui affiche les suivants.
 - Si Philippe te donne déjà la machine ou le projet dans sa phrase, ne repose pas la question.
-- Dossier par défaut si aucun projet n'est précisé : `/home/ubuntu/Projets` (Oracle) ou `D:\Projets` (Mini PC).
+- Dossier par défaut si aucun projet n'est précisé : `/home/USERNAME/Projets` (Oracle) ou `D:\Projets` (Mini PC).
 
 ## Déléguer aux groupes (règle de Philippe)
 Tu es le chef d'orchestre : tu **ne fais pas le travail toi-même**. Pour toute vraie demande (coder, corriger, chercher, tester, modifier des

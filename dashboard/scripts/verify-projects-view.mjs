@@ -25,7 +25,7 @@ const url = process.env.DASHBOARD_VERIFY_URL || "ws://127.0.0.1:7070/ui";
 const httpUrl = url.replace("ws:", "http:").replace("wss:", "https:").replace("/ui", "");
 const origin = httpUrl;
 const daemonUrl = process.env.PASEO_LOCAL_URL || "ws://127.0.0.1:6767/ws";
-const SANDBOX = process.env.VERIFY_SANDBOX || "D:/Projets/AI-OS/paseo-lab/sandbox-repo";
+const SANDBOX = process.env.VERIFY_SANDBOX || "D:/Projets/AI-OS/paseo-poste/sandbox-repo";
 
 let totalTests = 0;
 let passedTests = 0;
@@ -92,7 +92,7 @@ try {
   ws.send(JSON.stringify({ type: "project.list" }));
   const initialProjectsMsg = await waitForWs((m) => m.type === "project.list", "project.list initial");
   const existingSandbox = (initialProjectsMsg.projects || []).find(
-    (p) => p.host === "local" && (p.dir === SANDBOX || p.dir === "D:\\Projets\\AI-OS\\paseo-lab\\sandbox-repo")
+    (p) => p.host === "local" && (p.dir === SANDBOX || p.dir === "D:\\Projets\\AI-OS\\paseo-poste\\sandbox-repo")
   );
 
   if (!existingSandbox) {

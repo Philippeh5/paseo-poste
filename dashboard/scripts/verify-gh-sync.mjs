@@ -76,7 +76,7 @@ try {
   write(roots.A, "seed.txt", "1\nX\n");
   write(roots.A, "src/a.js", "a\nb\nc\n"); write(roots.A, "docs/a.js", "a\nb\n"); write(roots.A, "b.txt", "x\n");
   writeFileSync(join(roots.A, "proj", "bin.dat"), Buffer.from([0, 1, 2, 0, 255, 0]));
-  sync(roots.A, { host: "instance-20261008-1451" });
+  sync(roots.A, { host: "<ORACLE_HOSTNAME>" });
   const subject = git(origin, "log", "-n", "1", "--format=%s", "main");
   expect(subject === "sync oracle : b.txt, bin.dat, docs/a.js (+2 autres) · +7 −4", "sujet : machine, 3 fichiers, (+N autres), +A −D (binaire = 0)", subject);
   expect(originLog().startsWith("Philippe (auto-sync)|"), "auteur « Philippe (auto-sync) »", originLog());
@@ -85,15 +85,15 @@ try {
   expect(/^M\tseed\.txt$/m.test(body) && /^A\tsrc\/a\.js$/m.test(body), "corps : statut + chemin complet", body);
   expect(subject.includes("docs/a.js") && !subject.includes("src/a.js,"), "noms les plus courts mais uniques (deux a.js -> dossier/a.js)");
 
-  sync(roots.B, { host: "WIN-3LLN0L8LRLM" });
+  sync(roots.B, { host: "<WINDOWS_HOSTNAME>" });
   expect(existsSync(join(roots.B, "proj", "src", "a.js")) && readIf(join(roots.B, "proj", "seed.txt")) === "1\nX\n", "A -> origin -> B après un passage de chaque côté");
   write(roots.B, "notes.md", "bonjour\n");
-  const sB = sync(roots.B, { host: "WIN-3LLN0L8LRLM" });
+  const sB = sync(roots.B, { host: "<WINDOWS_HOSTNAME>" });
   expect(git(origin, "log", "-n", "1", "--format=%s", "main") === "sync mini-pc : notes.md · +1 −0", "nom d'hôte Windows -> « mini-pc »", git(origin, "log", "-n", "1", "--format=%s", "main"));
-  sync(roots.A, { host: "instance-20261008-1451" });
+  sync(roots.A, { host: "<ORACLE_HOSTNAME>" });
   expect(readIf(join(roots.A, "proj", "notes.md")) === "bonjour\n", "B -> origin -> A");
   const nb = git(join(roots.A, "proj"), "rev-list", "--count", "HEAD");
-  sync(roots.A, { host: "instance-20261008-1451" }); sync(roots.B, { host: "WIN-3LLN0L8LRLM" });
+  sync(roots.A, { host: "<ORACLE_HOSTNAME>" }); sync(roots.B, { host: "<WINDOWS_HOSTNAME>" });
   expect(git(join(roots.A, "proj"), "rev-list", "--count", "HEAD") === nb, "passage sans changement : aucun commit");
   const logA = readIf(join(roots.A, ".gh-sync.log"));
   expect((logA.match(/commit \(/g) || []).length === 1, "journal : une seule ligne de commit (pas de bruit)", logA);
@@ -120,14 +120,14 @@ try {
   expect(messages().length === 0, "aucune alerte pour des problèmes de moins de 10 minutes");
 
   section("Mode branche : CI verte, rouge persistante, annulée");
-  const C = { host: "instance-20261008-1451", machine: "oracle", branch: true };
+  const C = { host: "<ORACLE_HOSTNAME>", machine: "oracle", branch: true };
   const T0 = 1_800_000_000;
   sync(roots.C, { ...C, now: T0 }); // met C à jour (récupère les commits de A/B) ; rien à publier
   write(roots.C, "ok.txt", "vert\n");
   writeFileSync(ghState, "completed/success");
   sync(roots.C, { ...C, now: T0 });
   expect(git(origin, "rev-parse", "main") === git(join(roots.C, "proj"), "rev-parse", "HEAD"), "CI verte : main avancé en avance rapide");
-  expect(git(origin, "branch", "--list", "sync/*").includes("sync/instance-20261008-1451"), "publication sur sync/<hôte>");
+  expect(git(origin, "branch", "--list", "sync/*").includes("sync/<ORACLE_HOSTNAME>"), "publication sur sync/<hôte>");
   expect(messages().length === 0, "CI verte : aucune alerte");
 
   write(roots.C, "casse.txt", "rouge\n");
@@ -297,9 +297,9 @@ try {
   expect(ps.every((b) => b[0] === 0xef && b[1] === 0xbb) && /wscript\.exe/.test(ps[0].toString()) && /Windows|SW_HIDE|, 0, True/.test(ps[0].toString()), "scripts PowerShell : BOM UTF-8, lanceur masqué via wscript");
 
   section("Redirection du mini-PC");
-  expect(tailscaleIp({ eth0: [{ family: "IPv4", address: "192.168.1.5" }], ts: [{ family: "IPv4", address: "100.103.172.69" }] }) === "100.103.172.69"
+  expect(tailscaleIp({ eth0: [{ family: "IPv4", address: "192.168.1.5" }], ts: [{ family: "IPv4", address: "<TAILSCALE_IP>" }] }) === "<TAILSCALE_IP>"
     && tailscaleIp({ a: [{ family: "IPv4", address: "100.128.0.1" }, { family: "IPv4", address: "100.63.0.1" }] }) === null, "détection de l'adresse 100.64.0.0/10");
-  expect(redirectLocation("http://100.78.38.61:7070/", "/a/b?x=1&y=2") === "http://100.78.38.61:7070/a/b?x=1&y=2", "redirectLocation : chemin + requête");
+  expect(redirectLocation("http://<TAILSCALE_IP>:7070/", "/a/b?x=1&y=2") === "http://<TAILSCALE_IP>:7070/a/b?x=1&y=2", "redirectLocation : chemin + requête");
   const port = await freePort();
   const child = spawn(process.execPath, [join(repo, "tools", "redirect-poste.mjs")], { env: { ...process.env, REDIRECT_LISTEN: `127.0.0.1:${port}` }, stdio: ["ignore", "pipe", "pipe"] });
   let out = ""; child.stdout.on("data", (d) => (out += d)); child.stderr.on("data", (d) => (out += d));
@@ -308,9 +308,9 @@ try {
     expect(out.includes("redirection"), "le serveur de redirection démarre", out.slice(0, 200));
     const get = (path) => new Promise((resolve, reject) => http.get({ host: "127.0.0.1", port, path }, (res) => { let b = ""; res.on("data", (d) => (b += d)); res.on("end", () => resolve({ res, b })); }).on("error", reject));
     const { res, b } = await get("/projets/x?tab=2&q=%C3%A9");
-    expect(res.statusCode === 302 && res.headers.location === "http://100.78.38.61:7070/projets/x?tab=2&q=%C3%A9", "302 vers Oracle avec chemin + requête", `${res.statusCode} ${res.headers.location}`);
-    expect(/lang="fr"/.test(b) && b.includes("http://100.78.38.61:7070/projets/x"), "page HTML française avec le lien", b.slice(0, 120));
-    expect((await get("/")).res.headers.location === "http://100.78.38.61:7070/", "racine -> http://100.78.38.61:7070/");
+    expect(res.statusCode === 302 && res.headers.location === "http://<TAILSCALE_IP>:7070/projets/x?tab=2&q=%C3%A9", "302 vers Oracle avec chemin + requête", `${res.statusCode} ${res.headers.location}`);
+    expect(/lang="fr"/.test(b) && b.includes("http://<TAILSCALE_IP>:7070/projets/x"), "page HTML française avec le lien", b.slice(0, 120));
+    expect((await get("/")).res.headers.location === "http://<TAILSCALE_IP>:7070/", "racine -> http://<TAILSCALE_IP>:7070/");
   } finally { child.kill(); }
   {
     // Tailscale sans adresse au démarrage : réessais périodiques, écoute dès qu'elle apparaît, arrêt des essais ensuite

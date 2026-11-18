@@ -69,7 +69,7 @@ export function validatePath(raw, { local = false } = {}) {
   else if (text.startsWith("/") && !text.startsWith("//")) flavor = "posix";
   else if (text.startsWith("\\\\") || text.startsWith("//")) {
     throw new FsError("invalid_path", "Les chemins réseau (UNC) ne sont pas pris en charge.");
-  } else throw new FsError("invalid_path", "Chemin absolu requis (par exemple D:\\Projets ou /home/ubuntu).");
+  } else throw new FsError("invalid_path", "Chemin absolu requis (par exemple D:\\Projets ou /home/USERNAME).");
   if (local && flavor !== (process.platform === "win32" ? "win32" : "posix")) {
     throw new FsError("invalid_path", "Ce chemin n’a pas le format de cette machine.");
   }

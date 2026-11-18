@@ -2,7 +2,7 @@
   "mcpServers": {
     "paseo-coord": {
       "command": "node",
-      "args": ["D:/Projets/AI-OS/paseo-lab/tools/paseo-coord-mcp.mjs"],
+      "args": ["D:/Projets/AI-OS/paseo-poste/tools/paseo-coord-mcp.mjs"],
       "env": {
         "PASEO_COORD_URL": "http://127.0.0.1:7070"
       }

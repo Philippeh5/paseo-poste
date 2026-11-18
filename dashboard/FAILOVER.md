@@ -12,12 +12,12 @@ daemon Paseo. Le mini-PC peut s'éteindre sans rien perdre: les tâches, les mis
 téléphone / PC ──Tailscale──► dashboard + cerveau (Oracle)
                                    │            │
                          daemon Paseo Oracle   daemon Paseo mini-PC (écoute sur l'adresse Tailscale, mot de passe)
-                         projets /home/ubuntu  projets D:\Projets
+                         projets /home/USERNAME  projets D:\Projets
                                    └────── GitHub ──────┘  (les deux machines tirent/poussent les mêmes dépôts)
 ```
 
 ## Prérequis (certains demandent une action de Philippe)
-1. Daemon du mini-PC joignable par Tailscale (écoute sur 100.103.172.69:6767), mot de passe, démarrage automatique
+1. Daemon du mini-PC joignable par Tailscale (écoute sur <TAILSCALE_IP>:6767), mot de passe, démarrage automatique
    (tâche planifiée Windows), pare-feu Windows limité à l'interface Tailscale.
 2. GitHub connecté sur Oracle (`gh auth login` — action de Philippe, je ne copie aucun jeton) + identité git.
 3. Dashboard installé sur Oracle (service utilisateur, écoute sur l'adresse Tailscale, `DASHBOARD_PASSWORD` obligatoire).
@@ -31,7 +31,7 @@ première erreur (rien ne s'éteint si une étape échoue):
 2. **Arrêt doux** des agents en cours (fin de tour, ou arrêt après un délai choisi); les sessions interrompues sont notées.
 3. **Sauvegarde Git**: sur chaque projet, commit « Transfert vers Oracle <date> » sur une branche `transfert/<date>`
    (jamais sur `main`), puis push vers GitHub.
-4. **Mise en place sur Oracle**: clone ou pull de chaque dépôt dans `/home/ubuntu/projets/<nom>`, bascule sur la branche.
+4. **Mise en place sur Oracle**: clone ou pull de chaque dépôt dans `/home/USERNAME/projets/<nom>`, bascule sur la branche.
 5. **Reprise des tâches**: les tâches du mini-PC sont réaffectées à Oracle avec une invite de reprise (objectif,
    dernier commit, ce qui était fait, fichiers modifiés, erreurs vues) et redémarrées.
 6. **Extinction du mini-PC** après une dernière confirmation (« Le mini-PC va s'éteindre dans 60 secondes »; annulable).

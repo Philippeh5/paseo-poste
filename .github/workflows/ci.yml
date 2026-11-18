@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+# Les pushes successifs ne doivent pas empiler les exécutions.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # Le dépôt public ne versionne pas package-lock.json : installation sans lockfile.
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright-core install --with-deps chromium
+      - run: npm test -- --jobs=1

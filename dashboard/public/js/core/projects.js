@@ -4,7 +4,7 @@
 // projectsToolbar(), projectsHint(), projectsSignature().
 import { el, icons, iconEl, led, readPref, writePref } from "./util.js";
 import { send, on, onConnection } from "./socket.js";
-import { setStateExtra, sameDir, getState } from "./state.js";
+import { setStateExtra, sameDir, getState, isProjectFolder } from "./state.js";
 import { toast } from "./toast.js";
 import { openTerminalInFolder } from "./deskstore.js";
 import { openFolderPicker, rpc, FOLDER_ICON } from "../components/folderPicker.js";
@@ -32,8 +32,10 @@ const trackedFor = (host, dir) => tracked.find((p) => p.host === host && sameDir
 
 function publish() {
   version += 1;
-  const useFilter = loaded && !showAll && tracked.length > 0;
-  setStateExtra("followedProjects", useFilter ? tracked.map((p) => ({ host: p.host, directory: p.dir, name: p.name })) : null);
+  // Toujours transmettre la liste suivie : le mode « Afficher tous les projets » s'en sert pour garder les
+  // projets de Philippe en tête. Avant, il recevait null et ne voyait que les workspaces du daemon.
+  setStateExtra("followedProjects", tracked.map((p) => ({ host: p.host, directory: p.dir, name: p.name })));
+  setStateExtra("showAllProjects", showAll);
   for (const fn of listeners) fn();
 }
 
@@ -52,13 +54,36 @@ export const projectsHint = () =>
   showAll && tracked.length ? "Tous les projets sont affichés." : !tracked.length ? "Tous les projets (aucun choix fait)." : "";
 
 // Pour le lanceur : ne garde que les projets suivis (et ajoute ceux qui n'ont pas encore d'espace de travail).
+// Dans les deux modes, les workspaces parasites (worktrees, dossier personnel, racine des projets, /tmp…) sont
+// écartés et les doublons de casse fusionnés, sinon le même projet apparaissait plusieurs fois.
+const keyDir = (d) => String(d || "").replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
+function cleanWorkspaces(workspaces) {
+  const seen = new Set();
+  const out = [];
+  for (const w of workspaces) {
+    if (!w?.directory || !isProjectFolder(w.directory)) continue;
+    const key = keyDir(w.directory);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(w);
+  }
+  return out;
+}
+
 export function visibleWorkspaces(host, workspaces) {
-  if (!loaded || showAll || !tracked.length) return workspaces;
   const wanted = tracked.filter((p) => p.host === host);
-  const kept = workspaces.filter((w) => wanted.some((p) => sameDir(p.dir, w.directory)));
+  // Reprend le nom choisi dans « Projets suivis » plutôt que celui deviné par le daemon (FreqTrade vs freqtrade).
+  const named = (w) => {
+    const tr = wanted.find((p) => sameDir(p.dir, w.directory));
+    return tr?.name ? { ...w, name: tr.name } : w;
+  };
+  const clean = cleanWorkspaces(workspaces).map(named);
   const extra = wanted
-    .filter((p) => !kept.some((w) => sameDir(p.dir, w.directory)))
+    .filter((p) => !clean.some((w) => sameDir(p.dir, w.directory)))
     .map((p) => ({ workspaceId: null, name: p.name, directory: p.dir }));
+  if (!loaded || !tracked.length) return clean;
+  if (showAll) return [...extra, ...clean];
+  const kept = clean.filter((w) => wanted.some((p) => sameDir(p.dir, w.directory)));
   return [...kept, ...extra];
 }
 

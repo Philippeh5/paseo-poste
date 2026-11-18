@@ -56,11 +56,11 @@ const SCAN_TTL_MS = 3_000;
 // l'un à l'autre : chaque config est donc une variante de lancement du service, et son port (lu dans le fichier) sert
 // à l'état « en marche » comme au bouton Ouvrir. Le bot qui trade est un autre processus (`freqtrade trade`) : eux
 // deux ne peuvent pas tenir le même port en même temps, d'où l'avertissement.
-const FREQTRADE_DIR = "/home/ubuntu/Projets/freqtrade";
+const FREQTRADE_DIR = "/home/USERNAME/Projets/freqtrade";
 const FREQTRADE_USERDIR = join(FREQTRADE_DIR, "user_data");
 const FREQTRADE_STRATEGY_DIR = join(FREQTRADE_USERDIR, "strategies");
 const FREQTRADE_BIN = join(FREQTRADE_DIR, ".venv", "bin", "freqtrade");
-const FREQTRADE_HOST = "100.78.38.61"; // même adresse que les autres liens du poste (Tailscale)
+const FREQTRADE_HOST = "<TAILSCALE_IP>"; // même adresse que les autres liens du poste (Tailscale)
 
 // Une variante de lancement par fichier de config : « config.json (port 8085) ».
 function freqtradeConfigModes() {
@@ -125,7 +125,7 @@ const WINDOWS_SERVICES = [
 // base que le PC : ils restent « optionnels » et ne se lancent qu'après décision explicite (jamais deux instances en production).
 const LINUX_SERVICES = [
   { id: "blastwin-frontend", group: "BlastWin", name: "Site (frontend, test)", cwd: join(BLASTWIN, "blastwin-frontend"),
-    port: 3100, url: "http://100.78.38.61:3100", unit: "blastwin-frontend",
+    port: 3100, url: "http://<TAILSCALE_IP>:3100", unit: "blastwin-frontend",
     modes: [{ id: "prod", label: "Production (port 3100)", cmd: "npm run build && node node_modules/next/dist/bin/next start -p 3100 -H 0.0.0.0" }] },
   { id: "blastwin-tunnel", group: "BlastWin", name: "Tunnel Cloudflare", cwd: BLASTWIN,
     match: ["cloudflared", "config.yml"],
@@ -294,12 +294,13 @@ function taskDefs() {
         { key: "format", label: "Format", type: "select", options: ["csv", "md"], value: "csv" },
       ] },
     { id: "alumni-build", bot: "alumni", name: "Repérer des alumni",
-      help: "Lance le repérage EDHEC Alumni (sans ouvrir de fiche) : un préréglage OU une entreprise et/ou un pays.",
+      help: "Importe dans la base les alumni EDHEC en poste (un préréglage OU une entreprise et/ou un pays) : tous, ou seulement ceux dont l'e-mail perso est disponible (case à cocher, vérification ~5 s par personne).",
       fields: [
         { key: "preset", label: "Préréglage", type: "select", options: ["", ...listPresets()], value: "" },
+        { key: "sector", label: "Secteur (un LLM gratuit propose les entreprises)", type: "text", placeholder: "quant, fintech, hedge funds…", value: "" },
         { key: "company", label: "Entreprise (nom exact)", type: "text", placeholder: "OPTIVER", value: "" },
         { key: "country", label: "Pays de l'entreprise", type: "text", placeholder: "Pays-Bas", value: "" },
-        { key: "dry", label: "Essai à blanc (n'écrit rien)", type: "check", value: true },
+        { key: "perso", label: "Seulement les contacts avec e-mail perso (décoché : tous les contacts, import rapide)", type: "check", value: true },
       ] },
     { id: "pme-scout", bot: "pme", name: "Chercher des PME (métier + ville)",
       help: "Découvre des entreprises depuis les sources publiques (SIRENE, sites web). Ex. « plomberie chauffage Lille ».",
@@ -357,10 +358,11 @@ function buildTask(id, params = {}) {
   if (id === "alumni-build") {
     const argv = [PYTHON, ...py, "bot/build_db.py"];
     if (val.preset) argv.push("--preset", val.preset);
+    if (val.sector) argv.push("--sector", val.sector);
     if (val.company) argv.push("--company", val.company);
     if (val.country) argv.push("--country", val.country);
     if (argv.length === 3) throw new Error("choisis un préréglage, une entreprise ou un pays");
-    if (val.dry) argv.push("--dry-run");
+    if (val.perso) argv.push("--perso-only"); // coché : on vérifie chaque personne et on garde celles avec e-mail perso ; toujours en réel
     return { cwd: BOT_STAGE, argv };
   }
   if (id === "pme-scout") {
@@ -383,8 +385,9 @@ const DATASETS = {
     columns: [["fullname", "Nom"], ["current_company", "Entreprise"], ["current_title", "Poste"], ["current_city", "Ville"],
       ["current_country", "Pays"], ["promos", "Promo"], ["role_type", "Rôle"], ["linkedin_url", "LinkedIn"], ["mailto", "Mail"], ["cv", "CV à joindre"]],
     search: ["fullname", "current_company", "current_title", "current_city", "current_country", "parcours"],
-    facets: [{ key: "current_country", label: "Pays", col: "current_country" }, { key: "company_category", label: "Type d'entreprise", col: "company_category" },
-      { key: "role_type", label: "Rôle", col: "role_type" }],
+    facets: [{ key: "current_company", label: "Entreprise", col: "current_company" }, { key: "current_country", label: "Pays", col: "current_country" },
+      { key: "current_city", label: "Ville", col: "current_city" }, { key: "company_category", label: "Type d'entreprise", col: "company_category" },
+      { key: "role_type", label: "Rôle", col: "role_type" }, { key: "seniority", label: "Séniorité", col: "seniority" }],
     order: "fullname COLLATE NOCASE",
   },
   jobs: {
@@ -448,6 +451,12 @@ function loadCsv(file) {
 
 let readMarks = () => ({});
 
+// Un filtre accepte une valeur ou une liste (cumul « ou » dans un même filtre, « et » entre filtres).
+function facetVals(v) {
+  const list = Array.isArray(v) ? v : (typeof v === "string" && v ? [v] : []);
+  return list.filter((x) => typeof x === "string" && x).slice(0, 60).map((x) => x.slice(0, 120));
+}
+
 function queryCsv(ds, m) {
   const file = ds.file();
   if (!existsSync(file)) return { dataset: ds.id, available: false, reason: "Aucune donnée : lance d'abord une recherche.", rows: [], total: 0, facets: {} };
@@ -456,7 +465,7 @@ function queryCsv(ds, m) {
   const q = String(m.q ?? "").trim().toLowerCase().slice(0, 80);
   let rows = all;
   if (q) rows = rows.filter((r) => ds.search.some((k) => String(r[k] ?? "").toLowerCase().includes(q)));
-  for (const f of ds.facets) { const v = m.facets?.[f.key]; if (typeof v === "string" && v) rows = rows.filter((r) => String(r[f.key] ?? "") === v); }
+  for (const f of ds.facets) { const vs = facetVals(m.facets?.[f.key]); if (vs.length) { const low = vs.map((x) => x.toLowerCase()); rows = rows.filter((r) => low.includes(String(r[f.key] ?? "").toLowerCase())); } }
   if (m.marked === "yes") rows = rows.filter((r) => marks[r[ds.idKey]]);
   if (m.marked === "no") rows = rows.filter((r) => !marks[r[ds.idKey]]);
   const limit = Math.max(1, Math.min(Number(m.limit) || 50, 200));
@@ -464,8 +473,8 @@ function queryCsv(ds, m) {
   const facets = {};
   for (const f of ds.facets) {
     const counts = new Map();
-    for (const r of all) { const v = String(r[f.key] ?? ""); if (v) counts.set(v, (counts.get(v) || 0) + 1); }
-    facets[f.key] = { label: f.label, values: [...counts].sort((a, b) => b[1] - a[1]).slice(0, 40).map(([value, count]) => ({ value, count })) };
+    const rep = new Map(); for (const r of all) { const raw = String(r[f.key] ?? ""); if (!raw) continue; const k = raw.toLowerCase(); if (!rep.has(k)) rep.set(k, raw); const v = rep.get(k); counts.set(v, (counts.get(v) || 0) + 1); }
+    facets[f.key] = { label: f.label, values: [...counts].sort((a, b) => b[1] - a[1]).slice(0, 1500).map(([value, count]) => ({ value, count })) };
   }
   const pick = ds.columns.map(([k]) => k);
   return { dataset: ds.id, available: true, columns: ds.columns, marks: true, total: rows.length, offset, limit, facets,
@@ -527,11 +536,11 @@ function queryDataset(m) {
       for (let i = 0; i < ds.search.length; i += 1) args.push(like);
     }
     for (const f of ds.facets) {
-      const v = m.facets?.[f.key];
-      if (typeof v === "string" && v) { where.push(`${f.col} = ?`); args.push(v.slice(0, 120)); }
+      const vs = facetVals(m.facets?.[f.key]);
+      if (vs.length) { where.push(`${f.col} COLLATE NOCASE IN (${vs.map(() => "?").join(",")})`); args.push(...vs); }
     }
     const mailIds = ds.id === "alumni" ? Object.keys(alumniMailto()).slice(0, 5000) : null;
-    if (mailIds && m.facets?.has_mail === "yes") {
+    if (mailIds && facetVals(m.facets?.has_mail).includes("yes")) {
       where.push(`profile_id IN (${mailIds.map(() => "?").join(",") || "NULL"})`);
       args.push(...mailIds);
     }
@@ -547,7 +556,7 @@ function queryDataset(m) {
     const facets = {};
     for (const f of ds.facets) {
       facets[f.key] = { label: f.label, values: db.prepare(
-        `SELECT ${f.col} AS v, COUNT(*) AS n FROM ${ds.from} WHERE ${f.col} IS NOT NULL AND ${f.col} <> '' GROUP BY 1 ORDER BY 2 DESC LIMIT 40`).all().map((r) => ({ value: String(r.v), count: r.n })) };
+        `SELECT MIN(${f.col}) AS v, COUNT(*) AS n FROM ${ds.from} WHERE ${f.col} IS NOT NULL AND ${f.col} <> '' GROUP BY ${f.col} COLLATE NOCASE ORDER BY 2 DESC LIMIT 1500`).all().map((r) => ({ value: String(r.v), count: r.n })) };
     }
     if (mailIds) facets.has_mail = { label: "Mail", values: [{ value: "yes", count: mailIds.length }] };
     const done = readMarks()[ds.id] || {};
@@ -569,6 +578,20 @@ function listFiles() {
     } catch { /* dossier absent */ }
   }
   return out.sort((x, y) => y.modifiedAt.localeCompare(x.modifiedAt));
+}
+
+// Bilan lisible du dernier repérage (écrit par Bot_Stage/bot/report.py) : statut, chiffres, action à faire, suggestions.
+function alumniSession() {
+  // État de la session EDHEC Alumni gardée par le gardien (Bot_Stage/bot/session_keeper.py) : prête, ou attend une action humaine.
+  let flag = null;
+  try { flag = JSON.parse(readFileSync(join(BOT_STAGE, "data", "human_needed.json"), "utf8")); } catch { /* pas de drapeau */ }
+  let last = "";
+  try { last = readFileSync(join(BOT_STAGE, "data", "session_keeper.log"), "utf8").trim().split("\n").slice(-1)[0] || ""; } catch { /* pas de journal */ }
+  return { waiting: flag ? flag.kind : null, since: flag?.since ? new Date(flag.since * 1000).toISOString() : null, last };
+}
+
+function alumniReport() {
+  try { return JSON.parse(readFileSync(join(BOT_STAGE, "data", "last_run.json"), "utf8")); } catch { return null; }
 }
 
 // ---------- Enregistrement ----------
@@ -674,7 +697,7 @@ export function register(ctx) {
       const r = runs.get(t.id);
       const last = stateFile()[`task:${t.id}`] || null;
       return { ...t, run: r ? { running: !r.endedAt, startedAt: iso(r.startedAt), endedAt: r.endedAt ? iso(r.endedAt) : null, code: r.code ?? null, error: r.error ?? null } : null,
-        lastRun: last, history: runHistory(t.bot) };
+        lastRun: last, history: runHistory(t.bot), report: t.id === "alumni-build" ? alumniReport() : null, session: t.id === "alumni-build" ? alumniSession() : null };
     });
     return { type: "svc.state", at: iso(), services: list, tasks, bots: BOTS, datasets: Object.values(DATASETS).map((d) => ({ id: d.id, name: d.name, available: existsSync(d.kind === "csv" ? d.file() : d.db()) })),
       files: listFiles() };
@@ -896,7 +919,7 @@ export function register(ctx) {
     };
     api("GET", "/services", async () => {
       const st = await buildState(true);
-      return { services: st.services, tasks: st.tasks.map((t) => ({ id: t.id, bot: t.bot, name: t.name, run: t.run, lastRun: t.lastRun, history: t.history })), bots: st.bots };
+      return { services: st.services, tasks: st.tasks.map((t) => ({ id: t.id, bot: t.bot, name: t.name, run: t.run, lastRun: t.lastRun, history: t.history, report: t.report, session: t.session })), bots: st.bots };
     });
     api("GET", "/services/:id/logs", async ({ params, query }) => {
       if (!byId(params.id)) throw bad("service inconnu", "not_found");

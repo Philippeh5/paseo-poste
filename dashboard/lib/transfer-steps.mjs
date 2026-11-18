@@ -6,7 +6,7 @@ import { join } from "node:path";
 
 export const DEFAULT_ORACLE_DISK_FREE = 193 * 1024 ** 3; // valeur de repli si la mesure est impossible
 export const MIN_ORACLE_FREE_REQUIRED = 2 * 1024 ** 3; // 2 Go minimum doivent rester après le clone
-export const ORACLE_PROJECTS_ROOT = "/home/ubuntu/projets";
+export const ORACLE_PROJECTS_ROOT = "/home/USERNAME/projets";
 export const TRANSFER_BRANCH_RE = /^(transfert|reprise)\/\d{8}-\d{4}$/;
 
 // ---------- Chemins ----------
@@ -21,7 +21,7 @@ export function normDir(dir) {
   return String(dir || "").trim().replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
 }
 
-// D:\Projets\X -> /home/ubuntu/projets/X ("" si le dossier est vide).
+// D:\Projets\X -> /home/USERNAME/projets/X ("" si le dossier est vide).
 export function translateProjectPath(dir) {
   const name = folderName(dir).replace(/[^A-Za-z0-9._ -]/g, "_");
   return name ? `${ORACLE_PROJECTS_ROOT}/${name}` : "";

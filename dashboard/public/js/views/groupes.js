@@ -528,7 +528,7 @@ function mount(container, context) {
         el("button", { type: "button", class: "btn btn-sm grp-back", dataset: { action: "grp-back" }, onclick: () => { selected = null; document.getElementById("grp")?.classList.remove("is-chat"); renderList(); renderChat(); } }, "← Groupes"),
         el("h2", {}, g.name),
         el("span", { class: "muted" }, hostLabel(g.host)),
-        tgLinks ? el("a", { class: "btn btn-sm", href: tgLinks[{ "paseo-lab": "paseo-lab", blastwin: "blastwin" }[String(g.name).toLowerCase()] || "general"] || "#", target: "_blank", rel: "noopener noreferrer",
+        tgLinks ? el("a", { class: "btn btn-sm", href: tgLinks[{ "paseo-poste": "paseo-poste", blastwin: "blastwin" }[String(g.name).toLowerCase()] || "general"] || "#", target: "_blank", rel: "noopener noreferrer",
           title: "Ouvrir la discussion de ce projet dans Telegram" }, "Telegram") : null,
         el("button", { type: "button", class: "btn btn-sm", id: "grp-brief-btn", dataset: { action: "brief-open" },
           title: "Fiche du projet (PASEO-PROJECT.md), lue par toutes les sessions", onclick: () => toggleBrief(g) },

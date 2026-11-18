@@ -1,7 +1,7 @@
 // Pont Telegram ↔ fil de groupe des projets (le fil du poste reste la vérité, Telegram n'en est que le miroir).
-//   Groupes : ~/paseo-dash-data/telegram-groups.json  { "paseo-lab"|"blastwin"|"general"|"notifications": { chatId } }
+//   Groupes : ~/paseo-dash-data/telegram-groups.json  { "paseo-poste"|"blastwin"|"general"|"notifications": { chatId } }
 //   Bot     : l'Orchestrateur (TG_BOT_ORCHESTRATEUR_TOKEN dans ~/.config/paseo/telegram-bots.env), seul à écouter.
-//   Un groupe = un seul fil (pas de sujets) : paseo-lab, blastwin, general (les autres projets), notifications (à autoriser, blocages).
+//   Un groupe = un seul fil (pas de sujets) : paseo-poste, blastwin, general (les autres projets), notifications (à autoriser, blocages).
 //   Sortie  : tout le fil du projet est copié dans son groupe (les échanges entre agents sans notification) ; les questions, décisions et blocages
 //             sont en plus envoyés dans le groupe « Notifications ». Le privé avec Jarvis reste géré par Hermes.
 //   Entrée  : un message de Philippe dans le groupe d'un projet est versé dans le fil de ce projet (coord.group.telegram) ; dans « general »,
@@ -52,7 +52,7 @@ export function register(ctx) {
   const echoed = new Map();          // texte venu de Telegram → heure : pas de renvoi vers Telegram
   const nameOfProject = (key) => {
     const base = basename(String(key || "").split("|").slice(1).join("|")).toLowerCase();
-    return base === "paseo-lab" ? "paseo-lab" : base === "blastwin" ? "blastwin" : "general";
+    return base === "paseo-poste" ? "paseo-poste" : base === "blastwin" ? "blastwin" : "general";
   };
   const projectTitle = (key) => basename(String(key || "").split("|").slice(1).join("|")) || "projet";
 
@@ -157,7 +157,7 @@ export function register(ctx) {
       if (!found) { await reply(m.chat.id, `Écris « NomDuProjet : message ». Projets : ${list.map((p) => p.name).join(", ")}.`); return; }
       target = found; text = hit[2].trim();
     } else {
-      const wanted = group === "paseo-lab" ? "paseo-lab" : "blastwin";
+      const wanted = group === "paseo-poste" ? "paseo-poste" : "blastwin";
       target = list.find((p) => String(p.name).toLowerCase() === wanted);
       if (!target) { await reply(m.chat.id, `Projet « ${wanted} » introuvable dans les projets suivis.`); return; }
     }

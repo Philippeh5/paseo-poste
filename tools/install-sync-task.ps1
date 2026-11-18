@@ -1,6 +1,6 @@
 ﻿# Installe (ou réinstalle, de façon idempotente) la synchronisation GitHub toutes les minutes sur le mini-PC Windows.
 # Crée la tâche planifiée « PosteSyncGitHub » : à l'ouverture de session puis toutes les minutes, sans fin, qui lance
-#   bash.exe (Git for Windows)  ->  tools\gh-sync.sh D:\Projets <dépôts>   avec GH_SYNC_MACHINE=mini-pc et GH_SYNC_BRANCH_REPOS=paseo-lab.
+#   bash.exe (Git for Windows)  ->  tools\gh-sync.sh D:\Projets <dépôts>   avec GH_SYNC_MACHINE=mini-pc et GH_SYNC_BRANCH_REPOS=paseo-poste.
 # Remplace toute tâche existante dont l'action mentionne gh-sync (l'ancienne synchro, probablement cassée).
 #
 # Aucune fenêtre qui clignote : la tâche lance wscript.exe (programme graphique, sans console) sur un petit lanceur .vbs qui démarre
@@ -9,10 +9,10 @@
 # De plus, le lanceur copie gh-sync.sh avant de l'exécuter : la synchro met le dépôt à jour (git pull) et ne doit pas réécrire
 # le script pendant que bash le lit.
 #
-# Usage (PowerShell, sur le mini-PC) :  pwsh -File D:\Projets\paseo-lab\tools\install-sync-task.ps1  [-Projets D:\Projets] [-Bash <chemin\bash.exe>]
+# Usage (PowerShell, sur le mini-PC) :  pwsh -File D:\Projets\paseo-poste\tools\install-sync-task.ps1  [-Projets D:\Projets] [-Bash <chemin\bash.exe>]
 param(
   [string]$Projets = 'D:\Projets',
-  [string[]]$Repos = @('Bot_Stage', 'Automatisation PME', 'TelegramAssistant', 'BlastWin', 'paseo-lab', 'TestAgentMode', 'VentureOS'),
+  [string[]]$Repos = @('Bot_Stage', 'Automatisation PME', 'TelegramAssistant', 'BlastWin', 'paseo-poste', 'TestAgentMode', 'VentureOS'),
   [string]$Bash = '',
   [string]$TaskName = 'PosteSyncGitHub'
 )
@@ -52,7 +52,7 @@ $sh = @"
 # Généré par tools/install-sync-task.ps1 — ne pas éditer (régénéré à chaque installation).
 export PATH="/usr/bin:/mingw64/bin:`$PATH"
 export GH_SYNC_MACHINE=mini-pc
-export GH_SYNC_BRANCH_REPOS=paseo-lab
+export GH_SYNC_BRANCH_REPOS=paseo-poste
 cp -f '$labPosix/tools/gh-sync.sh' '$labPosix/.foreman/gh-sync.run.sh' || exit 0
 exec bash '$labPosix/.foreman/gh-sync.run.sh' '$projPosix' $q
 "@
@@ -98,7 +98,7 @@ $settings = New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -StartWhen
   -ExecutionTimeLimit (New-TimeSpan -Minutes 10) -Hidden
 $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
 Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Principal $principal `
-  -Description 'Synchronisation GitHub toutes les minutes (gh-sync.sh, mode branche pour paseo-lab)' | Out-Null
+  -Description 'Synchronisation GitHub toutes les minutes (gh-sync.sh, mode branche pour paseo-poste)' | Out-Null
 Start-ScheduledTask -TaskName $TaskName
 
 Write-Host "Tâche « $TaskName » installée : toutes les minutes, sans fenêtre."

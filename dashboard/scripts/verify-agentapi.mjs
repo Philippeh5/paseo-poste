@@ -15,7 +15,7 @@ import { readJson } from "../lib/store.mjs";
 
 const dashboardDir = fileURLToPath(new URL("../", import.meta.url));
 const scratch = fileURLToPath(new URL("../../.foreman/scratch/", import.meta.url));
-const SANDBOX = process.env.VERIFY_SANDBOX || "D:/Projets/AI-OS/paseo-lab/sandbox-repo";
+const SANDBOX = process.env.VERIFY_SANDBOX || "D:/Projets/AI-OS/paseo-poste/sandbox-repo";
 const ENGINE = "claude-openrouter/sonnet";
 const PONG = "Reply with the single word PONG and do nothing else.";
 const PREFIX = "VERIF-T17";

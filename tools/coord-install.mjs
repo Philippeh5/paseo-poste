@@ -136,7 +136,7 @@ export function buildPlan(flags) {
     steps.push({
       harness: "wsl", id: "hermes-wsl", kind: "manual", action: "manual",
       command: `wsl.exe${distro} -- hermes mcp add ${SERVER} --command node --env PASEO_COORD_URL=${remote} --args ${q(wslScript)}`,
-      note: "Hermès dans WSL : node et @modelcontextprotocol/sdk doivent exister DANS WSL (npm install --prefix /mnt/.../paseo-lab). POSTECTL_PASSWORD (si le poste a un mot de passe) se définit dans l'environnement de WSL, jamais ici. Affiché seulement.",
+      note: "Hermès dans WSL : node et @modelcontextprotocol/sdk doivent exister DANS WSL (npm install --prefix /mnt/.../paseo-poste). POSTECTL_PASSWORD (si le poste a un mot de passe) se définit dans l'environnement de WSL, jamais ici. Affiché seulement.",
     });
   }
 

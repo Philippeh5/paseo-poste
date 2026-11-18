@@ -24,7 +24,7 @@ const PORT = Number(process.env.VERIFY_PORT || 7092);
 const BASE = `http://127.0.0.1:${PORT}`;
 const FAKE_PORT = 18765;
 const CLOSED_PORT = 18769;
-const REAL_BIN = process.env.LAYA_BIN || "D:\\Projets\\AI-OS\\paseo-lab\\.foreman\\laya-test\\.venv\\Scripts\\laya-serve.exe";
+const REAL_BIN = process.env.LAYA_BIN || "D:\\Projets\\AI-OS\\paseo-poste\\.foreman\\laya-test\\.venv\\Scripts\\laya-serve.exe";
 
 let passed = 0;
 let failed = 0;

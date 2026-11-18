@@ -19,7 +19,7 @@ ROOT="$1"; shift
 LOG="$ROOT/.gh-sync.log"; PROB="$ROOT/SYNC-PROBLEMES.log"; ALERTS="$ROOT/.gh-sync.alerts"; STATE="$ROOT/.gh-sync.state"
 HOST="${GH_SYNC_HOST:-$(hostname)}"
 case "${GH_SYNC_MACHINE:-}" in
-  '') case "$HOST" in instance-20261008-1451) MACHINE=oracle;; WIN-3LLN0L8LRLM) MACHINE=mini-pc;; *) MACHINE="$HOST";; esac;;
+  '') case "$HOST" in <ORACLE_HOSTNAME>) MACHINE=oracle;; <WINDOWS_HOSTNAME>) MACHINE=mini-pc;; *) MACHINE="$HOST";; esac;;
   *) MACHINE="$GH_SYNC_MACHINE";;
 esac
 NOW="${GH_SYNC_NOW:-$(date +%s)}"
@@ -54,7 +54,7 @@ export GIT_TERMINAL_PROMPT=0
 tmo() { if command -v timeout >/dev/null 2>&1; then timeout 120 "$@"; else "$@"; fi; }
 
 SECRETS='(sk-[A-Za-z0-9_-]{20,}|sk-or-v1-[A-Za-z0-9]{20,}|nvapi-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|[0-9]{8,10}:[A-Za-z0-9_-]{35}|AIza[0-9A-Za-z_-]{35}|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|password|secret|token|mnemonic|private[_-]?key)["'"'"' ]*[:=]["'"'"' ]*[A-Za-z0-9_/+=-]{20,})'
-GIT=(git -c user.name="Philippe (auto-sync)" -c user.email="philippep.business@gmail.com" -c core.autocrlf=false)
+GIT=(git -c user.name="Philippe (auto-sync)" -c user.email="<email>@example.com" -c core.autocrlf=false)
 MAXBYTES=$((5 * 1024 * 1024))
 
 # Noms les plus courts possibles mais uniques (stdin : un chemin par ligne ; $1 = nombre de noms à rendre, 3 par défaut) :
@@ -88,7 +88,7 @@ EOT
 # Notification Telegram par le notificateur du poste (dashboard/lib/notify.mjs : il lit lui-même le jeton, jamais ce script).
 # Sans configuration de notification (Windows, pas de ~/.hermes/.env) ou sans node : rien n'est envoyé, code de retour 1.
 notify() {
-  local mjs="${GH_SYNC_NOTIFY_MJS:-$ROOT/paseo-lab/dashboard/lib/notify.mjs}"
+  local mjs="${GH_SYNC_NOTIFY_MJS:-$ROOT/paseo-poste/dashboard/lib/notify.mjs}"
   [ -f "$mjs" ] || return 1
   [ -n "${NOTIFY_DRY_FILE:-}" ] || [ -f "${HERMES_ENV_FILE:-$HOME/.hermes/.env}" ] || return 1
   command -v node >/dev/null 2>&1 || PATH="$HOME/.local/node/bin:$PATH"

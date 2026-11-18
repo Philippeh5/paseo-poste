@@ -16,7 +16,7 @@ const origin = new URL(url).origin.replace("ws:", "http:").replace("wss:", "http
 const daemonUrl = process.env.PASEO_LOCAL_URL || "ws://127.0.0.1:6767/ws";
 const here = fileURLToPath(new URL(".", import.meta.url));
 const dataDir = process.env.DASHBOARD_DATA_DIR || join(here, "..", "data");
-const SANDBOX = process.env.VERIFY_SANDBOX || "D:/Projets/AI-OS/paseo-lab/sandbox-repo";
+const SANDBOX = process.env.VERIFY_SANDBOX || "D:/Projets/AI-OS/paseo-poste/sandbox-repo";
 
 const fail = (message) => { throw new Error(message); };
 const expect = (condition, label, detail = "") => {
@@ -45,7 +45,7 @@ function boot(dir) {
 }
 const agent = (over = {}) => ({
   host: "local", agentId: "a1", title: "Test", provider: "claude-openrouter", model: "sonnet",
-  cwd: "D:\\Projets\\AI-OS\\paseo-lab\\sandbox-repo", status: "running", ...over,
+  cwd: "D:\\Projets\\AI-OS\\paseo-poste\\sandbox-repo", status: "running", ...over,
 });
 const state = (agents, hostStatus = "connected") => ({ hosts: [{ label: "local", status: hostStatus }], agents });
 const readEpisodes = (dir) => JSON.parse(readFileSync(join(dir, "timeline.json"), "utf8")).episodes;

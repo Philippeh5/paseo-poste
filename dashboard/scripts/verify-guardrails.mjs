@@ -33,7 +33,7 @@ t("lire .env", "Read", { file_path: `${H}/Projets/Autre/.env` }, "secrets");
 t("lire .env.example", "Read", { file_path: `${H}/Projets/Autre/.env.example` }, "allow");
 t("lire ~/.hermes/.env", "Read", { file_path: `${H}/.hermes/.env` }, "secrets");
 t("lire credentials Claude", "Read", { file_path: `${H}/.claude/.credentials.json` }, "secrets");
-t("lire hosts.json", "Read", { file_path: `${H}/Projets/paseo-lab/dashboard/hosts.json` }, "secrets");
+t("lire hosts.json", "Read", { file_path: `${H}/Projets/paseo-poste/dashboard/hosts.json` }, "secrets");
 t("cat .env en Bash", "Bash", { command: "cat .env" }, "secrets");
 t("grep dans ~/.hermes/.env", "Bash", { command: "grep TOKEN ~/.hermes/.env" }, "secrets");
 t("printenv", "Bash", { command: "printenv" }, "secrets");

@@ -121,7 +121,7 @@ try {
         dir: "D:/Projets/mon-projet-ia",
         concerned: true,
         dirtyCount: 3,
-        oracleDir: "/home/ubuntu/projets/mon-projet-ia",
+        oracleDir: "/home/USERNAME/projets/mon-projet-ia",
       },
     ],
     tasks: [

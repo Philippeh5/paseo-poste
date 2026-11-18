@@ -19,14 +19,14 @@ const IDLE_MS = 10 * 60_000;
 const ENGINES = {
   laya: {
     label: "Laya", urlEnv: "LAYA_URL", url: "http://127.0.0.1:8765/v1/systemone", binEnv: "LAYA_BIN",
-    bin: "D:\\Projets\\AI-OS\\paseo-lab\\.foreman\\laya-test\\.venv\\Scripts\\laya-serve.exe",
+    bin: "D:\\Projets\\AI-OS\\paseo-poste\\.foreman\\laya-test\\.venv\\Scripts\\laya-serve.exe",
     modelEnv: "LAYA_MODEL", model: "multilingual", startEnv: "LAYA_START_TIMEOUT_MS", other: "von",
     args: () => [],
     env: (port) => ({ LAYA_HOST: "127.0.0.1", LAYA_PORT: String(port), LAYA_MODELS: "multilingual" }),
   },
   von: {
     label: "Von", urlEnv: "VON_URL", url: "http://127.0.0.1:8766/v1/systemone", binEnv: "VON_BIN",
-    bin: "D:\\Projets\\AI-OS\\paseo-lab\\.foreman\\von-test\\Scripts\\von.exe",
+    bin: "D:\\Projets\\AI-OS\\paseo-poste\\.foreman\\von-test\\Scripts\\von.exe",
     modelEnv: "VON_MODEL", model: "von", startEnv: "VON_START_TIMEOUT_MS", other: "laya",
     args: (port) => ["serve", "--host", "127.0.0.1", "--port", String(port)],
     env: () => ({}),

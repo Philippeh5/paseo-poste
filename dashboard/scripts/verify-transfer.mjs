@@ -94,7 +94,7 @@ const getTask = (id) => brain((db) => ({ ...db.prepare("SELECT * FROM tasks WHER
 
 function fakePlan() {
   return {
-    projects: [{ name: "p1", dir: "D:\\fake\\p1", concerned: true, oracleDir: "/home/ubuntu/projets/p1", dirty: [], githubRepo: { owner: "o", repo: "p1" } }],
+    projects: [{ name: "p1", dir: "D:\\fake\\p1", concerned: true, oracleDir: "/home/USERNAME/projets/p1", dirty: [], githubRepo: { owner: "o", repo: "p1" } }],
     tasks: [{ id: "t1", title: "Tâche 1", project: "D:\\fake\\p1", status: "doing" }],
     agents: [{ id: "a1", task: "Tâche 1", status: "running" }],
     oracleDiskFree: 1e11, ghConnected: { local: true, oracle: true }, errors: [], blockers: [], warnings: [], forceRequired: false, ok: true,
@@ -148,7 +148,7 @@ function fakeWorld() {
       async getCheckoutStatus(d) { return { currentBranch: w.oracleBranch[d] }; },
       async createTerminal(cwd, name, rid, opts) { w.calls.oracle.push({ op: "terminal", cwd, command: opts?.command, args: opts?.args }); return { terminal: { id: "t-oracle" }, error: null }; },
     },
-    api: { workspaces: { list: async () => ({ entries: [{ id: "wks_oracle", workspaceDirectory: "/home/ubuntu/projets/essai" }] }) } },
+    api: { workspaces: { list: async () => ({ entries: [{ id: "wks_oracle", workspaceDirectory: "/home/USERNAME/projets/essai" }] }) } },
   };
   const map = { local, oracle };
   w.hosts = { get: (l) => map[l], has: (l) => l in map, labels: () => Object.keys(map) };
@@ -214,7 +214,7 @@ expect(isTransferBranch("transfert/20261014-0130") && isTransferBranch("reprise/
 expect(!isTransferBranch("main") && !isTransferBranch("feature/x") && !isTransferBranch("transfert/../main") && !isTransferBranch("transfert/20261014-0130/main"), "toute autre branche refusée");
 expect(/^transfert\/\d{8}-\d{4}$/.test(makeBranchName("transfert")), "makeBranchName suit AAAAMMJJ-HHMM");
 expect((() => { try { makeBranchName("main"); return false; } catch { return true; } })(), "makeBranchName refuse un préfixe arbitraire");
-expect(translateProjectPath("D:\\Projets\\X") === "/home/ubuntu/projets/X" && translateProjectPath("") === "", "D:\\Projets\\X -> /home/ubuntu/projets/X");
+expect(translateProjectPath("D:\\Projets\\X") === "/home/USERNAME/projets/X" && translateProjectPath("") === "", "D:\\Projets\\X -> /home/USERNAME/projets/X");
 const sneaky = JSON.stringify(redact({ msg: `https://user:${SECRET_PASS}@github.com/x ${SECRET_TOKEN} password=${SECRET_PASS}`, password: "p", nested: { Authorization: "Bearer abcdefghijkl" } }));
 expect(!sneaky.includes(SECRET_TOKEN) && !sneaky.includes(SECRET_PASS) && !sneaky.includes("abcdefghijkl"), "redact masque jeton, mot de passe, URL à identifiants, Bearer");
 expect(sensitivePaths([" M a.txt", "?? .env", "?? deploy/id_rsa", "A  src/key.pem"]).length === 3, "sensitivePaths détecte .env, id_rsa, .pem (et pas a.txt)");
@@ -222,7 +222,7 @@ const prompt = buildResumePrompt({
   task: { id: "t", title: "Titre", project: "D:\\Projets\\X", description: "Faire Z" }, branch: "transfert/20261014-0130",
   lastCommit: "abc123 sujet", modifiedFiles: [" M f.js"], errors: "TypeError boom",
 });
-expect(["Linux", "/home/ubuntu/projets/X", "transfert/20261014-0130", "abc123 sujet", "f.js", "TypeError boom", "Faire Z"].every((s) => prompt.includes(s)),
+expect(["Linux", "/home/USERNAME/projets/X", "transfert/20261014-0130", "abc123 sujet", "f.js", "TypeError boom", "Faire Z"].every((s) => prompt.includes(s)),
   "invite de reprise : système, dossier traduit, branche, dernier commit, fichiers, erreurs, objectif");
 
 // =====================================================================================================================
@@ -245,7 +245,7 @@ const p0 = plan0.projects.find((p) => p.concerned);
 expect(plan0.projects.length === 1 && p0?.name === "sandbox-repo", "un seul projet concerné, déduit des tâches todo/doing (la tâche done est ignorée)", JSON.stringify(plan0.projects.map((p) => p.name)));
 expect(p0?.isGit && p0.branch === "main" && p0.dirtyCount === 2, "dépôt git, branche main, 2 fichiers modifiés détectés", JSON.stringify(p0));
 expect(p0?.remoteUrl === FAKE_GITHUB && p0.githubRepo?.owner === "t10test", "URL du dépôt distant lue (config brute, sans insteadOf)");
-expect(p0?.oracleDir === "/home/ubuntu/projets/sandbox-repo" && p0.oracleExists === false && p0.diskNeeded > 0, "dossier Oracle traduit, absent côté Oracle, taille estimée");
+expect(p0?.oracleDir === "/home/USERNAME/projets/sandbox-repo" && p0.oracleExists === false && p0.diskNeeded > 0, "dossier Oracle traduit, absent côté Oracle, taille estimée");
 expect(plan0.ghConnected.oracle === true && plan0.oracleDiskFree === 50e9 && plan0.blockers.length === 0 && plan0.ok, "gh connecté sur Oracle : aucun blocage, espace disque rapporté");
 expect(plan0.agents.length === 1 && plan0.agents[0].id === "agent-1" && plan0.tasks.length === 2, "agents/tâches concernés = ceux des tâches (pas tous les agents)");
 expect(plan0.warnings.some((w) => w.code === "other_agents" && w.forceRequired) && plan0.forceRequired, "l'autre agent actif est un avertissement qui exige force");
@@ -370,13 +370,13 @@ let realBranch;
   expect(refs.includes(`refs/heads/${realBranch}`) && gd(bare, "rev-parse", "main") === S0.main && refs.split("\n").length === 2, "le dépôt nu a reçu la branche de transfert ; main n'a pas bougé", refs);
   expect(gd(bare, "rev-parse", realBranch) === g(sandbox, "rev-parse", "HEAD"), "SHA distant = SHA local");
   const clone = world.calls.oracle.find((x) => x.op === "clone");
-  expect(clone?.repo === "t10test/sandbox-repo" && clone.targetDirectory === "/home/ubuntu/projets", "clone Oracle demandé pour t10test/sandbox-repo dans /home/ubuntu/projets", JSON.stringify(clone));
+  expect(clone?.repo === "t10test/sandbox-repo" && clone.targetDirectory === "/home/USERNAME/projets", "clone Oracle demandé pour t10test/sandbox-repo dans /home/USERNAME/projets", JSON.stringify(clone));
   expect(world.calls.oracle.some((x) => x.op === "switch" && x.branch === realBranch), "Oracle basculé sur la branche de transfert");
-  expect(world.calls.oracle.some((x) => x.op === "terminal" && x.command === "git" && x.args.join(" ") === "-C /home/ubuntu/projets/sandbox-repo config core.autocrlf input"), "core.autocrlf=input demandé sur le clone Oracle");
+  expect(world.calls.oracle.some((x) => x.op === "terminal" && x.command === "git" && x.args.join(" ") === "-C /home/USERNAME/projets/sandbox-repo config core.autocrlf input"), "core.autocrlf=input demandé sur le clone Oracle");
   const t1 = getTask("T1");
   expect(t1.host === "oracle" && t1.status === "todo" && t1.agent_id === null && t1.branch === realBranch, "tâche réaffectée à Oracle (hôte, statut todo, agent retiré, branche)");
   const sha = g(sandbox, "log", "-1", "--format=%h %s");
-  expect([realBranch, "Linux", "/home/ubuntu/projets/sandbox-repo", "TypeError: boom", "work.txt", "a.txt", sha, "Corriger le bug X dans a.txt"].every((s) => t1.description.includes(s)), "invite de reprise complète (branche, Linux, dossier, erreurs, fichiers, dernier commit, objectif)");
+  expect([realBranch, "Linux", "/home/USERNAME/projets/sandbox-repo", "TypeError: boom", "work.txt", "a.txt", sha, "Corriger le bug X dans a.txt"].every((s) => t1.description.includes(s)), "invite de reprise complète (branche, Linux, dossier, erreurs, fichiers, dernier commit, objectif)");
   expect(getTask("T2").host === "oracle", "toutes les tâches du mini-PC réaffectées");
   expect(!world.calls.localTerm.some((x) => x.command === "shutdown"), "pas de confirmShutdown : AUCUNE commande d'extinction envoyée");
   expect(JSON.parse(m.row(res.id).results_json).shutdown.skipped === true, "extinction explicitement « non demandée » dans le résultat");

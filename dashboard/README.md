@@ -204,8 +204,8 @@ node tools/postectl.mjs decide "Supprimer le dossier de test" --choice agent=cla
 Ligne de configuration à ajouter pour Claude Code (**non exécutée** : c'est à vous de décider) :
 
 ```sh
-claude mcp add postectl -- node D:\Projets\AI-OS\paseo-lab\tools\postectl-mcp.mjs
-# avec mot de passe : claude mcp add postectl -e POSTECTL_PASSWORD=... -- node D:\Projets\AI-OS\paseo-lab\tools\postectl-mcp.mjs
+claude mcp add postectl -- node D:\Projets\AI-OS\paseo-poste\tools\postectl-mcp.mjs
+# avec mot de passe : claude mcp add postectl -e POSTECTL_PASSWORD=... -- node D:\Projets\AI-OS\paseo-poste\tools\postectl-mcp.mjs
 ```
 
 ### Compte rendu complet et envoi à la session mère
@@ -379,7 +379,7 @@ POST /api/v1/decide
 - Types : `choice` (une option parmi 2 à 26, `criteria` obligatoire), `score` (note sur une échelle), `noul` (oui/non : probabilité de « oui » entre 0 et 1).
 - Plafonds (400 sinon) : `state` 2000 caractères, 8 questions, noms de question `[A-Za-z0-9_-]{1,40}`, `instructions` 500 caractères, 26 options de 200 caractères au plus.
 - `postectl decide "<état>" --choice nom=opt1,opt2 --yesno "Question ?"` (les deux options se répètent) ; `--questions '<json>'` pour le format complet.
-- Laya : `LAYA_URL` (défaut `http://127.0.0.1:8765/v1/systemone`), `LAYA_MODEL` (défaut `multilingual`), délai de 10 s par appel. S'il n'écoute pas, le tableau de bord le lance au premier appel avec `LAYA_BIN` (défaut `D:\Projets\AI-OS\paseo-lab\.foreman\laya-test\.venv\Scripts\laya-serve.exe`) et `LAYA_HOST=127.0.0.1`, `LAYA_PORT`, `LAYA_MODELS=multilingual` (jamais 0.0.0.0, jamais sur une autre machine), attend jusqu'à 90 s (`LAYA_START_TIMEOUT_MS`), puis l'arrête avec le tableau de bord (une sentinelle l'arrête aussi après un arrêt brutal). Premier appel à froid : une quinzaine de secondes (chargement du modèle) ; ensuite 150 à 400 ms.
+- Laya : `LAYA_URL` (défaut `http://127.0.0.1:8765/v1/systemone`), `LAYA_MODEL` (défaut `multilingual`), délai de 10 s par appel. S'il n'écoute pas, le tableau de bord le lance au premier appel avec `LAYA_BIN` (défaut `D:\Projets\AI-OS\paseo-poste\.foreman\laya-test\.venv\Scripts\laya-serve.exe`) et `LAYA_HOST=127.0.0.1`, `LAYA_PORT`, `LAYA_MODELS=multilingual` (jamais 0.0.0.0, jamais sur une autre machine), attend jusqu'à 90 s (`LAYA_START_TIMEOUT_MS`), puis l'arrête avec le tableau de bord (une sentinelle l'arrête aussi après un arrêt brutal). Premier appel à froid : une quinzaine de secondes (chargement du modèle) ; ensuite 150 à 400 ms.
 - Absent ou en panne : erreur 503 en français (« Laya est absent… »), le reste du tableau de bord continue de fonctionner. Chaque appel est journalisé dans l'activité de l'agent (nombre et noms des questions, jamais le texte de l'état).
 - **Limites** : contexte de 512 tokens (état, questions et options confondus, le reste est tronqué) ; environ 8/10 en routage et 9/10 en détection de ce qui est destructeur sur nos tests (T26), moins en zéro-coup ; pas de calcul ni de raisonnement en plusieurs étapes. **Ne jamais l'utiliser seul comme garde-fou** : pour une action destructrice, le mandat, `confirm: true` et la validation humaine restent obligatoires ; Laya sert à aiguiller et à trier, pas à autoriser.
 
@@ -436,17 +436,17 @@ Poste vu d'ici : http://127.0.0.1:7070   Dossier personnel : C:\Users\Philippe
 [pi] CRÉER      C:\Users\Philippe\.paseo-coord\bin\coord.cmd     (commande « coord » : à ajouter au PATH)
 [freebuff] CRÉER  C:\Users\Philippe\.config\manicode\mcp.json    (emplacement NON VÉRIFIÉ)
 [hermes] EXÉCUTER (sauvegarde avant)
-    hermes mcp add paseo-coord --command "C:\Program Files\nodejs\node.exe" --env PASEO_COORD_URL=http://127.0.0.1:7070 --args D:\Projets\AI-OS\paseo-lab\tools\paseo-coord-mcp.mjs
-[claude] MANUEL   claude mcp add --scope user paseo-coord --env PASEO_COORD_URL=http://127.0.0.1:7070 -- "C:\Program Files\nodejs\node.exe" D:\Projets\AI-OS\paseo-lab\tools\paseo-coord-mcp.mjs
-[wsl] MANUEL      wsl.exe -- hermes mcp add paseo-coord --command node --env PASEO_COORD_URL=http://100.103.172.69:7070 --args /mnt/d/Projets/AI-OS/paseo-lab/tools/paseo-coord-mcp.mjs
+    hermes mcp add paseo-coord --command "C:\Program Files\nodejs\node.exe" --env PASEO_COORD_URL=http://127.0.0.1:7070 --args D:\Projets\AI-OS\paseo-poste\tools\paseo-coord-mcp.mjs
+[claude] MANUEL   claude mcp add --scope user paseo-coord --env PASEO_COORD_URL=http://127.0.0.1:7070 -- "C:\Program Files\nodejs\node.exe" D:\Projets\AI-OS\paseo-poste\tools\paseo-coord-mcp.mjs
+[wsl] MANUEL      wsl.exe -- hermes mcp add paseo-coord --command node --env PASEO_COORD_URL=http://<TAILSCALE_IP>:7070 --args /mnt/d/Projets/AI-OS/paseo-poste/tools/paseo-coord-mcp.mjs
 [oracle] MANUEL   ssh … 'mkdir -p ~/paseo-coord' ; scp tools/paseo-coord-mcp.mjs tools/coord-lib.mjs tools/coord.mjs … ;
                   ssh … 'cd ~/paseo-coord && npm install @modelcontextprotocol/sdk@1.31.0' ;
-                  ssh … 'hermes mcp add paseo-coord --command node --env PASEO_COORD_URL=http://100.103.172.69:7070 --args ~/paseo-coord/paseo-coord-mcp.mjs'
+                  ssh … 'hermes mcp add paseo-coord --command node --env PASEO_COORD_URL=http://<TAILSCALE_IP>:7070 --args ~/paseo-coord/paseo-coord-mcp.mjs'
 ```
 
 - **FreeBuff** : exemple dans `tools/freebuff-mcp.example.json` (`{"mcpServers": {"paseo-coord": {"command": "node", "args": [".../tools/paseo-coord-mcp.mjs"], "env": {"PASEO_COORD_URL": "http://127.0.0.1:7070"}}}}`). L'emplacement lu par FreeBuff n'a pas pu être vérifié (test payant en Freebucks, non lancé).
-- **Hermès, Mini PC (Windows)** : `hermes mcp add paseo-coord --command "C:\Program Files\nodejs\node.exe" --env PASEO_COORD_URL=http://127.0.0.1:7070 --args D:\Projets\AI-OS\paseo-lab\tools\paseo-coord-mcp.mjs` (syntaxe lue dans `hermes mcp add --help`, v0.22.0 ; `--args` doit être la dernière option). Non exécutée sur la vraie configuration de Hermès.
-- **Hermès, WSL** : `wsl.exe -- hermes mcp add paseo-coord --command node --env PASEO_COORD_URL=http://<IP-Tailscale-du-Mini-PC>:7070 --args /mnt/d/Projets/AI-OS/paseo-lab/tools/paseo-coord-mcp.mjs` (node et `@modelcontextprotocol/sdk` doivent exister dans WSL).
+- **Hermès, Mini PC (Windows)** : `hermes mcp add paseo-coord --command "C:\Program Files\nodejs\node.exe" --env PASEO_COORD_URL=http://127.0.0.1:7070 --args D:\Projets\AI-OS\paseo-poste\tools\paseo-coord-mcp.mjs` (syntaxe lue dans `hermes mcp add --help`, v0.22.0 ; `--args` doit être la dernière option). Non exécutée sur la vraie configuration de Hermès.
+- **Hermès, WSL** : `wsl.exe -- hermes mcp add paseo-coord --command node --env PASEO_COORD_URL=http://<IP-Tailscale-du-Mini-PC>:7070 --args /mnt/d/Projets/AI-OS/paseo-poste/tools/paseo-coord-mcp.mjs` (node et `@modelcontextprotocol/sdk` doivent exister dans WSL).
 - **Hermès, Oracle (Ubuntu)** : copier `paseo-coord-mcp.mjs`, `coord-lib.mjs`, `coord.mjs` dans `~/paseo-coord`, `npm install @modelcontextprotocol/sdk@1.31.0`, puis `hermes mcp add paseo-coord --command node --env PASEO_COORD_URL=http://<IP-Tailscale-du-Mini-PC>:7070 --args ~/paseo-coord/paseo-coord-mcp.mjs` ; le poste doit écouter sur Tailscale (`DASHBOARD_TAILSCALE=1`) et `POSTECTL_PASSWORD` se définit dans l'environnement d'Oracle.
 - Sans injection, la session s'identifie par `coord hello <nom>` (ou `coord_hello`) : le poste répond par un code que Philippe confirme dans « Équipe », puis la même commande rend l'identité.
 

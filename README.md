@@ -5,6 +5,8 @@ A self-hosted **command post** for managing autonomous AI agents, terminals, tas
 > ⚠️ **Self-hosted infrastructure — Not a SaaS**
 > You run this on your own machines. No cloud account required beyond your own VPS/local hardware.
 
+> 🧭 **New here?** Follow the [Onboarding guide](ONBOARDING.md): add a machine, a provider/subscription, connect your tools, then add a project — step by step.
+
 ---
 
 ## 🎯 What It Does
@@ -42,7 +44,7 @@ A self-hosted **command post** for managing autonomous AI agents, terminals, tas
 ## 🚀 Quickstart
 
 ### 1. Prerequisites
-- **Node.js 20+** (via nvm recommended)
+- **Node.js 24** (CI and deployment units use 24)
 - **Tailscale** (optional, for remote access)
 - **Linux/macOS** (Windows via WSL2)
 - **Git**
@@ -52,10 +54,8 @@ A self-hosted **command post** for managing autonomous AI agents, terminals, tas
 git clone https://github.com/Philippeh5/paseo-poste.git
 cd paseo-poste
 
-# Install dashboard dependencies
-cd dashboard
+# Install dependencies (declared at the repository root, not in dashboard/)
 npm install
-cd ..
 
 # Make scripts executable
 chmod +x deploy/oracle/*.sh deploy/oracle/systemd/*/*.sh deploy/mini-pc/*.ps1 2>/dev/null || true
@@ -82,10 +82,12 @@ nano ~/paseo-dash-data/hermes-api.env
 echo "YOUR_STRONG_PASSWORD_16_CHARS_MIN" > ~/paseo-dash-data/tailscale-password.txt
 chmod 600 ~/paseo-dash-data/tailscale-password.txt
 
-# Hosts file (machine registry)
-cp dashboard/data/projects.json.example ~/paseo-dash-data/hosts.json
-# Edit with your machines:
+# Hosts file (machine registry) — { "hosts": [ { label, url, password? } ] }
+cp deploy/oracle/hosts.json.example ~/paseo-dash-data/hosts.json
+chmod 600 ~/paseo-dash-data/hosts.json
+# Edit with your machines (never commit this file):
 nano ~/paseo-dash-data/hosts.json
+export DASHBOARD_HOSTS_FILE="$HOME/paseo-dash-data/hosts.json"
 ```
 
 ### 4. Install Systemd Services (Oracle / Linux)
@@ -124,8 +126,10 @@ paseo-poste/
 │   │   └── poste.env.example  # Env template (NO secrets)
 │   └── mini-pc/            # Windows (PowerShell) deployment
 ├── tools/                  # CLI utilities (postectl, etc.)
+├── .github/workflows/ci.yml
 ├── .gitignore
 ├── LICENSE
+├── ONBOARDING.md           # step-by-step setup guide
 └── README.md
 ```
 
@@ -146,23 +150,24 @@ BACKUP_RCLONE_REMOTE=oracle-storage:backups
 BACKUP_AGE_RECIPIENT=age1...
 ```
 
-### `~/paseo-dash-data/hosts.json`
+### `~/paseo-dash-data/hosts.json` (machine registry)
+
+The code reads a `hosts` array. `label` is the machine name shown in the dashboard; `url` is the daemon WebSocket; `password` is optional and stays on your machine.
+
 ```json
 {
-  "projects": [
+  "hosts": [
+    { "label": "oracle", "url": "ws://127.0.0.1:6767/ws" },
     {
-      "id": "unique-id",
-      "host": "oracle",
-      "dir": "/home/user/Projets/MyProject",
-      "name": "MyProject",
-      "color": "#ff6b6b",
-      "addedAt": "2026-01-01T00:00:00.000Z",
-      "order": 0,
-      "starred": true
+      "label": "mini-pc",
+      "url": "ws://<TAILSCALE_IP>:6767/ws",
+      "password": "<DAEMON_PASSWORD>"
     }
   ]
 }
 ```
+
+Followed projects are separate: add them with `node tools/postectl.mjs project follow <host> <dir>` (see [ONBOARDING.md](ONBOARDING.md#5-add-a-project)).
 
 ### Dashboard Environment Variables
 | Variable | Default | Description |
@@ -180,11 +185,10 @@ BACKUP_AGE_RECIPIENT=age1...
 ## 🔧 Development
 
 ```bash
-# Dashboard dev (hot reload)
-cd dashboard
-npm run dev
+# Run the dashboard locally
+node dashboard/server.mjs
 
-# Run tests
+# Run the offline test suites
 npm test
 ```
 

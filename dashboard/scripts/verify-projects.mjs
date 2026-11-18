@@ -15,7 +15,7 @@ const url = process.env.DASHBOARD_VERIFY_URL || "ws://127.0.0.1:7070/ui";
 const origin = new URL(url).origin.replace("ws:", "http:").replace("wss:", "https:");
 const dataDir = fileURLToPath(new URL("../data/", import.meta.url));
 const projectsFile = join(dataDir, "projects.json");
-const SANDBOX = process.env.VERIFY_SANDBOX || "D:\\Projets\\AI-OS\\paseo-lab\\sandbox-repo";
+const SANDBOX = process.env.VERIFY_SANDBOX || "D:\\Projets\\AI-OS\\paseo-poste\\sandbox-repo";
 const REMOTE_REPO = "D:\\Projets\\Orchestrateur"; // dépôt de Philippe avec remote GitHub : lecture seule
 const socket = new WebSocket(url, { origin });
 const inbox = [];
@@ -108,7 +108,7 @@ try {
     ["chemin relatif", "Projets\\AI-OS"],
     ["chemin réseau UNC", "\\\\serveur\\partage"],
     ["chemin trop long", `D:\\${"a".repeat(1100)}`],
-    ["format d'une autre machine", "/home/ubuntu"],
+    ["format d'une autre machine", "/home/USERNAME"],
   ]) {
     const refused = await ask({ type: "fs.list", host: "local", path: bad }, "fs.list", label);
     expect(refused.ok === false && refused.code === "invalid_path", `fs.list refuse : ${label}`, refused.error);
@@ -120,12 +120,12 @@ try {
   const rootsOracle = await ask({ type: "fs.roots", host: "oracle" }, "fs.roots", "fs.roots oracle");
   show("FS_ROOTS_ORACLE", rootsOracle.roots.map((r) => `${r.kind}:${r.path}`));
   expect(rootsOracle.ok && rootsOracle.platform === "posix" && rootsOracle.roots.some((r) => r.path === "/"), "fs.roots oracle : racine / présente");
-  expect(rootsOracle.roots.some((r) => r.kind === "home" && r.path === "/home/ubuntu"), "fs.roots oracle : $HOME = /home/ubuntu");
-  const listOracle = await ask({ type: "fs.list", host: "oracle", path: "/home/ubuntu" }, "fs.list", "fs.list oracle");
+  expect(rootsOracle.roots.some((r) => r.kind === "home" && r.path === "/home/USERNAME"), "fs.roots oracle : $HOME = /home/USERNAME");
+  const listOracle = await ask({ type: "fs.list", host: "oracle", path: "/home/USERNAME" }, "fs.list", "fs.list oracle");
   show("FS_LIST_ORACLE_HOME", { path: listOracle.path, parent: listOracle.parent, count: listOracle.entries.length, sample: listOracle.entries.slice(0, 3) });
-  expect(listOracle.ok && listOracle.parent === "/home" && listOracle.entries.length > 0, "fs.list oracle : /home/ubuntu listé (daemon)");
-  expect(listOracle.entries.every((e) => e.path.startsWith("/home/ubuntu/")), "fs.list oracle : chemins complets");
-  const missingOracle = await ask({ type: "fs.list", host: "oracle", path: "/home/ubuntu/dossier-inexistant-zz" }, "fs.list", "oracle inexistant");
+  expect(listOracle.ok && listOracle.parent === "/home" && listOracle.entries.length > 0, "fs.list oracle : /home/USERNAME listé (daemon)");
+  expect(listOracle.entries.every((e) => e.path.startsWith("/home/USERNAME/")), "fs.list oracle : chemins complets");
+  const missingOracle = await ask({ type: "fs.list", host: "oracle", path: "/home/USERNAME/dossier-inexistant-zz" }, "fs.list", "oracle inexistant");
   expect(missingOracle.ok === false && missingOracle.code === "not_found", "fs.list oracle : dossier inexistant -> erreur claire", missingOracle.error);
   const unknownHost = await ask({ type: "fs.list", host: "fantome", path: "/" }, "fs.list", "machine inconnue");
   expect(unknownHost.ok === false && unknownHost.code === "unknown_host", "fs.list : machine inconnue refusée", unknownHost.error);
@@ -200,7 +200,7 @@ try {
   expect(stNotGit.ok && stNotGit.isGit === false && stNotGit.branch === null, "project.status : dossier non git signalé");
   const stMissing = await ask({ type: "project.status", host: "local", dir: "D:\\Projets\\inexistant-zz" }, "project.status", "status inexistant");
   expect(stMissing.ok === false && stMissing.code === "not_found", "project.status : dossier inexistant -> erreur claire");
-  const stOracle = await ask({ type: "project.status", host: "oracle", dir: "/home/ubuntu", fresh: true }, "project.status", "status oracle");
+  const stOracle = await ask({ type: "project.status", host: "oracle", dir: "/home/USERNAME", fresh: true }, "project.status", "status oracle");
   show("STATUS_ORACLE", { ok: stOracle.ok, isGit: stOracle.isGit, github: stOracle.github, githubReason: stOracle.githubReason });
   expect(stOracle.ok && ["disconnected", "unlinked", "linked"].includes(stOracle.github) && (stOracle.github !== "disconnected" || Boolean(stOracle.githubReason)), "project.status oracle : état GitHub cohérent (connecté: lié ou non lié ; sinon une raison est fournie)");
 
@@ -230,7 +230,7 @@ try {
   expect(createLinked.ok === false && createLinked.code === "remote_exists", "github.create sur un dépôt déjà lié -> bloqué (remote_exists)");
   const badName = await ask({ type: "github.create", host: "local", dir: SANDBOX, name: "nom invalide!", confirm: true, dryRun: true }, "github.result", "nom invalide");
   expect(badName.ok === false && badName.code === "invalid_name", "github.create : nom de dépôt invalide refusé");
-  const oracleCreate = await ask({ type: "github.create", host: "oracle", dir: "/home/ubuntu", confirm: true, dryRun: true }, "github.result", "create oracle");
+  const oracleCreate = await ask({ type: "github.create", host: "oracle", dir: "/home/USERNAME", confirm: true, dryRun: true }, "github.result", "create oracle");
   show("GITHUB_ORACLE", { ok: oracleCreate.ok, code: oracleCreate.code, error: oracleCreate.error, help: oracleCreate.plan?.github?.help });
   const oracleConnected = stOracle.github !== "disconnected";
   if (oracleConnected) {

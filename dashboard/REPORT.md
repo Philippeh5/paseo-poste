@@ -30,9 +30,9 @@ Commande : `node dashboard/scripts/verify-v2.mjs`. Sortie brute de la dernière 
 
 ```text
 OPTIONS_OK [{"id":"claude-openrouter","status":"ready","available":true,"sonnetModels":["claude-sonnet-5-5","claude-sonnet-5","claude-sonnet-5[1m]","claude-sonnet-4-6[1m]","claude-sonnet-4-6"]},{"id":"claude-api","status":"ready","available":true,"sonnetModels":["claude-sonnet-5-5","claude-sonnet-5","claude-sonnet-5[1m]","claude-sonnet-4-6[1m]","claude-sonnet-4-6"]}]
-TERMINAL_OK {"host":"local","cwd":"D:\\Projets\\AI-OS\\paseo-lab\\sandbox-repo","terminalId":"c68320f4-656d-4502-8d6f-4b79a06060c6","echoed":"PASEO_cd52a0efde"}
+TERMINAL_OK {"host":"local","cwd":"D:\\Projets\\AI-OS\\paseo-poste\\sandbox-repo","terminalId":"c68320f4-656d-4502-8d6f-4b79a06060c6","echoed":"PASEO_cd52a0efde"}
 AGENT_LIVE_PONG {"agentId":"f52368f2-ccad-40e6-a2e7-80fb0e767f8e","timelineText":"PONG"}
-AGENT_STATE_OK {"agentId":"f52368f2-ccad-40e6-a2e7-80fb0e767f8e","provider":"claude-openrouter","model":"sonnet","status":"running","cwd":"D:\\Projets\\AI-OS\\paseo-lab\\sandbox-repo","parentAgentId":null}
+AGENT_STATE_OK {"agentId":"f52368f2-ccad-40e6-a2e7-80fb0e767f8e","provider":"claude-openrouter","model":"sonnet","status":"running","cwd":"D:\\Projets\\AI-OS\\paseo-poste\\sandbox-repo","parentAgentId":null}
 AGENT_SECOND_REPLY_OK {"agentId":"f52368f2-ccad-40e6-a2e7-80fb0e767f8e","reply":"PONG"}
 AGENT_TIMELINE_OK ["agent.history","thread_started","assistant_message","assistant_message","turn_completed","turn_started","user_message","assistant_message","assistant_message","turn_completed"]
 CLEANUP_AGENT_ARCHIVED f52368f2-ccad-40e6-a2e7-80fb0e767f8e

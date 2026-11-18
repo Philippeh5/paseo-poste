@@ -157,7 +157,7 @@ async function makeHarness(name, { dataDir: reuseDir, project = PROJ, extraHandl
     log: (scope, ...args) => logs.push(`[${scope}] ${args.join(" ")}`),
     safeError: (e) => String(e?.message ?? e),
     hosts: {
-      get: (l) => (l === "local" ? entry : l === "oracle" ? { ...entry, url: "ws://100.78.38.61:6767/ws" } : undefined),
+      get: (l) => (l === "local" ? entry : l === "oracle" ? { ...entry, url: "ws://<TAILSCALE_IP>:6767/ws" } : undefined),
       has: (l) => l === "local" || l === "oracle", labels: () => ["local"],
     },
     hostOf: (m) => ({ label: m.host || "local", entry: m.host && m.host !== "local" ? undefined : entry }),

@@ -386,7 +386,7 @@ try {
 
   // =====================================================================================
   section("E. test RÉEL avec le vrai Von (REAL_VON=1)");
-  const realBin = USER_VON_BIN || "D:\\Projets\\AI-OS\\paseo-lab\\.foreman\\von-test\\Scripts\\von.exe";
+  const realBin = USER_VON_BIN || "D:\\Projets\\AI-OS\\paseo-poste\\.foreman\\von-test\\Scripts\\von.exe";
   const freeGb = freemem() / 1024 ** 3;
   if (process.env.REAL_VON !== "1") {
     console.log("[IGNORÉ] REAL_VON=1 non demandé : le vrai Von n'est pas lancé");

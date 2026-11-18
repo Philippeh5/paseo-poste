@@ -35,13 +35,32 @@ const normDir = (d) => String(d || "").replace(/\\/g, "/").replace(/\/+$/, "").t
 export const sameDir = (a, b) => Boolean(a && b) && normDir(a) === normDir(b);
 const insideDir = (child, dir) => Boolean(child && dir) && `${normDir(child)}/`.startsWith(`${normDir(dir)}/`);
 
+// Racines des projets par machine (mêmes valeurs que le lanceur de widgets). Sert à distinguer un vrai
+// dossier de projet des espaces de travail parasites créés par les outils : dossier personnel, racine des
+// projets elle-même, arbres de travail Paseo, dossiers temporaires, node_modules…
+export const PROJECT_ROOTS = ["/home/USERNAME/Projets", "D:\\Projets", "D:/Projets"];
+const parentDir = (dir) => {
+  const n = normDir(dir);
+  const i = n.lastIndexOf("/");
+  return i > 0 ? n.slice(0, i) : "";
+};
+export function isProjectFolder(dir) {
+  const n = normDir(dir);
+  if (!n) return false;
+  if (n.includes("/.paseo/worktrees/") || n.includes("/node_modules/")) return false;
+  if (n.startsWith("/tmp/") || n.includes("/scratchpad/")) return false;
+  // Un projet = un dossier DIRECTEMENT sous une racine de projets. Cela écarte /home/USERNAME, /home/USERNAME/Projets,
+  // les sous-dossiers de test et les worktrees, tout en gardant les projets suivis (traités à part).
+  return PROJECT_ROOTS.some((root) => parentDir(n) === normDir(root));
+}
+
 // Un dossier = un projet (par machine). Nom = nom du dossier.
 // Les projets SUIVIS (state.followedProjects) sont inclus : sans ca, un projet sans session ouverte
 // n'apparaissait nulle part (pas dans les favoris du tableau de bord, pas dans le lanceur).
 export function allProjects(state) {
   const byKey = new Map();
   for (const w of state.workspaces || []) {
-    if (!w.directory) continue;
+    if (!w.directory || !isProjectFolder(w.directory)) continue;
     const key = `${w.host}|${normDir(w.directory)}`;
     if (!byKey.has(key)) byKey.set(key, { host: w.host, directory: w.directory, name: w.name, workspaceIds: [] });
     byKey.get(key).workspaceIds.push(w.workspaceId);
@@ -68,20 +87,25 @@ export function dedupeProjects(projects) {
 }
 
 // Projets suivis : state.followedProjects (liste de { host?, directory } ou de chemins) s'il existe, sinon tous.
+// « Afficher tous les projets » (state.showAllProjects) garde les projets suivis en tête puis ajoute les autres
+// vrais dossiers de projet : avant, ce mode repartait des seuls workspaces du daemon et faisait donc disparaître
+// les projets suivis sans session ouverte (AI-OS, VentureOS…).
 export function followedProjects(state) {
   const all = allProjects(state);
-  const followed = state.followedProjects;
-  if (!Array.isArray(followed)) return { projects: dedupeProjects(all), filtered: false };
-  const wanted = followed.map((f) => (typeof f === "string" ? { directory: f } : f));
-  // Ordre choisi par l'utilisateur ; un dossier suivi sans espace de travail Paseo apparaît quand même.
-  const projects = wanted.map((f) => {
+  const followed = Array.isArray(state.followedProjects) ? state.followedProjects : null;
+  const showAll = state.showAllProjects === true;
+  const wanted = (followed || []).map((f) => (typeof f === "string" ? { directory: f } : f)).map((f) => {
     const found = all.find((p) => sameDir(f.directory, p.directory) && (!f.host || f.host === p.host));
     if (found) return f.name ? { ...found, name: f.name } : found;
     return f.host && f.directory
       ? { host: f.host, directory: f.directory, name: f.name || String(f.directory).split(/[\\/]/).filter(Boolean).pop(), workspaceIds: [] }
       : null;
   }).filter(Boolean);
-  return { projects: dedupeProjects(projects), filtered: true };
+  if (!wanted.length) return { projects: dedupeProjects(all), filtered: false };
+  if (!showAll) return { projects: dedupeProjects(wanted), filtered: true };
+  const isWanted = (p) => wanted.some((w) => w.host === p.host && sameDir(w.directory, p.directory));
+  const rest = all.filter((p) => !isWanted(p)).sort((a, b) => a.name.localeCompare(b.name));
+  return { projects: dedupeProjects([...wanted, ...rest]), filtered: false };
 }
 
 export function agentsOfProject(state, project) {

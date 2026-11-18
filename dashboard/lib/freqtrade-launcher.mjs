@@ -4,7 +4,7 @@
 import { execSync } from "node:child_process";
 import { spawn } from "node:child_process";
 
-const FREQTRADE_USERDIR = "/home/ubuntu/Projets/freqtrade/user_data";
+const FREQTRADE_USERDIR = "/home/USERNAME/Projets/freqtrade/user_data";
 
 export async function launchFreqTrade(strategy, config, mode, pairs) {
   try {

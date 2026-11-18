@@ -101,7 +101,7 @@ process.env.BRAIN_DB = join(work, "brain.sqlite");
   ins.run("B", "Tâche B (non cochée)", "Faire B", "D:\\Projets\\ProjB", "mini", "doing", "ag-B", "");
   ins.run("C", "Tâche C (cochée, agent sur Oracle)", "Faire C", "D:\\Projets\\ProjC", "mini", "doing", "ag-C", "");
   ins.run("D", "Tâche D (cochée, mais à faire)", "Faire D", "D:\\Projets\\ProjD", "mini", "todo", null, "");
-  ins.run("E", "Tâche E (cochée, déjà sur Oracle)", "Faire E", "/home/ubuntu/projets/ProjE", "oracle", "doing", null, "");
+  ins.run("E", "Tâche E (cochée, déjà sur Oracle)", "Faire E", "/home/USERNAME/projets/ProjE", "oracle", "doing", null, "");
   db.close();
 }
 function makeWorld() {
@@ -178,8 +178,8 @@ const FAST = { intervalMs: 50, pingTimeoutMs: 80 };
     "ordre observé : monitoring, suspect, unreachable, resuming, resumed");
   expect(calls.length === 1 && calls[0].taskId === "A", "plan de reprise produit pour la seule tâche cochée en cours sur l'hôte principal (A)", JSON.stringify(calls.map((c) => c.taskId)));
   const plan = calls[0];
-  expect(/^reprise\/\d{8}-\d{4}$/.test(plan.branch) && plan.targetDir === "/home/ubuntu/projets/ProjA", "plan : branche reprise/<date> et dossier Oracle traduit", `${plan.branch} ${plan.targetDir}`);
-  expect(["Linux", "Faire A", "Erreur récente A", plan.branch, "/home/ubuntu/projets/ProjA", "perdu"].every((s) => plan.prompt.includes(s)), "invite de reprise : système, objectif, erreurs, branche, dossier, avertissement travail non commité");
+  expect(/^reprise\/\d{8}-\d{4}$/.test(plan.branch) && plan.targetDir === "/home/USERNAME/projets/ProjA", "plan : branche reprise/<date> et dossier Oracle traduit", `${plan.branch} ${plan.targetDir}`);
+  expect(["Linux", "Faire A", "Erreur récente A", plan.branch, "/home/USERNAME/projets/ProjA", "perdu"].every((s) => plan.prompt.includes(s)), "invite de reprise : système, objectif, erreurs, branche, dossier, avertissement travail non commité");
   const st = m.getStatus();
   expect(!calls.some((c) => ["B", "D", "E"].includes(c.taskId)), "aucun plan pour B (non cochée), D (à faire), E (autre hôte)");
   expect(st.skipped.length === 1 && st.skipped[0].id === "C" && /oracle/.test(st.skipped[0].reason), "tâche C ignorée : elle a déjà un propriétaire actif sur Oracle", JSON.stringify(st.skipped));

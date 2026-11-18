@@ -37,7 +37,7 @@ const url = process.env.DASHBOARD_VERIFY_URL || "ws://127.0.0.1:7070/ui";
 const httpUrl = url.replace("ws:", "http:").replace("wss:", "https:").replace("/ui", "");
 const origin = httpUrl;
 const daemonUrl = process.env.PASEO_LOCAL_URL || "ws://127.0.0.1:6767/ws";
-const SANDBOX = process.env.VERIFY_SANDBOX || "D:/Projets/AI-OS/paseo-lab/sandbox-repo";
+const SANDBOX = process.env.VERIFY_SANDBOX || "D:/Projets/AI-OS/paseo-poste/sandbox-repo";
 
 let totalTests = 0;
 let passedTests = 0;
@@ -106,9 +106,9 @@ expect(harnessLabel("terminal") === "Terminal", "harnessLabel('terminal')");
 expect(harnessLabel("custom-tool") === "Custom-tool", "harnessLabel inconnu avec majuscule initiale");
 
 // 19-22: projectLabel: chemins Windows, Linux, trailing slashes, vides
-expect(projectLabel("D:\\Projets\\AI-OS\\paseo-lab\\sandbox-repo") === "sandbox-repo", "projectLabel Windows");
-expect(projectLabel("/home/ubuntu/projects/ai-hub") === "ai-hub", "projectLabel Linux");
-expect(projectLabel("D:/Projets/AI-OS/paseo-lab/sandbox-repo/") === "sandbox-repo", "projectLabel trailing slash");
+expect(projectLabel("D:\\Projets\\AI-OS\\paseo-poste\\sandbox-repo") === "sandbox-repo", "projectLabel Windows");
+expect(projectLabel("/home/USERNAME/projects/ai-hub") === "ai-hub", "projectLabel Linux");
+expect(projectLabel("D:/Projets/AI-OS/paseo-poste/sandbox-repo/") === "sandbox-repo", "projectLabel trailing slash");
 expect(projectLabel("") === "" && projectLabel(null) === "", "projectLabel vide");
 expect(projectLabel({ directory: "C:\\dev\\mon-projet" }) === "mon-projet", "projectLabel objet");
 
@@ -187,10 +187,10 @@ expect(toolFromCommand("/usr/local/bin/claude") === "Claude", "toolFromCommand c
 expect(toolFromCommand("htop") === "Htop", "toolFromCommand commande inconnue capitalisée");
 expect(toolFromCommand("") === "Terminal" && toolFromCommand(undefined) === "Terminal", "toolFromCommand vide -> Terminal");
 
-const nameFreeBuff = windowName({ tool: "FreeBuff", project: "D:\\Projets\\AI-OS\\paseo-lab\\sandbox-repo", host: "local" });
+const nameFreeBuff = windowName({ tool: "FreeBuff", project: "D:\\Projets\\AI-OS\\paseo-poste\\sandbox-repo", host: "local" });
 expect(nameFreeBuff === "FreeBuff · sandbox-repo · Mini PC", "windowName FreeBuff", nameFreeBuff);
-expect(windowName({ project: "/home/ubuntu/ai-hub", host: "oracle" }) === "Terminal · ai-hub · Oracle", "windowName terminal simple Oracle");
-expect(windowName({ kind: "agent", provider: "hermes", project: "/home/ubuntu/ai-hub", host: "oracle" }) === "Hermes · ai-hub · Oracle", "windowName agent Hermes");
+expect(windowName({ project: "/home/USERNAME/ai-hub", host: "oracle" }) === "Terminal · ai-hub · Oracle", "windowName terminal simple Oracle");
+expect(windowName({ kind: "agent", provider: "hermes", project: "/home/USERNAME/ai-hub", host: "oracle" }) === "Hermes · ai-hub · Oracle", "windowName agent Hermes");
 expect(windowName({ kind: "agent", provider: "claude-openrouter/sonnet", project: "sandbox-repo", host: "local" })
   === "Claude (OpenRouter) · sandbox-repo · Mini PC", "windowName agent OpenRouter");
 expect(windowName({ kind: "agent", provider: "pi", project: "sandbox-repo", host: "local" }) === "Pi · sandbox-repo · Mini PC", "windowName agent Pi");

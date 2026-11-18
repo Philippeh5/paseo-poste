@@ -162,7 +162,14 @@ export function register(ctx) {
   };
   load(); // crée data/widgets.json avec les valeurs par défaut s'il est absent
 
-  const knownHosts = () => new Set(ctx.hosts.labels ? ctx.hosts.labels() : []);
+  const knownHosts = () => {
+    const set = new Set(ctx.hosts.labels ? ctx.hosts.labels() : []);
+    // Une machine retirée de la flotte (ex. « local » / Mini PC) ne doit pas verrouiller toute la barre :
+    // on continue d'accepter les hôtes déjà présents dans la configuration enregistrée. Le lancement affiche
+    // ensuite « machine non connectée », et l'éditeur permet de réaffecter le widget.
+    for (const w of load()) if (w?.action?.host) set.add(w.action.host);
+    return set;
+  };
 
   const summary = (widgets) => {
     const all = widgets.slice().sort((a, b) => a.order - b.order);

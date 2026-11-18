@@ -58,7 +58,7 @@ let agentId = null;
 try {
   console.log("--- 1. Lancement d'un agent avec réflexion (claude-nvidia / sonnet) ---");
   const prompt = "Say hello in one short sentence.";
-  const cwd = "D:/Projets/AI-OS/paseo-lab/sandbox-repo";
+  const cwd = "D:/Projets/AI-OS/paseo-poste/sandbox-repo";
   ws.send(JSON.stringify({
     type: "launch.start",
     host: "local",

@@ -401,7 +401,7 @@ if (run("b")) {
   expect(/Projet inconnu/.test(unknown.error || ""), "brief.create sur un dossier qui n'est pas un projet connu : refusé", unknown.error);
   const outside = await h.human("brief.create", { host: "local", dir: `${P}/src/../..` });
   expect(outside.error !== null && !existsSync(join(PROJ, "..", BRIEF_FILE)), "brief.create avec « .. » : refusé, rien écrit hors du projet", outside.error);
-  const remote = await h.human("brief.create", { host: "oracle", dir: "/home/ubuntu/x" });
+  const remote = await h.human("brief.create", { host: "oracle", dir: "/home/USERNAME/x" });
   expect(/machine du poste/.test(remote.error || ""), "brief.create sur une machine distante : refusé");
   const cr = await h.human("brief.create", { host: "local", dir: P });
   const crState = stateOf(cr);

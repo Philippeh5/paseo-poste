@@ -48,7 +48,12 @@ on("launch.started", (msg) => {
 });
 
 // Dossier qui contient tous les projets, par machine (quand aucun projet n'est sélectionné).
-const PROJECT_ROOTS = { oracle: "/home/ubuntu/Projets", local: "D:\\Projets" };
+const PROJECT_ROOTS = { oracle: "/home/USERNAME/Projets", local: "D:\\Projets" };
+
+// Machines réellement configurées : sert de valeur par défaut aux nouveaux widgets (avant, « local » était
+// codé en dur et l'enregistrement échouait avec « hôte inconnu : local » quand cette machine n'existait plus).
+const knownHostLabels = () => (getState().hosts || []).map((h) => h.label).filter(Boolean);
+const defaultHostLabel = () => knownHostLabels()[0] || "local";
 
 const quote = (arg) => (/\s/.test(arg) ? `"${arg.replace(/"/g, '\\"')}"` : arg);
 
@@ -209,7 +214,7 @@ function openEditor() {
 
   const addBtn = el("button", { class: "btn btn-sm btn-add", type: "button", onclick: () => {
     const w = { id: `w-${Date.now().toString(36)}`, label: "Nouveau widget", icon: "terminal",
-      order: (editorWidgets.length + 1) * 10, hidden: false, action: { type: "terminal", host: "local" } };
+      order: (editorWidgets.length + 1) * 10, hidden: false, action: { type: "terminal", host: defaultHostLabel() } };
     editorWidgets.push(w);
     rebuild();
     widgetForm(w, formBox, rebuild);
@@ -325,7 +330,7 @@ function widgetForm(w, formBox, rebuild) {
   const dyn = el("div", { class: "widget-form-dyn" });
 
   const hostNames = () => {
-    const names = (getState().hosts || []).map((h) => h.label);
+    const names = knownHostLabels();
     return names.length ? names : ["local"];
   };
   function renderDyn() {
@@ -341,8 +346,14 @@ function widgetForm(w, formBox, rebuild) {
       sel.addEventListener("change", () => { a.view = sel.value; });
       dyn.append(field("Vue", sel));
     } else {
-      a.host = a.host || hostNames()[0];
-      const host = el("select", {}, ...hostNames().map((n) => el("option", { value: n, selected: n === a.host }, hostLabel(n))));
+      const names = hostNames();
+      a.host = a.host || names[0];
+      // Garde l'hôte mémorisé visible même s'il n'est plus configuré : sinon la liste affichait « Oracle »
+      // alors que la valeur enregistrée restait « local », et l'enregistrement échouait sans que ça se voie.
+      const configured = knownHostLabels();
+      const options = names.includes(a.host) ? names : [a.host, ...names];
+      const host = el("select", {}, ...options.map((n) => el("option", { value: n, selected: n === a.host },
+        configured.includes(n) ? hostLabel(n) : `${hostLabel(n)} (indisponible)`)));
       host.addEventListener("change", () => { a.host = host.value; });
       const cwd = input({ value: a.cwd || "", maxlength: "1000", placeholder: "Dossier (sinon : fenêtre active)" });
       cwd.addEventListener("input", () => { a.cwd = cwd.value.trim() || undefined; });

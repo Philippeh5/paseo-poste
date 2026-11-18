@@ -18,7 +18,7 @@ const origin = new URL(url).origin.replace("ws:", "http:").replace("wss:", "http
 const http = origin;
 const here = fileURLToPath(new URL(".", import.meta.url));
 const dataDir = process.env.DASHBOARD_DATA_DIR || join(here, "..", "data");
-const SANDBOX = process.env.VERIFY_SANDBOX || "D:/Projets/AI-OS/paseo-lab/sandbox-repo";
+const SANDBOX = process.env.VERIFY_SANDBOX || "D:/Projets/AI-OS/paseo-poste/sandbox-repo";
 
 const fail = (message) => { throw new Error(message); };
 const expect = (condition, label, detail = "") => {
@@ -213,7 +213,7 @@ try {
   const desk = [
     { id: "w1", kind: "terminal", host: "local", cwd: SANDBOX, title: "Terminal test", terminalId, agentId: null,
       minimized: false, focused: true, x: 24, y: 40, w: 560, h: 344 },
-    { id: "w2", kind: "agent", host: "oracle", cwd: "/home/ubuntu/projets/essai", title: "Agent test", terminalId: null,
+    { id: "w2", kind: "agent", host: "oracle", cwd: "/home/USERNAME/projets/essai", title: "Agent test", terminalId: null,
       agentId: "agent-xyz", minimized: true, focused: false, x: 600, y: 40, w: 520, h: 432 },
   ];
   a.ws.send(JSON.stringify({ type: "desk.state", windows: desk }));

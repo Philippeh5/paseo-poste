@@ -70,7 +70,7 @@ export function register(ctx, { hosts }) {
       const isFreqtrade = label.includes("freqtrade") || label === "FreqTrade";
       let freqtradeOptions = [];
       if (isFreqtrade) {
-        const strategiesDir = "/home/ubuntu/Projets/freqtrade/user_data/strategies";
+        const strategiesDir = "/home/USERNAME/Projets/freqtrade/user_data/strategies";
         const configs = ["config.json", "config1.json", "config2.json", "config3.json", "config_AI.json", "config_btc.json"];
         freqtradeOptions = [
           { id: "strategy", label: "Stratégie", options: [] },  // Sera rempli côté JS

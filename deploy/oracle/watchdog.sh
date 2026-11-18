@@ -19,7 +19,7 @@ if [ $ok -eq 1 ]; then
   # Battement vers GitHub (surveillance externe : .github/workflows/oracle-heartbeat.yml), au plus toutes les 5 min.
   last=$(cat "$STATE/beat" 2>/dev/null || echo 0); nowt=$(date +%s)
   if [ $((nowt - last)) -ge 300 ] && command -v gh >/dev/null; then
-    REPO="${HEARTBEAT_REPO:-Philippeh5/paseo-lab}"
+    REPO="${HEARTBEAT_REPO:-Philippeh5/paseo-poste}"
     if timeout 20 gh api -X PATCH "repos/$REPO/actions/variables/ORACLE_HEARTBEAT" -f name=ORACLE_HEARTBEAT -f value="$nowt" >/dev/null 2>&1; then echo "$nowt" > "$STATE/beat"; fi
   fi
   disk=$(df --output=pcent / | tail -1 | tr -dc 0-9)

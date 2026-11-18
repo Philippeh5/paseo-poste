@@ -1,0 +1,13 @@
+{
+  "hosts": [
+    {
+      "label": "oracle",
+      "url": "ws://127.0.0.1:6767/ws"
+    },
+    {
+      "label": "mini-pc",
+      "url": "ws://<TAILSCALE_IP>:6767/ws",
+      "password": "<DAEMON_PASSWORD>"
+    }
+  ]
+}

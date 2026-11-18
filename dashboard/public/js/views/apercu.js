@@ -27,7 +27,7 @@ function render() {
         el("button", { class: "btn btn-sm", type: "button", onclick: () => { const p = Number(manual); if (p >= 1024 && p <= 65535) open(p); else toast("Port entre 1024 et 65535"); } }, "Ouvrir"))),
     el("ul", { class: "pilot-list" }, list.length ? list.map((p) => el("li", { class: "pilot-row", style: "grid-template-columns:70px 1fr auto" },
       el("strong", {}, String(p.port)), el("span", { class: "pilot-detail" }, `${p.process || "processus inconnu"} · ${p.loopbackOnly ? "local seulement" : `écoute sur ${p.addr}`}`),
-      el("button", { class: "btn btn-sm btn-primary", type: "button", onclick: () => open(p.port) }, "Afficher"))) : [el("li", { class: "pilot-row" }, el("span", { class: "pilot-detail" }, st ? "Aucun port à l'écoute." : "Détection…"))])),
+      el("span", { class: "pilot-actions" }, el("button", { class: "btn btn-sm btn-primary", type: "button", onclick: () => open(p.port) }, "Afficher"), el("button", { class: "btn btn-sm", type: "button", title: "Vrai Chrome sur la machine : WebSocket, formulaires, connexions", onclick: () => { try { window.sessionStorage.setItem("paseo-rb-pending", `http://127.0.0.1:${p.port}/`); } catch { /* stockage indisponible */ } window.location.hash = "#navigateur"; } }, "Navigateur distant")))) : [el("li", { class: "pilot-row" }, el("span", { class: "pilot-detail" }, st ? "Aucun port à l'écoute." : "Détection…"))])),
     current ? el("section", { class: "pilot-group" }, el("header", { class: "pilot-group-head" }, el("h2", {}, `Port ${current.port}`),
       el("div", { class: "pilot-group-actions" },
         el("button", { class: "btn btn-sm", type: "button", onclick: () => { const f = root.querySelector("iframe"); if (f) f.src = url; } }, "Recharger"),

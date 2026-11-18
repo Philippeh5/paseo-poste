@@ -58,7 +58,7 @@ PATHS=(
   "dashboard/.gitignore" "dashboard/DESIGN.md" "dashboard/FAILOVER.md" "dashboard/README.md" "dashboard/REPORT.md"
   "dashboard/handlers" "dashboard/lib" "dashboard/public" "dashboard/scripts"
   "dashboard/server.mjs" "dashboard/start-dashboard.ps1"
-  "deploy/mini-pc" "deploy/oracle"
+  "deploy/mini-pc" "deploy/oracle" "deploy/join-machine.sh"
   "tools" "package.json"
 )
 

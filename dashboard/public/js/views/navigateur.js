@@ -16,6 +16,12 @@ const keyMsg = (e) => ({ type: "rbrowser.input", kind: "key", key: e.key, ctrl: 
 function pos(e) { const r = canvas.getBoundingClientRect(); return { x: Math.round((e.clientX - r.left) * (W / r.width)), y: Math.round((e.clientY - r.top) * (H / r.height)) }; }
 const mods = (e) => ({ ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, shift: e.shiftKey });
 
+// Adresse déposée par la vue Aperçu : ouverte dès que le navigateur tourne (démarrage manuel confirmé si besoin).
+function takePending() {
+  try { const u = window.sessionStorage.getItem("paseo-rb-pending"); if (u) { window.sessionStorage.removeItem("paseo-rb-pending"); return u; } } catch { /* stockage indisponible */ }
+  return null;
+}
+let pendingUrl = null;
 async function copySelection() { send({ type: "rbrowser.copy" }); }
 async function writeClipboard(text) {
   try { await navigator.clipboard.writeText(text); toast(text ? `Copié (${text.length} caractères)` : "Aucune sélection dans la page"); }
@@ -73,9 +79,10 @@ const view = {
   id: "navigateur", title: "Navigateur", short: "Web", icon: ICON, order: 19,
   mount(container) {
     root = container;
+    pendingUrl = takePending();
     root.replaceChildren(el("div", { class: "pilot" }));
     render();
-    offs.push(on("rbrowser.state", (m) => { const was = st.state; const prevTabs = st.tabs; const prevActive = st.active; st = m; if (was !== m.state || JSON.stringify(m.tabs) !== JSON.stringify(prevTabs) || m.active !== prevActive) { render(); if (m.state === "running") send({ type: "rbrowser.watch" }); } else if (urlInput && document.activeElement !== urlInput && m.url) urlInput.value = m.url; }));
+    offs.push(on("rbrowser.state", (m) => { if (m.state === "running" && pendingUrl) { send({ type: "rbrowser.nav", url: pendingUrl }); pendingUrl = null; } const was = st.state; const prevTabs = st.tabs; const prevActive = st.active; st = m; if (was !== m.state || JSON.stringify(m.tabs) !== JSON.stringify(prevTabs) || m.active !== prevActive) { render(); if (m.state === "running") send({ type: "rbrowser.watch" }); } else if (urlInput && document.activeElement !== urlInput && m.url) urlInput.value = m.url; }));
     offs.push(on("rbrowser.frame", (m) => { if (!ctx2d) return; const img = new Image(); img.onload = () => ctx2d.drawImage(img, 0, 0, W, H); img.src = `data:image/jpeg;base64,${m.data}`; }));
     offs.push(on("rbrowser.selection", (m) => writeClipboard(m.text)));
     offs.push(onConnection((up) => { if (up) { send({ type: "rbrowser.status" }); } }));

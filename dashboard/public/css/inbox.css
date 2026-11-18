@@ -1043,3 +1043,14 @@
   background: color-mix(in srgb, var(--attention) 12%, transparent);
 }
 .inbox-wait-alert[hidden] { display: none; }
+
+/* ---------- Réception : onglets À traiter · Idées et autonomie · Journal ---------- */
+.reception-tabs { display: flex; gap: 4px; padding: 10px 16px 0; border-bottom: 1px solid var(--trait); overflow-x: auto; }
+.reception-tab {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; font: inherit; font-size: var(--t-14);
+  color: var(--texte-doux); background: transparent; border: 0; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap;
+}
+.reception-tab[aria-selected="true"] { color: var(--texte); border-bottom-color: var(--accent); font-weight: 600; }
+.reception-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.reception-pane[hidden] { display: none; }
+.reception-pane > .cockpit, .reception-pane > .journal-view { padding-top: 16px; }

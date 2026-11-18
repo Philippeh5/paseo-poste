@@ -2,6 +2,7 @@
 // Réutilise l'appel LLM direct de llmchat.mjs (modèle gratuit OpenRouter ou NVIDIA).
 // Crée un élément de plan dans l'inbox via le message inbox.plan.create (source "voix").
 import { executeLlmCall, resolveProvider, sanitizeKey } from "./llmchat.mjs";
+import { SELF_HOST } from "../lib/selfhost.mjs";
 
 export const MAX_TEXT_LENGTH = 4000;
 export const TIMEOUT_MS = 60000;
@@ -126,7 +127,7 @@ export function register(ctx) {
   onMessage("voiceplan.generate", async (ws, m) => {
     const rawText = typeof m.text === "string" ? m.text.trim() : "";
     const project = typeof m.project === "string" ? m.project.trim() : "";
-    const host = typeof m.host === "string" ? m.host.trim() : "local";
+    const host = typeof m.host === "string" ? m.host.trim() : SELF_HOST;
 
     if (!rawText) {
       const err = "Le texte de la demande est vide.";

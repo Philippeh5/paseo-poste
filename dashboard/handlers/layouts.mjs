@@ -26,6 +26,11 @@ function cleanWindow(w) {
     minimized: w.minimized === true,
     maximized: w.maximized === true,
     z: int(w.z),
+    // Fenêtres web : numéro de port, chemin, adresse http(s) et mode (relais rapide ou Chrome distant).
+    port: Number.isInteger(w.port) && w.port >= 1024 && w.port <= 65535 ? w.port : undefined,
+    path: typeof w.path === "string" && w.path.startsWith("/") ? w.path.slice(0, 500) : undefined,
+    url: typeof w.url === "string" && /^https?:\/\//i.test(w.url) ? w.url.slice(0, 1000) : undefined,
+    mode: w.mode === "relay" || w.mode === "chrome" ? w.mode : undefined,
   };
 }
 

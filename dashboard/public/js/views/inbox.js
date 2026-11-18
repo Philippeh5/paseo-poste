@@ -5,6 +5,8 @@ import { el, icons, iconEl } from "../core/util.js";
 import { setInboxUnread } from "../core/topbar.js";
 import { hostLabel, projectLabel } from "../core/names.js";
 import { openVoicePlanDialog } from "../components/voiceplan.js";
+import { mountCockpit } from "../components/cockpit.js";
+import { mountJournal } from "../components/journal.js";
 
 // Une forme distincte par type (la couleur seule ne suffit pas) : losange, coche, croix, écran, info.
 const glyph = (path) => '<svg viewBox="0 0 20 20" width="12" height="12" fill="none" stroke="currentColor" ' +
@@ -505,7 +507,7 @@ function questionBlock(item, busy) {
 
 function openItem(item) {
   if (item.agentId) ctx.drawer.openAgent(item.host, item.agentId);
-  else if (item.kind === "machine") ctx.navigate("machines");
+  else if (item.kind === "machine") ctx.navigate("connexions");
 }
 
 async function validatePlan(item) {
@@ -655,6 +657,7 @@ function render() {
   if (!shown.some((i) => i.id === selectedId)) selectedId = shown[0]?.id ?? null;
   const unread = items.filter((i) => i.status === "nouveau").length;
   setInboxUnread(unread);
+  if (tabBtns.inbox) paintTabs();
 
   const header = el("div", { class: "inbox-header" },
     el("div", { class: "inbox-title-group" }, el("h1", { class: "inbox-title" }, "Boîte de réception"),
@@ -774,6 +777,7 @@ function refreshTimes() {
 }
 
 function onKeydown(event) {
+  if (!root?.offsetParent) return; // onglet Idées ou Journal affiché : j/k/a/r ne concernent pas la boîte
   if (event.ctrlKey || event.metaKey || event.altKey || event.defaultPrevented) return;
   if (document.querySelector("dialog[open]") || event.target.closest?.("input, textarea, select, .xterm")) return;
   const shown = visibleItems();
@@ -816,22 +820,72 @@ function setItems(message) {
   render();
 }
 
+// ---------- Onglets de la page Réception : À traiter (boîte) · Idées et autonomie (ex-Cockpit) · Journal ----------
+const TABS = [["inbox", "À traiter"], ["ideas", "Idées et autonomie"], ["journal", "Journal"]];
+const FROM = { cockpit: "ideas", journal: "journal" }; // anciennes ancres #cockpit et #journal (posées par main.js dans history.state)
+let tabBtns = {}; let panes = {}; let activeTab = "inbox"; let pendingIdeas = 0; let paneOffs = {};
+
+function showTab(id) {
+  activeTab = id;
+  try { sessionStorage.setItem("paseo-reception-tab", id); } catch { /* stockage indisponible */ }
+  for (const [tab] of TABS) {
+    const on = tab === id;
+    tabBtns[tab].setAttribute("aria-selected", String(on));
+    tabBtns[tab].tabIndex = on ? 0 : -1;
+    panes[tab].hidden = !on;
+    if (on && !paneOffs[tab] && tab !== "inbox") paneOffs[tab] = (tab === "ideas" ? mountCockpit : mountJournal)(panes[tab], ctx);
+  }
+  if (id === "inbox") render();
+}
+
+function paintTabs() {
+  const unread = items.filter((i) => i.status === "nouveau").length;
+  tabBtns.inbox.replaceChildren(...["À traiter", unread ? el("span", { class: "tab-badge" }, String(unread)) : null].filter(Boolean));
+  tabBtns.ideas.replaceChildren(...["Idées et autonomie", pendingIdeas ? el("span", { class: "tab-badge" }, String(pendingIdeas)) : null].filter(Boolean));
+}
+
 const view = {
   id: "reception",
   title: "Boîte de réception",
   short: "Réception",
   icon: icons.inbox,
   order: 60,
+  rail: "none",
   mount(container, context) {
-    root = container;
     ctx = context;
     selectedId = null;
+    paneOffs = {};
+    pendingIdeas = 0;
+    panes = { inbox: el("div", { class: "reception-pane" }), ideas: el("div", { class: "reception-pane", hidden: true }),
+      journal: el("div", { class: "reception-pane", hidden: true }) };
+    root = panes.inbox;
+    tabBtns = {};
+    const bar = el("div", { class: "reception-tabs", role: "tablist", "aria-label": "Sections de la réception" },
+      ...TABS.map(([id, label]) => (tabBtns[id] = el("button", { class: "reception-tab", type: "button", role: "tab", id: `rtab-${id}`,
+        "aria-controls": `rpane-${id}`, onclick: () => showTab(id),
+        onkeydown: (e) => {
+          const k = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+          if (!k) return;
+          e.preventDefault();
+          const next = TABS[(TABS.findIndex(([t]) => t === id) + k + TABS.length) % TABS.length][0];
+          showTab(next); tabBtns[next].focus();
+        } }, label))));
+    for (const [id] of TABS) { panes[id].id = `rpane-${id}`; panes[id].setAttribute("role", "tabpanel"); panes[id].setAttribute("aria-labelledby", `rtab-${id}`); }
+    container.replaceChildren(el("div", { class: "reception" }, bar, panes.inbox, panes.ideas, panes.journal));
     unsubs = [ctx.on("inbox.list", setItems), ctx.on("inbox.changed", setItems), ctx.onConnection((up) => {
-      if (up) ctx.send({ type: "inbox.list" });
-    })];
+      if (up) { ctx.send({ type: "inbox.list" }); ctx.send({ type: "idea.list" }); }
+    }),
+    // Le nombre d'idées à valider reste juste sur l'onglet même quand le Cockpit n'est pas affiché.
+    ctx.on("idea.list", (m) => { pendingIdeas = (m.ideas || []).filter((i) => i.status === "pending").length; paintTabs(); }),
+    ctx.on("idea.changed", () => ctx.send({ type: "idea.list" }))];
     window.addEventListener("keydown", onKeydown);
     timer = setInterval(refreshTimes, 15000);
-    render();
+    let first = "inbox";
+    try { first = sessionStorage.getItem("paseo-reception-tab") || "inbox"; } catch { /* stockage indisponible */ }
+    first = FROM[history.state?.from] || (TABS.some(([t]) => t === first) ? first : "inbox");
+    paintTabs();
+    showTab(first);
+    ctx.send({ type: "idea.list" });
   },
   unmount() {
     window.removeEventListener("keydown", onKeydown);
@@ -839,6 +893,8 @@ const view = {
     timer = null;
     unsubs.forEach((fn) => fn());
     unsubs = [];
+    Object.values(paneOffs).forEach((off) => off?.());
+    paneOffs = {};
     root = ctx = null;
   },
 };

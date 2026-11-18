@@ -1991,7 +1991,7 @@ if (run("g5")) {
     const problems = [];
     page.on("pageerror", (e) => problems.push(`pageerror: ${e.message}`));
     page.on("console", (m) => { if (m.type() === "error" && !/favicon|Failed to load resource/.test(m.text())) problems.push(`console: ${m.text()}`); });
-    await page.goto(`${L.BASE}/#agent`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${L.BASE}/#agents`, { waitUntil: "domcontentloaded" }); await page.locator('[data-agents-open="orchestrateur"]').click();
     await page.waitForSelector("#team-body .team-project", { timeout: 30000 });
     const rowOf = (label) => page.locator(".team-session", { has: page.locator(".team-session-name", { hasText: label }) });
     await rowOf("Session A").waitFor({ timeout: 15000 });
@@ -2074,10 +2074,10 @@ if (run("g5")) {
     await confirmDialog("ok");
     await rowOf("Session B").locator('button[data-action="observer-on"]').waitFor({ timeout: 12000 });
     expect(true, "« Retirer l'observateur » : retour à la normale");
-    // Vue « Groupes » : l'onglet existe, un groupe par projet, écrire au groupe depuis la messagerie
-    await page.evaluate(() => { location.hash = "#groupes"; });
+    // Onglet « Conversation » de la page Agents (ex-vue Groupes) : un groupe par projet, écrire au groupe depuis la messagerie
+    await page.locator('[data-agents-tab="conversation"]').click();
     await page.waitForSelector("#grp .grp-item", { timeout: 12000 });
-    expect((await page.locator("#tab-groupes").count()) === 1, "onglet « Groupes » présent dans la barre du haut");
+    expect((await page.locator("#tab-agents").count()) === 1, "page « Agents » présente dans la barre du haut (ex-onglet Groupes)");
     // Le projet apparaît dans la liste des groupes (régulier ou « ancien » s'il n'est pas suivi) ; le cibler par son nom.
     await page.locator('#grp .grp-item').filter({ hasText: 'labproj' }).first().click();
     await page.waitForSelector("#grp-input", { timeout: 8000 });
@@ -2087,7 +2087,7 @@ if (run("g5")) {
     const viaGroup = await until(async () => { const r = await L.api("GET", "/coord/inbox", undefined, { agentId: S.A, token: tokenA }); return r.json.data?.messages?.find((m) => /messagerie de groupe/.test(m.text)); }, "message de la messagerie reçu par A", 10000, 300);
     expect(viaGroup?.fromKind === "human", "messagerie de groupe : le message de Philippe apparaît dans le fil et arrive aux sessions du projet", JSON.stringify(viaGroup));
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), "vue Groupes : aucun débordement horizontal de la page");
-    await page.evaluate(() => { location.hash = "#agent"; });
+    await page.locator('[data-agents-tab="orchestrateur"]').click();
     await page.waitForSelector("#agv-team .team-session", { timeout: 12000 });
     // Demande d'identification (coord_hello) : confirmation par Philippe
     await page.waitForSelector(".team-hello .team-res", { timeout: 15000 });
@@ -2106,7 +2106,7 @@ if (run("g5")) {
     await page.emulateMedia({ colorScheme: "light" });
     // Mobile 390 px : aucun débordement horizontal
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(`${L.BASE}/#agent`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${L.BASE}/#agents`, { waitUntil: "domcontentloaded" }); await page.locator('[data-agents-open="orchestrateur"]').click();
     await page.waitForSelector("#team-body .team-project", { timeout: 30000 });
     await page.waitForTimeout(800);
     const widths = await page.evaluate(() => ({

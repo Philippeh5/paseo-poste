@@ -80,19 +80,6 @@ si l'entrée est invalide ; aucun code ne demande de jeton Telegram (le pont res
 Méthodes complémentaires sur `ctx.inbox` : `list(filter)`, `mark(ids, status)`, `markAll(status)`,
 `clear(olderThan)`, `getUnreadCount()`.
 
-**Transfert vers Oracle (`handlers/transfer.mjs`, `lib/transfer-steps.mjs`)** :
-- Machine d’états `idle → checking → stopping_agents → committing → cloning → reassigning → shutting_down → done`, `failed(<étape>)`, `partial(shutdown)`, persistée dans `data/transfers.sqlite` (`transfers`, `transfer_events`).
-- Exécuteurs injectables : `TransferManager(ctx, {dbPath, executors, simulation})` ; `createRealExecutors(deps)` et `createSimulationExecutors()`. `dryRun` n’appelle jamais les exécuteurs réels sauf `check` (lecture seule).
-- Messages : `transfer.plan`, `transfer.run {confirm:true, dryRun:boolean, force?, confirmShutdown?, fresh?}`, `transfer.status`, `transfer.events`, `transfer.cancel` ; diffusions `transfer.status`, `transfer.done`, `transfer.error`.
-- Sécurité : `confirm:true` toujours exigé, branches limitées à `transfert/<date>` et `reprise/<date>`, aucun secret journalisé, extinction réelle protégée par `confirmShutdown:true` et annulable (`shutdown /a`). Détail dans `../README.md` (« Transfert et reprise »).
-
-**Surveillance et reprise automatique (`handlers/failover.mjs`)** :
-- Surveille l’hôte principal (`local` par défaut) : connexion + `daemon.ping` (défaut 30 s, délai 4 s). `FailoverManager(ctx, {resumeExecutor, intervalMs, pingTimeoutMs})`.
-- Fonction pure `nextState(state, event, config, now)` : `monitoring → suspect → unreachable → resuming → resumed → reclaim_available`.
-- Persistance dans `data/failover.json` (`ctx.store`), état armé restauré au redémarrage sans rejouer de reprise.
-- Messages : `failover.status`, `failover.arm` (→ `failover.armed`), `failover.disarm` (→ `failover.disarmed`), `failover.setAutoResume {taskId, on}`, `failover.reclaim {confirm:true}` (simulation).
-- En `unreachable`, enregistre un plan de reprise par tâche `doing` cochée (exécuteur injectable, simulation par défaut), un seul à la fois, jamais si la tâche a déjà un propriétaire actif sur Oracle ; notifie `ctx.inbox`.
-
 **Mode Agent : démarrage automatique et vue « Agent » (`handlers/agentmode.mjs`, `public/js/views/agent.js`, T31)** :
 - `agentmode.enable {project, brief, forbidden, launch?, engine?}` : avec `launch: true`, le serveur retrouve le dossier du projet suivi
   (sinon refus clair), crée UNE tâche « Agent aux commandes — <projet> » (consigne `buildBrief`, chemin réel de `tools/postectl.mjs`,

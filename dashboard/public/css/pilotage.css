@@ -86,3 +86,10 @@
 
 .pilot-session, .pilot-report { color: var(--texte); }
 .pilot-row > .pilot-run-status:first-child { min-width: 76px; }
+
+/* Page Services : formulaire d'ajout replié, lignes de serveurs détectés */
+.pilot-add { margin: 0 0 12px; padding: 8px 12px; border: 1px dashed var(--trait, #8884); border-radius: 8px; }
+.pilot-add > summary { cursor: pointer; font-weight: 600; }
+.pilot-add form { margin-top: 8px; }
+.pilot-add input { flex: 1 1 160px; min-width: 0; }
+.pilot-row[data-detected] { background: color-mix(in srgb, var(--attention, #e0a030) 8%, transparent); }

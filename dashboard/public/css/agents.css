@@ -1,0 +1,94 @@
+/* Page « Agents » (views/agents.js) : liste des agents regroupée + panneau de droite (conversation, fiche, tâches, historique). */
+.ag-page { max-width: 1280px; }
+.ag-page.has-panel { max-width: none; }
+.ag-toolbar { gap: 10px 14px; }
+.ag-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.ag-count { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border: 1px solid var(--trait);
+  border-radius: var(--rayon-controle); background: var(--panneau); color: var(--texte); font: 500 var(--t-13) var(--police-ui); cursor: pointer; }
+.ag-count:hover { background: var(--panneau-2); }
+.ag-count.is-on { border-color: var(--accent); background: var(--accent-doux); }
+.ag-count .num { font-variant-numeric: tabular-nums; font-weight: 600; }
+.ag-shortcuts { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: -6px 0 14px; }
+.ag-shortcuts .label-caps { margin-right: 4px; color: var(--texte-doux); }
+
+.ag-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.ag-page.has-panel .ag-layout { grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.4fr); }
+.ag-list { display: grid; gap: 18px; min-width: 0; }
+.ag-group { display: grid; gap: 8px; min-width: 0; }
+.ag-group-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; width: 100%; padding: 6px 10px; text-align: left;
+  background: transparent; border: 1px solid transparent; border-radius: var(--rayon-controle); color: var(--texte); font: inherit; cursor: pointer; }
+.ag-group-head strong { font: 600 var(--t-16) var(--police-titre); }
+.ag-group-head:hover:not(.is-static) { background: var(--panneau-2); border-color: var(--trait); }
+.ag-group-head.is-selected { border-color: var(--accent); background: var(--accent-doux); }
+.ag-group-head.is-static { cursor: default; }
+.ag-group-counts { font-size: var(--t-13); }
+.ag-group-open { margin-left: auto; font-size: var(--t-12); color: var(--accent); }
+.ag-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 10px; }
+.ag-page.has-panel .ag-cards { grid-template-columns: minmax(0, 1fr); }
+
+.ag-card { display: grid; gap: 6px; min-width: 0; padding: 10px 12px; background: var(--panneau); border: 1px solid var(--trait);
+  border-radius: var(--rayon-fenetre); }
+.ag-card.is-waiting { border-color: color-mix(in srgb, var(--attention) 70%, var(--trait)); }
+.ag-card.is-blocked { border-color: color-mix(in srgb, var(--danger) 70%, var(--trait)); }
+.ag-card.is-idle { background: var(--panneau-2); }
+.ag-head { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-width: 0; }
+.ag-status { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: var(--t-13); }
+.ag-tool { font-size: var(--t-14); }
+.ag-model { font-size: var(--t-13); overflow-wrap: anywhere; }
+.ag-chip { padding: 1px 8px; border: 1px solid var(--trait); border-radius: 999px; font-size: var(--t-12); color: var(--texte-doux);
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ag-pastille { margin-left: auto; }
+.ag-label { margin: 0; font-size: var(--t-12); overflow-wrap: anywhere; }
+.ag-action { margin: 0; font-size: var(--t-13); overflow-wrap: anywhere; font-family: var(--police-mono); }
+.ag-action .label-caps { font-family: var(--police-ui); margin-right: 4px; color: var(--texte-doux); }
+.ag-statetext { margin: 0; font-size: var(--t-12); color: var(--texte-doux); }
+.ag-ago { font-variant-numeric: tabular-nums; }
+.ag-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: var(--t-12); color: var(--texte-doux); min-width: 0; }
+.ag-meta-item { min-width: 0; overflow-wrap: anywhere; }
+.ag-meta .label-caps { margin-right: 2px; }
+.ag-meta code { font-size: var(--t-12); color: var(--texte); }
+.ag-quota.is-exhausted { color: var(--danger); }
+.ag-quota.is-slow { color: var(--attention); }
+.ag-pending { margin: 0; font-size: var(--t-12); color: var(--attention); overflow-wrap: anywhere; }
+.ag-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.ag-empty { margin-top: 12px; }
+.ag-none { display: flex; align-items: center; gap: 8px; }
+
+/* Panneau de droite */
+.ag-panel { position: sticky; top: 12px; min-width: 0; display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 12px;
+  background: var(--panneau); border: 1px solid var(--trait); border-radius: var(--rayon-fenetre);
+  max-height: calc(100vh - var(--haut-barre) - 32px); overflow: auto; }
+.ag-panel[hidden] { display: none; }
+.ag-panel-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
+.ag-panel-head h2 { font: 600 var(--t-16) var(--police-titre); margin: 0; }
+.ag-panel-close { margin-left: auto; font-size: 20px; line-height: 1; }
+.ag-panel-back { display: none; }
+.ag-tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--trait); padding-bottom: 6px; }
+.ag-tab { min-height: 30px; padding: 0 10px; border: 1px solid transparent; border-radius: var(--rayon-controle); background: transparent;
+  color: var(--texte-doux); font: 500 var(--t-13) var(--police-ui); cursor: pointer; }
+.ag-tab:hover { color: var(--texte); background: var(--panneau-2); }
+.ag-tab.is-on { color: var(--texte); border-color: var(--accent); background: var(--accent-doux); }
+.ag-panel-body { min-width: 0; overflow-x: auto; }
+.ag-panel-body .view-page { padding: 4px 0 8px; max-width: none; margin: 0; }
+.ag-panel-body .view-title { font-size: var(--t-16); }
+/* Conversation (ex-Groupes) dans le panneau : hauteur libre ; limitée à un projet, la liste des groupes disparaît. */
+.ag-panel .grp { height: auto; min-height: 0; max-width: none; grid-template-columns: minmax(170px, 230px) minmax(0, 1fr); }
+.ag-panel .grp.is-scoped { grid-template-columns: minmax(0, 1fr); }
+.ag-panel .grp.is-scoped .grp-side, .ag-panel .grp.is-scoped .grp-back { display: none; }
+.ag-panel .grp-msgs { max-height: 55vh; }
+.ag-scrollback { margin: 0; padding: 10px; max-height: calc(100vh - 220px); overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere;
+  background: var(--sol); border: 1px solid var(--trait); border-radius: var(--rayon-controle); }
+.ag-scrollback-note { font-size: var(--t-12); margin: 0 0 8px; }
+
+@media (max-width: 1100px) {
+  .ag-page.has-panel .ag-layout { grid-template-columns: minmax(0, 1fr); }
+  .ag-page.has-panel .ag-list { display: none; }
+  .ag-panel { position: static; max-height: none; }
+  .ag-panel-back { display: inline-flex; }
+}
+@media (max-width: 720px) {
+  .ag-page { padding: 12px 12px 24px; }
+  .ag-toolbar .view-title { width: 100%; }
+  .ag-panel .grp { grid-template-columns: minmax(0, 1fr); }
+  .ag-actions .btn { flex: 1 1 auto; }
+}

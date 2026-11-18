@@ -1,6 +1,6 @@
 // dashboard/scripts/verify-journal.mjs
 // Vérification du ticket T42 : rapport de fin de mission (handlers/missionreport.mjs) + journal par projet
-// (handlers/journal.mjs, vue public/js/views/journal.js).
+// (handlers/journal.mjs, section Journal de la page Réception, public/js/components/journal.js).
 // Instance ISOLÉE (port 7097 ou VERIFY_PORT, dossier de données jetable, liste de machines jetable SANS machine
 // joignable : aucun appel à un daemon, aucun appel LLM). Ne touche ni au :7070, ni à dashboard/data, ni à hosts.json.
 // Aucune écriture git dans un vrai projet : le dépôt de test est un dossier jetable (git init + git add, jamais de
@@ -444,7 +444,7 @@ try {
   expect(readJson("mission-reports.json").reports.length === 2, "après redémarrage : 2 rapports mémorisés");
 
   // ---------------------------------------------------------------- G5 : navigateur
-  section("G5 : vue Journal dans un navigateur (playwright-cli)");
+  section("G5 : section Journal (#journal -> onglet de Réception) dans un navigateur (playwright-cli)");
   if (process.env.VERIFY_BROWSER === "0") console.log("     (sauté : VERIFY_BROWSER=0)");
   else {
     mkdirSync(shotsDir, { recursive: true });

@@ -18,6 +18,7 @@
 //  - ctx.projectBrief.hintFor(dir) : les 3 lignes ajoutées au premier message d'une session coord (jamais le fichier
 //    entier).
 import { randomBytes, randomUUID } from "node:crypto";
+import { SELF_HOST, isSelfHost } from "../lib/selfhost.mjs";
 import {
   closeSync, linkSync, lstatSync, mkdirSync, openSync, readFileSync, readSync, readdirSync, renameSync, rmSync,
   statSync, writeFileSync, appendFileSync, existsSync,
@@ -70,7 +71,7 @@ const bad = (message, code = "bad_request") => new ApiError(400, code, message);
 
 export function register(ctx) {
   const { onMessage, send, broadcast, sendError, store, log } = ctx;
-  const isLocal = (host) => (ctx.coord?.isLocalHost ? ctx.coord.isLocalHost(host) : host === "local");
+  const isLocal = (host) => (ctx.coord?.isLocalHost ? ctx.coord.isLocalHost(host) : isSelfHost(host));
 
   // ---------- Propositions (persistées) ----------
   const loaded = store.read(PROP_FILE, {}) || {};
@@ -151,7 +152,7 @@ export function register(ctx) {
     const edited = /^[0-9a-f]{16}$/.test(tag);
     const what = tag === "absent" ? "a été supprimée" : edited ? "a été modifiée" : "a été remplacée";
     ctx.inbox?.add({
-      kind: "système", host: p.host || "local", source: "coord", project: p.dir, key: `brief:${norm(p.dir)}:${tag}`,
+      kind: "système", host: p.host || SELF_HOST, source: "coord", project: p.dir, key: `brief:${norm(p.dir)}:${tag}`,
       title: `La fiche projet ${what} hors du poste`,
       body: `PASEO-PROJECT.md de « ${p.name || p.dir} » ${what} sans passer par le poste (agent sans `
         + `permissions, script, édition manuelle…). Une copie de la dernière version connue est dans ${BAK_NAME} ; `
@@ -159,7 +160,7 @@ export function register(ctx) {
         + "et la reconnaître.",
     });
     journal(`Fiche projet ${what} hors du poste : « ${p.name || "projet"} »`, false, 409);
-    broadcast({ type: "brief.changed", host: p.host || "local", dir: p.dir });
+    broadcast({ type: "brief.changed", host: p.host || SELF_HOST, dir: p.dir });
   }
   // Compare le fichier à la dernière version écrite par le poste ; true si changé hors du poste. Première observation
   // d'une fiche existante : elle devient la référence (rien à signaler).
@@ -191,7 +192,7 @@ export function register(ctx) {
   function checkIntegrity() {
     purgeExpired();
     for (const rec of Object.values(known)) {
-      try { observe({ dir: rec.dir, host: "local", name: rec.name }); } catch { /* un projet illisible : on passe */ }
+      try { observe({ dir: rec.dir, host: SELF_HOST, name: rec.name }); } catch { /* un projet illisible : on passe */ }
     }
   }
   setInterval(checkIntegrity, CHECK_MS).unref();
@@ -245,7 +246,7 @@ export function register(ctx) {
 
   // Un projet connu du poste (suivi dans la barre de gauche, ou vu par la coordination), machine du poste seulement.
   async function knownProject(hostRaw, rawDir) {
-    const host = typeof hostRaw === "string" && hostRaw ? hostRaw : "local";
+    const host = typeof hostRaw === "string" && hostRaw ? hostRaw : SELF_HOST;
     if (!isLocal(host)) throw new BriefError("remote", MSG.remote);
     let dir;
     try { dir = validatePath(rawDir, { local: true }).path; } catch (e) { throw new BriefError("path", e.message); }
@@ -254,7 +255,7 @@ export function register(ctx) {
     try {
       const r = await ctx.invoke("project.list", {});
       const list = r.replies.find((x) => x.type === "project.list")?.projects || [];
-      for (const p of list) if (p && p.dir && (p.host || "local") === host) cands.push(p);
+      for (const p of list) if (p && p.dir && (p.host || SELF_HOST) === host) cands.push(p);
     } catch { /* liste indisponible */ }
     for (const b of ctx.coord?.boards?.() || []) {
       if (b.project?.host === host) cands.push({ dir: b.project.dir, name: b.project.name });
@@ -275,7 +276,7 @@ export function register(ctx) {
     try {
       const r = await ctx.invoke("task.list", {});
       tasks = (r.replies.find((x) => x.type === "tasks")?.tasks || []).filter((t) => t && t.status === "doing"
-        && (t.host || "local") === host && t.project && norm(t.project) === norm(dir));
+        && (t.host || SELF_HOST) === host && t.project && norm(t.project) === norm(dir));
     } catch { /* liste indisponible */ }
     return renderAutoBlocks({ team, tasks });
   }
@@ -438,7 +439,7 @@ export function register(ctx) {
       if (!(e instanceof BriefError)) return fail(ws, e);
       // Projet distant ou inconnu : pas d'erreur affichée à chaque sélection, le panneau explique.
       send(ws, {
-        type: "brief.state", host: typeof m.host === "string" && m.host ? m.host : "local", dir: String(m.dir ?? ""),
+        type: "brief.state", host: typeof m.host === "string" && m.host ? m.host : SELF_HOST, dir: String(m.dir ?? ""),
         name: "", sections: SECTIONS, proposals: [], exists: false, problem: e.message, text: "", rev: null,
         updatedAt: null, external: false, ref: m.ref ?? null,
       });

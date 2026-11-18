@@ -8,14 +8,13 @@ import { openAgentDrawer } from "./drawer.js";
 import { on, send, onConnection } from "./socket.js";
 import { toggleSideChat, setSideChatButton } from "../components/llmchat.js";
 import { toggleJarvis, setJarvisButton } from "../components/jarvis.js";
-import { openTransferDialog } from "../components/transferDialog.js";
-import { initFailoverBanner } from "../components/failoverBanner.js";
 import { subscribeAgentMode, openAgentModeDialog, disableAgentMode } from "../components/agentmode.js";
 import { initAgentActivityPanel } from "../components/agentactivity.js";
 import { createTelegramButton } from "../components/hermesChat.js";
 import "./gatewaymodels.js";
 import { createQuotaGauge } from "../components/quota.js";
 import { subscribeAlerts, alertCount } from "../components/agentalerts.js";
+import { confirmDialog } from "./confirm.js";
 import { subscribeCoord, teamBadgeCount, unreadGroups } from "../components/coordteam.js";
 
 const BRAND_MARK = '<svg viewBox="0 0 24 24" class="brand-mark" fill="none" stroke="currentColor" ' +
@@ -119,13 +118,12 @@ function renderTabs() {
     icon.innerHTML = view.icon || "";
     const badge = view.id === "reception"
       ? el("span", { class: "tab-badge", hidden: unreadCount === 0 }, String(unreadCount))
-      : view.id === "groupes"
-        ? el("span", { class: "tab-badge", hidden: groupsUnread === 0, title: "Groupes avec des messages non lus" }, String(groupsUnread))
-      : view.id === "agent"
-        ? el("span", { class: "tab-badge tab-badge-alert", id: "agent-tab-badge", hidden: agentAlerts === 0,
-          title: "Un agent attend ta réponse ou semble bloqué" }, String(agentAlerts))
+      : view.id === "agents" // page Agents (ex-Groupes et ex-Agent) : alertes d'agents, sinon conversations non lues
+        ? (agentAlerts
+          ? el("span", { class: "tab-badge tab-badge-alert", id: "agent-tab-badge", title: "Un agent attend ta réponse ou semble bloqué" }, String(agentAlerts))
+          : el("span", { class: "tab-badge", hidden: groupsUnread === 0, title: "Projets avec des messages non lus" }, String(groupsUnread)))
         : null;
-    const team = view.id === "agent"
+    const team = view.id === "agents"
       ? el("span", { class: "team-badge", id: "team-tab-badge", hidden: teamCount === 0,
         title: "Équipe : projets où plusieurs sessions travaillent ensemble" }, String(teamCount))
       : null;
@@ -214,12 +212,6 @@ export function initTopbar(root) {
     onclick: () => toggleJarvis(),
   }, iconEl(CHAT_ICON), " Jarvis");
   setJarvisButton(jarvisButton);
-  const oracleButton = el("button", {
-    class: "btn btn-sm", type: "button", id: "topbar-oracle",
-    title: "Transférer vers Oracle",
-    onclick: () => openTransferDialog(),
-  }, "→ Oracle");
-  const oracle = el("span", { class: "btn-oracle" }, oracleButton);
   themeButton = el("button", { class: "icon-btn", type: "button", onclick: toggleTheme });
 
   const agentModeEl = el("div", { class: "agentmode-topbar", id: "agentmode-topbar" });
@@ -273,7 +265,27 @@ export function initTopbar(root) {
   setInterval(renderAgentAlerts, 10000);
   initAgentActivityPanel();
 
-  actionsEl = el("div", { class: "topbar-actions" }, agentModeEl, pendingButton, launch, createTelegramButton(), themeButton, createQuotaGauge());
+  // Arrêt d'urgence (ex-Cockpit) : accessible depuis toutes les pages. Handlers serveur : handlers/emergency.mjs.
+  const emergencyButton = el("button", { class: "btn btn-sm btn-danger-ghost", type: "button", id: "topbar-emergency" });
+  let stopped = false;
+  const renderEmergency = () => {
+    emergencyButton.classList.toggle("btn-danger", stopped);
+    emergencyButton.classList.toggle("btn-danger-ghost", !stopped);
+    emergencyButton.replaceChildren(el("span", { class: "emergency-text" }, stopped ? "Reprendre" : "Arrêt d’urgence"),
+      el("span", { class: "emergency-short", "aria-hidden": "true" }, stopped ? "▶" : "■"));
+    emergencyButton.setAttribute("aria-label", stopped ? "Arrêt d’urgence actif : reprendre les agents autonomes" : "Arrêt d’urgence des agents autonomes");
+    emergencyButton.title = stopped ? "Arrêt d’urgence ACTIF : cliquer pour reprendre" : "Bloquer immédiatement tous les agents autonomes";
+  };
+  emergencyButton.addEventListener("click", async () => {
+    if (stopped) { send({ type: "emergency.resume" }); return; }
+    const ok = await confirmDialog({ title: "Arrêt d'urgence", message: "Bloquer immédiatement tous les agents autonomes ?", confirmLabel: "Tout arrêter", danger: true });
+    if (ok) send({ type: "emergency.stop", reason: "arrêt depuis la barre du haut" });
+  });
+  on("emergency.state", (m) => { stopped = Boolean(m?.stopped); renderEmergency(); });
+  onConnection((up) => up && send({ type: "emergency.status" }));
+  renderEmergency();
+
+  actionsEl = el("div", { class: "topbar-actions" }, agentModeEl, emergencyButton, pendingButton, launch, createTelegramButton(), themeButton, createQuotaGauge());
 
   root.replaceChildren(railToggle, brand, tablist, actionsEl);
   setupLauncher(launch);
@@ -287,9 +299,6 @@ export function initTopbar(root) {
   on("inbox.list", (m) => setInboxUnread(m?.unreadCount));
   // Le compteur de l'onglet doit être juste même si la Boîte de réception n'a jamais été ouverte.
   onConnection((up) => up && send({ type: "inbox.list" }));
-
-  const bannerEl = document.getElementById("failover-banner");
-  if (bannerEl) initFailoverBanner(bannerEl);
 
   return {
     setActive(id) {

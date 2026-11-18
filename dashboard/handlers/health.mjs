@@ -2,6 +2,7 @@
 // (deploy/oracle/watchdog.sh), qui relance le service et alerte sur Telegram. Lecture seule, aucun secret.
 import { statfsSync, readFileSync } from "node:fs";
 import { totalmem, freemem, loadavg } from "node:os";
+import { SELF_HOST } from "../lib/selfhost.mjs";
 
 const DISK_ALERT = 0.85;
 const startedAt = Date.now();
@@ -32,7 +33,7 @@ export function register(ctx) {
     let store = true;
     try { ctx.store.read("projects.json"); } catch { store = false; }
     // Les hôtes secondaires (Mini PC éteint) ne rendent pas le poste malade : seul l'hôte propre compte.
-    const self = process.env.DASHBOARD_SELF_HOST || "local";
+    const self = SELF_HOST;
     const selfOk = hosts[self]?.connected ?? true;
     const ok = d.ok && store && selfOk;
     const body = { ok, uptimeS: Math.round((Date.now() - startedAt) / 1000), self, selfOk, store, disk: d, mem, load: loadavg().map((x) => Number(x.toFixed(2))), hosts };

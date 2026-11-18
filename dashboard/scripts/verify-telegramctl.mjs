@@ -596,7 +596,7 @@ if (part("e")) {
     page.on("pageerror", (e) => problems.push(`pageerror ${e.message}`));
     page.on("console", (m) => { if (m.type() === "error") problems.push(`console ${m.text()}`); });
     for (let i = 0; i < 300 && !srv2.log.includes("Paseo dashboard :"); i++) await sleep(100);
-    await page.goto(`${BASE}/#taches`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE}/#agents`, { waitUntil: "domcontentloaded" });
     const button = page.locator("#topbar-telegram");
     await button.waitFor({ state: "visible", timeout: 10_000 });
     await ui.waitSpawned(1, 20_000);

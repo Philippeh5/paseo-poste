@@ -221,7 +221,7 @@ try {
   const page = await context.newPage();
   const consoleErrors = [];
   page.on("pageerror", (e) => consoleErrors.push(String(e)));
-  await page.goto(`${BASE}/#agent`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE}/#agents`, { waitUntil: "domcontentloaded" }); await page.locator('[data-agents-open="orchestrateur"]').click();
   await page.waitForSelector("#agv-entrust", { timeout: 10000 });
   expect(/Jarvis n.a pas de mission en cours/.test(await page.locator(".agv-head").innerText()), "sans mandat : message clair");
   expect(await page.locator("#tab-agent").count() === 1, "onglet « Agent » présent dans la barre des vues");
@@ -280,7 +280,7 @@ try {
   await page.waitForFunction(() => location.hash === "#bureau", null, { timeout: 4000 });
   const deskTerminals = await page.evaluate((id) => window.__getWindows().filter((w) => w.terminalId === id).length, termId);
   expect(deskTerminals === 1, "« Voir sur le Bureau » : la fenêtre du terminal est posée sur le Bureau");
-  await page.goto(`${BASE}/#agent`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE}/#agents`, { waitUntil: "domcontentloaded" }); await page.locator('[data-agents-open="orchestrateur"]').click();
   await page.waitForSelector("#agv-takeover", { timeout: 8000 });
 
   // G3 : mobile

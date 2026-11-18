@@ -902,7 +902,7 @@ if (run("d")) {
     const page = await ctxb.newPage();
     page.on("pageerror", (e) => problems.push(`pageerror: ${e.message}`));
     page.on("console", (m) => { if (m.type() === "error" && !/favicon|Failed to load resource|WebSocket/.test(m.text())) problems.push(`console: ${m.text()}`); });
-    await page.goto(`${BASE}/#groupes`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE}/#agents`, { waitUntil: "domcontentloaded" }); await page.locator('[data-agents-open="conversation"]').click();
     await page.locator(".grp-item", { hasText: "projd" }).click({ timeout: 30000 });
     const btn = page.locator('[data-action="brief-open"]');
     await btn.waitFor({ timeout: 15000 });
@@ -998,6 +998,7 @@ if (run("d")) {
     // Mobile
     await page.setViewportSize({ width: 390, height: 844 });
     await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator('[data-agents-open="conversation"]').click();
     await page.locator(".grp-item", { hasText: "projd" }).click({ timeout: 20000 });
     await page.locator('[data-action="brief-open"]').click();
     await page.locator("#brief-edit").waitFor({ timeout: 10000 });

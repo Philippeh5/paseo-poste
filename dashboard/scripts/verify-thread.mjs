@@ -910,7 +910,7 @@ if (run("d")) {
     const page = await ctxb.newPage();
     page.on("pageerror", (e) => problems.push(`pageerror: ${e.message}`));
     page.on("console", (m) => { if (m.type() === "error" && !/favicon|Failed to load resource|WebSocket/.test(m.text())) problems.push(`console: ${m.text()}`); });
-    await page.goto(`${BASE}/#groupes`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE}/#agents`, { waitUntil: "domcontentloaded" }); await page.locator('[data-agents-open="conversation"]').click();
     await page.locator(".grp-item", { hasText: "projd" }).click({ timeout: 30000 });
     await page.locator("#grp-msgs .grp-bubble").first().waitFor({ timeout: 15000 });
     const q1 = page.locator(`.grp-bubble[data-id="${ids.q1}"]`);

@@ -225,7 +225,7 @@ export function register(ctx) {
   async function buildReport(runId, orchestrator, children, outcome) {
     const run = data.runs[runId] || {};
     const dir = orchestrator.project || run.projectDir || "";
-    const host = orchestrator.host || run.host || "local";
+    const host = orchestrator.host || run.host || SELF_HOST;
     const S = (value, max) => clip(scrub(value, dir), max);
     const project = S(run.project || orchestrator.projectName || folderName(dir) || "projet", 120);
     const tasks = children.map((t) => ({

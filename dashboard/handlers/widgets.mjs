@@ -3,54 +3,63 @@
 // Diffuse widgets.changed après chaque modification.
 // Le lancement réutilise les messages existants (launch.start, term.create) sans exécuter de commande côté serveur.
 
+import { SELF_HOST, SELF_LABEL } from "../lib/selfhost.mjs";
+
 const FILE = "widgets";
 const MAX_WIDGETS = 40;
 
 const KNOWN_TYPES = new Set(["terminal", "agent", "freebuff", "view", "url"]);
-const KNOWN_VIEWS = new Set(["taches", "bureau", "sessions", "chronologie", "machines", "reception"]);
+const KNOWN_VIEWS = new Set(["agents", "bureau", "machines", "connexions", "services", "reception"]);
+// Anciennes pages fusionnées dans « Agents » : un widget enregistré avec l'une d'elles reste valide et mène à #agents.
+const VIEW_ALIASES = { taches: "agents", sessions: "agents", chronologie: "agents", projets: "agents", groupes: "agents", agent: "agents" };
+const viewOf = (v) => VIEW_ALIASES[v] || v;
 const KNOWN_ICONS = new Set([
   "desk", "tasks", "sessions", "timeline", "machines", "inbox",
   "terminal", "agent", "plus", "send", "grid", "group", "save", "trash",
   "menu", "close", "minimize", "maximize", "restore", "stop", "sun", "moon",
 ]);
 
+// Les lanceurs visent la machine du poste (SELF_HOST). Les variantes « Oracle » n'existent que si le poste
+// tourne ailleurs (sinon elles feraient doublon).
 function defaultWidgets() {
+  const me = SELF_LABEL;
+  const others = SELF_HOST !== "oracle";
   return [
     {
-      id: "w-terminal-local", label: "Terminal Mini PC", icon: "terminal", order: 10, hidden: false,
-      action: { type: "terminal", host: "local" },
+      id: "w-terminal-local", label: `Terminal ${me}`, icon: "terminal", order: 10, hidden: false,
+      action: { type: "terminal", host: SELF_HOST },
     },
-    {
+    ...(others ? [{
       id: "w-terminal-oracle", label: "Terminal Oracle", icon: "terminal", order: 20, hidden: false,
       action: { type: "terminal", host: "oracle" },
-    },
+    }] : []),
     {
       id: "w-agent-openrouter", label: "Agent OpenRouter", icon: "agent", order: 30, hidden: false,
-      action: { type: "agent", host: "local", provider: "claude-openrouter/sonnet" },
+      action: { type: "agent", host: SELF_HOST, provider: "claude-openrouter/sonnet" },
     },
     {
       id: "w-agent-nvidia", label: "Agent NVIDIA", icon: "agent", order: 40, hidden: false,
-      action: { type: "agent", host: "local", provider: "claude-nvidia/sonnet" },
+      action: { type: "agent", host: SELF_HOST, provider: "claude-nvidia/sonnet" },
     },
     {
       id: "w-freebuff", label: "FreeBuff", icon: "terminal", order: 50, hidden: false,
-      action: { type: "freebuff", host: "local" },
+      action: { type: "freebuff", host: SELF_HOST },
     },
     {
-      id: "w-hermes-local", label: "Hermes (Mini PC)", icon: "agent", order: 55, hidden: false,
-      action: { type: "agent", host: "local", provider: "hermes" },
+      id: "w-hermes-local", label: `Hermes (${me})`, icon: "agent", order: 55, hidden: false,
+      action: { type: "agent", host: SELF_HOST, provider: "hermes" },
     },
-    {
+    ...(others ? [{
       id: "w-hermes-oracle", label: "Hermes (Oracle)", icon: "agent", order: 60, hidden: false,
       action: { type: "agent", host: "oracle", provider: "hermes" },
+    }] : []),
+    {
+      id: "w-pi-local", label: `Pi (${me})`, icon: "agent", order: 65, hidden: false,
+      action: { type: "agent", host: SELF_HOST, provider: "pi" },
     },
     {
-      id: "w-pi-local", label: "Pi (Mini PC)", icon: "agent", order: 65, hidden: false,
-      action: { type: "agent", host: "local", provider: "pi" },
-    },
-    {
-      id: "w-taches", label: "Tâches", icon: "tasks", order: 70, hidden: false,
-      action: { type: "view", view: "taches" },
+      id: "w-taches", label: "Agents", icon: "tasks", order: 70, hidden: false,
+      action: { type: "view", view: "agents" },
     },
   ];
 }
@@ -87,7 +96,7 @@ function validateAction(action, widgetId, knownHosts) {
     return null;
   }
   if (type === "view") {
-    if (!KNOWN_VIEWS.has(action.view)) return `vue inconnue : ${action.view} (widget ${widgetId})`;
+    if (!KNOWN_VIEWS.has(viewOf(action.view))) return `vue inconnue : ${action.view} (widget ${widgetId})`;
     return null;
   }
   // terminal / agent / freebuff : nécessitent un hôte
@@ -130,7 +139,7 @@ function cleanWidget(w, knownHosts) {
 function cleanAction(a) {
   const base = { type: a.type };
   if (a.type === "url") return { ...base, url: str(a.url, 2000) };
-  if (a.type === "view") return { ...base, view: a.view };
+  if (a.type === "view") return { ...base, view: viewOf(a.view) };
   const result = {
     ...base,
     host: str(a.host, 60),
@@ -171,8 +180,15 @@ export function register(ctx) {
     return set;
   };
 
+  // Migration à la lecture : un widget dont l'hôte n'existe plus (Mini PC retiré) est ignoré, sans toucher au fichier.
+  const dropDeadHosts = (widgets) => {
+    const live = new Set(ctx.hosts.labels ? ctx.hosts.labels() : []);
+    if (!live.size) return widgets;
+    return widgets.filter((w) => !w?.action?.host || live.has(w.action.host));
+  };
+
   const summary = (widgets) => {
-    const all = widgets.slice().sort((a, b) => a.order - b.order);
+    const all = dropDeadHosts(widgets).slice().sort((a, b) => a.order - b.order);
     return { widgets: all.filter((w) => !w.hidden), all };
   };
 

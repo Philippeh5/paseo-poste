@@ -2,7 +2,7 @@
 // Vérification complète du ticket T19 : Noms clairs partout (Mini PC et Projet · Machine · Harnais · tâche).
 // (a) Tests unitaires purs de public/js/core/names.js (>= 25 cas)
 // (b) Test serveur : l'état WebSocket contient displayName: "Mini PC" pour local ; hosts.json non modifié (SHA-1)
-// (c) Test navigateur Playwright : parcourt les 6 vues (#bureau, #taches, #sessions, #chronologie, #machines, #reception),
+// (c) Test navigateur Playwright : parcourt les 6 vues (#bureau, #agents, #connexions, #reception),
 //     vérifie qu'aucun nom de machine visible n'est « local », lance un agent réel claude-openrouter/sonnet avec invite
 //     « Reply with the single word PONG and do nothing else. », vérifie le schéma sandbox-repo · Mini PC · Claude (OpenRouter) · …,
 //     génère les captures d'écran requises (sombre/clair/mobile 390px) et nettoie l'agent et la tâche.
@@ -314,10 +314,8 @@ try {
   // Vérification des 6 vues
   const views = [
     { name: "bureau", hash: "#bureau" },
-    { name: "taches", hash: "#taches" },
-    { name: "sessions", hash: "#sessions" },
-    { name: "chronologie", hash: "#chronologie" },
-    { name: "machines", hash: "#machines" },
+    { name: "agents", hash: "#agents" }, // ex-Tâches, Sessions, Chronologie (fusionnées dans la page Agents)
+    { name: "connexions", hash: "#connexions" }, // ex-Machines : fusionnée dans Connexions
     { name: "reception", hash: "#reception" },
   ];
 
@@ -368,7 +366,7 @@ try {
   expect(Boolean(createdAgentId), "agent créé avec identifiant", createdAgentId);
 
   // Attendre que l'agent soit visible dans le DOM du dashboard
-  await page.evaluate(() => { window.location.hash = "#sessions"; });
+  await page.evaluate(() => { window.location.hash = "#agents"; });
   await delay(2000);
 
   // Extraire le nom de session affiché dans la vue Sessions ou dans le Rail
@@ -467,13 +465,13 @@ try {
   console.log("OK Capture: names-rail-dark.png");
 
   // Sessions sombre
-  await page.evaluate(() => { window.location.hash = "#sessions"; });
+  await page.evaluate(() => { window.location.hash = "#agents"; });
   await delay(400);
   await page.screenshot({ path: join(screenshotsDir, "names-sessions-dark.png") });
   console.log("OK Capture: names-sessions-dark.png");
 
   // Tâches sombre
-  await page.evaluate(() => { window.location.hash = "#taches"; });
+  await page.evaluate(() => { window.location.hash = "#agents"; });
   await delay(400);
   await page.screenshot({ path: join(screenshotsDir, "names-tasks-dark.png") });
   console.log("OK Capture: names-tasks-dark.png");
@@ -497,13 +495,13 @@ try {
   console.log("OK Capture: names-rail-light.png");
 
   // Sessions clair
-  await page.evaluate(() => { window.location.hash = "#sessions"; });
+  await page.evaluate(() => { window.location.hash = "#agents"; });
   await delay(400);
   await page.screenshot({ path: join(screenshotsDir, "names-sessions-light.png") });
   console.log("OK Capture: names-sessions-light.png");
 
   // Tâches clair
-  await page.evaluate(() => { window.location.hash = "#taches"; });
+  await page.evaluate(() => { window.location.hash = "#agents"; });
   await delay(400);
   await page.screenshot({ path: join(screenshotsDir, "names-tasks-light.png") });
   console.log("OK Capture: names-tasks-light.png");
@@ -519,7 +517,7 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => {
     document.documentElement.dataset.theme = "dark";
-    window.location.hash = "#sessions";
+    window.location.hash = "#agents";
   });
   await delay(600);
 

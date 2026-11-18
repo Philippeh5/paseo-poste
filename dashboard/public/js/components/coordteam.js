@@ -5,7 +5,7 @@ import { el, led } from "../core/util.js";
 import { on, send, onConnection } from "../core/socket.js";
 import { relativeTime } from "./agentactivity.js";
 import { hostLabel } from "../core/names.js";
-import { dedupeProjects } from "../core/state.js";
+import { dedupeProjects, defaultHost } from "../core/state.js";
 
 const ROLE_LABEL = { writer: "Rédacteur", reader: "Lecture seule", planner: "Planificateur" };
 const ROLE_TITLE = {
@@ -45,7 +45,7 @@ export function markSeen(key, at) {
 let projects = []; // projets suivis (menu « Parler à un projet »)
 on("project.list", (m) => {
   // Mêmes projets que le rail, sur TOUTES les machines (Oracle d'abord, un seul par nom).
-  projects = dedupeProjects(list(m.projects).filter((p) => p && p.dir).map((p) => ({ ...p, host: p.host || "local", name: p.name || projectNameOf(p.dir) })));
+  projects = dedupeProjects(list(m.projects).filter((p) => p && p.dir).map((p) => ({ ...p, host: p.host || defaultHost(), name: p.name || projectNameOf(p.dir) })));
   notify();
 });
 const threads = new Map(); // projet → fil complet (100 derniers) demandé par « Voir toute la conversation »
@@ -53,7 +53,7 @@ const threadsByDir = new Map();
 on("coord.thread", (m) => { threads.set(m.project, list(m.messages)); if (m.dir) threadsByDir.set(dirKey(m.dir), list(m.messages)); notify(); });
 export const getProjects = () => projects;
 export const getThread = (g) => (g.board?.project.key && threads.get(g.board.project.key)) || threadsByDir.get(dirKey(g.dir)) || null;
-export const requestThread = (g) => send({ type: "coord.thread", host: g.host || "local", dir: g.dir, project: g.board?.project.key });
+export const requestThread = (g) => send({ type: "coord.thread", host: g.host || defaultHost(), dir: g.dir, project: g.board?.project.key });
 onConnection((up) => { if (up) send({ type: "coord.get" }); });
 
 export function subscribeCoord(fn) {
@@ -117,7 +117,7 @@ export function mountTeam(container, ctx) {
     const go = (launch) => {
       const text = input.value.trim();
       if (!text || !select.value) return;
-      send({ type: "coord.group", host: "local", dir: select.value, text, launch });
+      send({ type: "coord.group", host: defaultHost(), dir: select.value, text, launch });
       input.value = "";
       ctx.toast?.(launch ? "Orchestrateur en cours de lancement…" : "Message envoyé au groupe du projet.");
     };

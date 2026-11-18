@@ -7,7 +7,7 @@ import { join, dirname } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { WebSocket } from "ws";
-import { CATALOG, detectOne, install, writeEnvKey, removeEnvKey, readEnv, listSharedSkills, linkSkills, skillsStatus, importSkill, getEntry } from "../lib/connections.mjs";
+import { CATALOG, detectOne, hasAuthFile, loginCommand, install, writeEnvKey, removeEnvKey, readEnv, listSharedSkills, linkSkills, skillsStatus, importSkill, getEntry } from "../lib/connections.mjs";
 
 let failed = 0;
 const check = (cond, label) => { console.log(`${cond ? "OK  " : "FAIL"} ${label}`); if (!cond) failed++; };
@@ -27,6 +27,17 @@ check((statSync(join(dir, "connections.env")).mode & 0o777) === 0o600, "fichier 
 check(removeEnvKey(dir, "OPENROUTER_API_KEY") && !readEnv(dir).OPENROUTER_API_KEY, "suppression de la clé");
 for (const bad of ["", "a\nb", "x".repeat(600)]) { let t = false; try { writeEnvKey(dir, "OPENROUTER_API_KEY", bad); } catch { t = true; } check(t, `clé refusée : ${JSON.stringify(bad.slice(0, 8))}`); }
 let t = false; try { writeEnvKey(dir, "bad name", "v"); } catch { t = true; } check(t, "nom de variable invalide refusé");
+
+// --- « Connecté » réel : présence d'un fichier d'identifiants (jamais son contenu)
+const fakeHome = join(dir, "home"); mkdirSync(join(fakeHome, ".pi", "agent"), { recursive: true });
+const piEntry = getEntry("pi");
+check(!hasAuthFile(piEntry, fakeHome), "authFile absent → pas connecté");
+writeFileSync(join(fakeHome, ".pi", "agent", "auth.json"), `{"token":"${SECRET}"}`);
+check(hasAuthFile(piEntry, fakeHome), "authFile présent → connecté");
+check(["claude", "pi", "opencode", "agy", "freebuff", "hermes"].every((id) => getEntry(id).authFile?.length), "authFile déclaré pour claude, pi, opencode, agy, freebuff, hermes");
+const detNoBin = await detectOne({ ...piEntry, bin: "binaire-qui-nexiste-pas-xyz" });
+check(detNoBin.status === "missing" && !JSON.stringify(detNoBin).includes(SECRET), "non installé → absent, sans contenu du fichier");
+check(loginCommand(getEntry("claude")) === "claude" && loginCommand(getEntry("opencode")) === "opencode auth login" && loginCommand(getEntry("openrouter")) === null, "commande de connexion = celle du catalogue, sans commentaire");
 
 // --- installation : liste blanche
 let rej = ""; try { await install("tailscale"); } catch (e) { rej = e.message; } check(/Pas d'installation/.test(rej), "sans commande fixe → refus");
@@ -97,6 +108,12 @@ try {
   const d2 = await waitFor("connections.done"); check(d2 && d2.ok === false, "installation sans commande fixe → échec propre");
   ws.send(JSON.stringify({ type: "connections.setKey", id: "claude", value: "x", confirm: true }));
   const e2 = await waitFor("error"); check(!!e2, "setKey sur un connecteur sans clé refusé");
+  ws.send(JSON.stringify({ type: "connections.login", id: "claude" }));
+  check(/Confirmation/.test((await waitFor("error"))?.message ?? ""), "login sans confirm refusé");
+  ws.send(JSON.stringify({ type: "connections.login", id: "pas-dans-le-catalogue", confirm: true, cmd: "rm -rf /" }));
+  check(!!(await waitFor("error")), "login : identifiant hors catalogue refusé");
+  ws.send(JSON.stringify({ type: "connections.login", id: "openrouter", confirm: true }));
+  check(/pas de commande/.test((await waitFor("error"))?.message ?? ""), "login : clé d'API sans commande de connexion refusé");
   ws.send(JSON.stringify({ type: "composio.get" }));
   const cg = await waitFor("composio.state"); check(cg && cg.policy.exists === false && !!cg.error, "composio.get : sans politique, CLI en échec signalé proprement");
   ws.send(JSON.stringify({ type: "composio.setAgent", agent: "claude", toolkits: ["gmail"], writes: false }));

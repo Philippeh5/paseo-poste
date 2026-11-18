@@ -205,11 +205,14 @@ async function main(argv) {
   switch (command) {
     case "summary": {
       const d = await api("GET", "/summary");
+      // Les vrais agents tournent aussi dans des terminaux : on les prend sur /agents (vue Agents du poste).
+      try { d.agents = (await api("GET", "/agents")).counts; } catch { d.agents = null; }
       out(d, () =>
         [
           `Machines : ${d.machines.map((m) => `${m.name} (${m.status})`).join(", ")}`,
           `Sessions : ${d.sessions.total} (actives ${d.sessions.active}, permission ${d.sessions.waitingPermission}, ` +
             `inactives ${d.sessions.idle}, erreur ${d.sessions.error})`,
+          ...(d.agents ? [`Agents   : ${d.agents.total} (actifs ${d.agents.active}, en attente ${d.agents.waiting}, bloqués ${d.agents.blocked}, au repos ${d.agents.idle})`] : []),
           `Tâches   : ${COLUMNS.map((k) => `${TASK_LABEL[k]} ${d.tasks[k]}`).join(", ")}`,
           `Réception: ${d.inbox.unread} non lu(s) sur ${d.inbox.total}`,
           `Permissions en attente : ${d.pendingPermissions.length}`,

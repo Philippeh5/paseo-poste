@@ -1,7 +1,7 @@
 # Poste de commande — cahier de design (v3)
 
-Objet: un « bureau à distance » pour une flotte de terminaux et d'agents IA répartis sur deux machines
-(mini-PC Windows, serveur Oracle Ubuntu). Usage: surveiller, lancer, déplacer, reprendre.
+Objet: un « bureau à distance » pour une flotte de terminaux et d'agents IA répartis sur plusieurs machines
+(Oracle Ubuntu aujourd'hui, d'autres machines via Tailscale). Usage: surveiller, lancer, déplacer, reprendre.
 Public: une seule personne, qui veut voir d'un coup d'œil ce qui travaille et où, puis agir.
 
 ## Direction visuelle
@@ -39,7 +39,7 @@ bureau. Focus clavier visible (anneau `--accent`). `prefers-reduced-motion` resp
 ## Structure de l'écran
 ```
 ┌ barre du haut ───────────────────────────────────────────────────────────────┐
-│ nom · [Bureau|Tâches|Sessions|Chronologie|Machines|Boîte de réception] · ⌘K · Lancer · → Oracle · thème │
+│ nom · [Bureau|Tâches|Sessions|Chronologie|Machines|Boîte de réception] · ⌘K · Lancer ·  · thème │
 ├ rail gauche ──┬ vue principale ────────────────────────────┬ tiroir droit ────┤
 │ machines (LED)│                                            │ détail d'un agent │
 │ projets       │                                            │ ou d'une tâche    │
@@ -51,29 +51,25 @@ bureau. Focus clavier visible (anneau `--accent`). `prefers-reduced-motion` resp
 - Le tiroir droit s'ouvre sur sélection d'un agent/une tâche et se ferme à `Échap`.
 - Téléphone (≤ 720 px): rail replié en tiroir gauche, sélecteur de vue en barre basse, pas de défilement horizontal.
 
-## Les six vues (A–F)
-A. **Bureau** (priorité 1). Surface libre où l'on pose des fenêtres: terminal d'une machine/dossier, session d'agent
-   (fil en direct), note. Glisser pour déplacer, poignée pour redimensionner, double-clic sur la barre de titre
-   pour agrandir, bouton pour réduire dans un dock en bas. Aimantation à une grille de 8 px. Mises en page
-   nommées (« Mon bureau », « Production ») enregistrées côté serveur et rechargeables; boutons « Ranger en
-   grille » et « Grouper par machine ». Chaque fenêtre porte un liseré de la couleur d'état et le nom
-   machine · dossier.
-B. **Tâches** (priorité 2). Tableau à colonnes: À faire · En cours · À valider · Terminé. Carte: titre, projet,
-   machine, moteur, dépendances. Glisser entre colonnes. Bouton « Démarrer » crée la session sur la machine et le
-   moteur choisis; l'état de la session met la carte à jour (en cours → à valider).
-C. **Sessions**. Arbre machine → projet → agent → sous-agents, avec statut, durée, fil en direct dans le tiroir.
-D. **Chronologie**. Frise horizontale par machine: barres = périodes de travail d'un agent, marqueurs = demandes
-   de permission, erreurs, reprises.
-E. **Machines**. Une carte par machine: état, version, agents par statut, terminaux, quotas par fournisseur
-   (barres), bouton « Transférer vers Oracle » sur la carte du mini-PC.
-F. **Boîte de réception**. Messages Telegram/commandes entrants, approbations en attente, résumé des fins de tâche.
-Les vues non encore construites affichent un état vide qui dit ce qui y apparaîtra.
+## Les cinq pages (refonte 2026-11-18)
+Cinq pages, une par question de l'utilisateur ; les anciennes ancres (`#sessions`, `#taches`, `#machines`, `#pilotage`,
+`#apercu`, `#navigateur`, `#cockpit`, `#journal`, `#modeles`…) redirigent vers elles (`ALIASES` dans `public/js/main.js`).
+1. **Bureau** (`#bureau`) : « Je travaille ». Surface de fenêtres libres : terminal, session d'agent, note et fenêtre
+   **web** (relais ou Chrome distant, ouverte depuis « Vue web » dans Services). Seule page qui garde le rail gauche.
+2. **Agents** (`#agents`) : « Qui fait quoi, où, est-ce bloqué ? ». Un agent par ligne (outil, machine, projet, statut,
+   dernière action, fichiers réservés, quota), regroupés par projet/machine/outil. Alimentée par `agents.overview`, qui
+   fusionne agents du démon et terminaux d'agents. Panneaux : Conversations, Tâches, Historique, Orchestrateur.
+3. **Services** (`#services`) : « Qu'est-ce qui tourne ? ». Groupes au choix, ajout, ports détectés à suivre, « Vue web ».
+4. **Connexions** (`#connexions`) : « Mes outils sont-ils branchés, combien me reste-t-il ? ». Machines, état réel
+   « Connecté », « Se connecter » (ouvre un terminal), quotas sur chaque ligne, Modèles (une ligne par fournisseur).
+5. **Réception** (`#reception`) : « Qu'est-ce qui attend ma décision ? ». Onglets : À traiter, Idées et autonomie, Journal.
+Plus **Téléphone** (`#mobile`) sous 720 px. Le rail est déclaré par page (champ `rail` du registre).
 
 ## Contrôles transversaux
 - **Lancer**: fenêtre modale existante (hôte, projet, type, moteur, modèle, mode, isolation) reprise dans les jetons.
 - **Palette de commandes** (`Ctrl+K`): chercher une machine, un projet, un agent, une action.
 - **Sélecteur de dossier**: navigateur de dossiers côté serveur pour la machine choisie (pas de boîte système).
-- **Confirmations** intégrées à la page (jamais `confirm()`); les actions irréversibles (éteindre le mini-PC) exigent
+- **Confirmations** intégrées à la page (jamais `confirm()`); les actions irréversibles exigent
   une confirmation à deux temps avec un texte qui dit ce qui va se passer.
 
 ## Critères de réussite visuels

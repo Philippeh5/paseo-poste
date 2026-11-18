@@ -1,4 +1,4 @@
-// Pilotage des bots et serveurs (vue « Bots & serveurs »).
+// Pilotage des bots et serveurs (vue « Services », ex-« Bots & serveurs »).
 // Trois choses, toutes côté poste (aucune commande ne vient du navigateur : le client ne désigne qu'un id de la liste) :
 //   1. SERVICES : processus longs (serveurs BlastWin, tunnel Cloudflare, Hermes, daemon Paseo, serveur FreqUI de
 //      FreqTrade…). Lancer / arrêter / relancer, état (processus lancé ici, OU déjà vivant et reconnu par sa ligne de
@@ -14,12 +14,14 @@
 // Messages WS : svc.list | svc.start {id, mode?} | svc.stop {id} | svc.restart {id, mode?} | svc.logs {id, lines?}
 //   | svc.rename {id, name} | svc.group {group, action: start|stop} | svc.task.run {id, params} | svc.task.cancel {id} | svc.task.logs {id}
 //   | svc.data.query {dataset, q, facets, offset, limit} | svc.job.status {job_key, profile, value}
+//   | svc.add {name, group?, port?, cmd?, cwd?, confirm?} | svc.follow {port, group?, name?} | svc.remove {id}
+//   | svc.setGroup {id, group} | svc.ignore {port, ignore?}   (voir lib/svc-manage.mjs ; svc.state porte aussi `detected`)
 // Réponses/diffusions : svc.state (liste complète, diffusée au changement), svc.logs, svc.data.result.
 // Les actions (start/stop/restart/group/task.run/job.status) sont refusées à un appel interne (ctx.invoke) : un agent
 // ne pilote pas les processus du poste par ce chemin.
 import { spawn, execFile } from "node:child_process";
 import {
-  closeSync, existsSync, fstatSync, mkdirSync, openSync, readdirSync, readFileSync, readSync, renameSync, statSync, writeFileSync,
+  closeSync, existsSync, fstatSync, mkdirSync, openSync, readdirSync, readFileSync, readlinkSync, readSync, renameSync, statSync, writeFileSync,
   createReadStream, appendFileSync,
 } from "node:fs";
 import { basename, join, relative, resolve } from "node:path";
@@ -27,6 +29,8 @@ import { homedir } from "node:os";
 import { DatabaseSync } from "node:sqlite";
 import { redact } from "../lib/redact.mjs";
 import { ApiError } from "./agentapi.mjs";
+import { listPorts } from "../lib/preview.mjs";
+import { addService, removeService, setGroup, detect, backupFile } from "../lib/svc-manage.mjs";
 
 const WIN = process.platform === "win32";
 const PROJECTS = process.env.PROJECTS_DIR || (WIN ? "D:\\Projets" : join(homedir(), "Projets"));
@@ -626,10 +630,13 @@ export function register(ctx) {
   {
     const modes = freqtradeConfigModes();
     const i = services.findIndex((s) => s.id === FREQTRADE_SERVICE.id);
-    const before = i === -1 ? null : JSON.stringify(services[i].modes);
-    if (i === -1) services.push({ ...FREQTRADE_SERVICE });
-    else if (modes.length) services[i].modes = modes;
-    if (before === null || (modes.length && before !== JSON.stringify(modes))) {
+    const removedIds = store.read("services-removed", []) || [];
+    let changed = false;
+    if (i === -1) {
+      // Retiré volontairement depuis la vue (svc.remove) : on ne le remet pas.
+      if (!removedIds.includes(FREQTRADE_SERVICE.id)) { services.push({ ...FREQTRADE_SERVICE }); changed = true; }
+    } else if (modes.length && JSON.stringify(services[i].modes) !== JSON.stringify(modes)) { services[i].modes = modes; changed = true; }
+    if (changed) {
       try { store.write("services", services); } catch { /* disque en lecture seule : liste en mémoire */ }
     }
   }
@@ -689,10 +696,35 @@ export function register(ctx) {
     };
   }
 
+  // ---------- Suivi des serveurs : détectés, ajout, rangement ----------
+  const dashPorts = [Number(process.env.DASHBOARD_PORT || 7070)];
+  const ignoredPorts = () => (store.read("services-ignored", []) || []).map(Number);
+  const procInfo = (pid) => {
+    if (WIN) return {};
+    const out = {};
+    try { out.cwd = readlinkSync(`/proc/${pid}/cwd`); } catch { /* processus d'un autre utilisateur ou disparu */ }
+    try { out.cmd = mask(readFileSync(`/proc/${pid}/cmdline`, "utf8").split("\0").join(" ").trim()).slice(0, 200); } catch { /* idem */ }
+    return out;
+  };
+  async function detectedServices(snap, statuses) {
+    const ports = await listPorts({ exclude: dashPorts });
+    const covered = new Set();
+    for (const st of statuses) for (const pid of descendants(st.pids, snap.procs)) covered.add(pid);
+    const projects = (store.read("projects", null)?.projects || []).filter((p) => p && p.dir);
+    return detect({ ports, services, snapPorts: snap.ports, coveredPids: covered, ignored: ignoredPorts(), info: procInfo, projects, projectsRoot: PROJECTS });
+  }
+  // Écriture de la liste : sauvegarde horodatée du fichier d'abord, puis écriture atomique (store), puis mémoire.
+  const persistServices = (next) => {
+    backupFile(join(dataDir, "services.json"));
+    store.write("services", next);
+    services = next;
+  };
+
   async function buildState(force = false) {
     const snap = await scan(force);
     const list = [];
     for (const s of services) list.push(await statusOf(s, snap));
+    const detected = await detectedServices(snap, list);
     const tasks = taskDefs().map((t) => {
       const r = runs.get(t.id);
       const last = stateFile()[`task:${t.id}`] || null;
@@ -700,7 +732,7 @@ export function register(ctx) {
         lastRun: last, history: runHistory(t.bot), report: t.id === "alumni-build" ? alumniReport() : null, session: t.id === "alumni-build" ? alumniSession() : null };
     });
     return { type: "svc.state", at: iso(), services: list, tasks, bots: BOTS, datasets: Object.values(DATASETS).map((d) => ({ id: d.id, name: d.name, available: existsSync(d.kind === "csv" ? d.file() : d.db()) })),
-      files: listFiles() };
+      files: listFiles(), detected, groups: [...new Set(services.map((x) => x.group).filter(Boolean))] };
   }
 
   let lastSig = "";
@@ -807,6 +839,32 @@ export function register(ctx) {
     const name = String(m.name ?? "").trim().slice(0, 60);
     if (name && name !== s.name) names[s.id] = name; else delete names[s.id];
     store.write("services-names", names);
+  });
+  action("svc.add", async (_ws, m) => {
+    // Une commande saisie dans le navigateur sera exécutée par le poste au « Lancer » : confirmation explicite requise.
+    if (m.cmd && m.confirm !== true) throw new Error("ajouter une commande exige confirm: true");
+    persistServices(addService(services, m).services);
+  });
+  action("svc.follow", async (_ws, m) => {
+    const port = Number(m.port);
+    const d = (await detectedServices(await scan(true), (await buildState(true)).services)).find((x) => x.port === port);
+    if (!d) throw new Error("ce port n'est plus détecté (ou déjà suivi)");
+    persistServices(addService(services, { name: m.name || (d.process && !/^(MainThread|node|python3?)$/i.test(d.process) ? d.process : (d.cwd ? basename(d.cwd) : `port ${port}`)), group: m.group || d.suggestedGroup, port, cwd: d.cwd || undefined }).services);
+  });
+  action("svc.remove", async (_ws, m) => {
+    const { services: next, removed } = removeService(services, String(m.id || ""));
+    persistServices(next);
+    store.write("services-removed", [...new Set([...(store.read("services-removed", []) || []), removed.id])]);
+  });
+  action("svc.setGroup", async (_ws, m) => {
+    if (!byId(String(m.id || ""))) throw new Error("service inconnu");
+    persistServices(setGroup(services, String(m.id), m.group).services);
+  });
+  action("svc.ignore", async (_ws, m) => {
+    const port = Number(m.port);
+    if (!Number.isInteger(port)) throw new Error("port invalide");
+    const rest = ignoredPorts().filter((p) => p !== port);
+    store.write("services-ignored", m.ignore === false ? rest : [...rest, port]);
   });
   action("svc.start", async (_ws, m) => { const s = byId(m.id); if (!s) throw new Error("service inconnu"); await startService(s, m.mode); });
   action("svc.stop", async (_ws, m) => { const s = byId(m.id); if (!s) throw new Error("service inconnu"); await stopService(s); });

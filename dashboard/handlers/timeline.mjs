@@ -3,7 +3,8 @@
 // Structure d'un épisode :
 //   { id, host, agentId, title, provider, model, project, start, end|null, status,
 //     markers:[{t, type:"permission"|"erreur"|"reprise"|"fin", label}] }
-// Source : crochet ctx.onStateChange (state complet après chaque broadcastState, toutes les 5 s au plus).
+// Source : crochet ctx.onStateChange (state complet après chaque broadcastState, toutes les 5 s au plus), plus les terminaux
+// d'agents de ctx.agentsOverview (agentId « term-<id> » ; « en cours » tant que leur écran bouge).
 // Un épisode ouvert porte aussi `lastSeen` (dernier instant où l'agent a été vu actif), utilisé pour le fermer
 // au redémarrage du serveur.
 
@@ -84,7 +85,10 @@ export function register(ctx) {
     const present = new Set();
     let dirty = false;
 
-    for (const agent of state.agents || []) {
+    // Agents du daemon ET terminaux d'agents (Claude Code, FreeBuff… lancés dans un terminal : agentsoverview.mjs) ; sans ces
+    // derniers, la frise restait vide alors que les agents travaillaient.
+    const terminalAgents = ctx.agentsOverview?.asAgents?.() || [];
+    for (const agent of [...(state.agents || []), ...terminalAgents]) {
       const key = `${agent.host}\0${agent.agentId}`;
       present.add(key);
       const active = ACTIVE.has(agent.status);

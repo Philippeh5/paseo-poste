@@ -13,6 +13,7 @@ import { constants, copyFileSync, existsSync, mkdirSync, readFileSync, renameSyn
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { evaluatePermission, insideDir, isWriteTool, projectRelative, targetOf, toolOf } from "../lib/permpolicy.mjs";
 import { redact } from "../lib/redact.mjs";
+import { SELF_HOST } from "../lib/selfhost.mjs";
 
 export const WAIT_ALERT_MS = 2 * 60 * 1000;
 export const ORPHAN_MS = 10 * 60 * 1000;
@@ -171,7 +172,7 @@ export function register(ctx) {
     const mand = mandate();
     if (!mand.enabled || m.behavior !== "allow" || String(ws?._uiId ?? "").startsWith("invoke:")) return;
     const item = (ctx.inbox?.list({ kind: "permission" }) || [])
-      .find((i) => i.host === (m.host || "local") && i.agentId === m.agentId && i.action?.requestId === m.requestId);
+      .find((i) => i.host === (m.host || SELF_HOST) && i.agentId === m.agentId && i.action?.requestId === m.requestId);
     const what = item ? `${toolOf(item)} ${clip(redact(targetOf(item)), 80)}`.trim() : `demande ${String(m.requestId ?? "").slice(-8)}`;
     journal(`Autorisé depuis l'interface : ${what}`);
   });

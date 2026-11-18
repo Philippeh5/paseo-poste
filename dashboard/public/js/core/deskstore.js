@@ -7,7 +7,7 @@ import { getState, isReady, subscribe as subscribeState } from "./state.js";
 export const GRID = 8;
 export const MIN_W = 280;
 export const MIN_H = 160;
-const DEFAULT_SIZE = { terminal: { w: 1420, h: 903 }, agent: { w: 520, h: 432 } };
+const DEFAULT_SIZE = { terminal: { w: 1420, h: 903 }, agent: { w: 520, h: 432 }, web: { w: 800, h: 560 } };
 
 const windows = [];
 const listeners = new Set();
@@ -116,6 +116,7 @@ export function currentLayout() {
     type: win.type, host: win.host, terminalId: win.terminalId, agentId: win.agentId, workspaceId: win.workspaceId,
     cwd: win.cwd, title: win.title, tool: win.tool, x: win.x, y: win.y, w: win.w, h: win.h,
     minimized: win.minimized, maximized: win.maximized, z: win.z,
+    port: win.port, path: win.path, url: win.url, mode: win.mode, // fenêtres web
   });
   return windows.map(keep);
 }
@@ -218,6 +219,43 @@ export function openTerminalWindow(host, terminalId, { at, cwd, workspaceId, lar
     return focusExisting(found);
   }
   return addWindow({ type: "terminal", host, terminalId, cwd, workspaceId, large, tool }, at);
+}
+
+// ---------- Fenêtres web (page d'un port de la machine du poste, relais rapide ou Chrome distant) ----------
+// openWeb(host, cible, label) : cible = numéro de port, ou adresse http(s). Une adresse locale (localhost, 127.0.0.1) est
+// ramenée à son port (relais) ; une adresse externe n'a que le mode Chrome. Mode relais par défaut (aussi sur téléphone).
+export function openWeb(host, target, label) {
+  let port = null; let path = "/"; let url = null;
+  if (Number.isInteger(Number(target)) && Number(target) >= 1024 && Number(target) <= 65535) port = Number(target);
+  else {
+    let u;
+    try { u = new URL(String(target)); } catch { toast("Adresse web invalide.", { kind: "error" }); return null; }
+    if (!/^https?:$/.test(u.protocol)) { toast("Seules les adresses http(s) s'ouvrent ici.", { kind: "error" }); return null; }
+    if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(u.hostname) && Number(u.port) >= 1024) { port = Number(u.port); path = `${u.pathname}${u.search}`; }
+    else url = u.href;
+  }
+  const found = windows.find((w) => w.type === "web" && (port ? w.port === port && (w.path || "/") === path : w.url === url));
+  if (found) return focusExisting(found);
+  const name = String(label || "").trim().slice(0, 60);
+  const title = `Web · ${name ? `${name} ` : ""}${port ? `:${port}` : new URL(url).host}`.trim();
+  return addWindow({ type: "web", host: host || "", port: port ?? undefined, path: port ? path : undefined, url: url ?? undefined, mode: port ? "relay" : "chrome", title });
+}
+// Un seul Chrome distant pour tout le poste : une seule fenêtre peut être en mode Chrome, les autres repassent en relais
+// (ou restent en Chrome si elles n'ont pas de port).
+export function setWebMode(id, mode) {
+  const win = windows.find((w) => w.id === id && w.type === "web");
+  if (!win || (mode !== "relay" && mode !== "chrome") || win.mode === mode) return;
+  if (mode === "relay" && !win.port) return;
+  if (mode === "chrome") {
+    for (const other of windows) {
+      if (other.type === "web" && other.id !== id && other.mode === "chrome" && other.port) {
+        other.mode = "relay";
+        toast("Un seul Chrome distant à la fois : l'autre fenêtre repasse en relais.");
+      }
+    }
+  }
+  win.mode = mode;
+  changed("web-mode");
 }
 
 // Outil lancé par un lanceur rapide (« FreeBuff », « Hermes »…), retrouvé à la réponse launch.started via `ref`.

@@ -18,7 +18,7 @@
 // ~/.claude-openrouter/settings.json en LECTURE : seuls les quatre ANTHROPIC_DEFAULT_*_MODEL sont lus, jamais les clés.
 //
 // Messages WebSocket : quota.get -> quota.state {providers, cooldowns, fallback, failures, at} ;
-// quota.setFallback {engines:["fournisseur/modèle",…], role?: writer|reader|planner} -> diffusion quota.state ; diffusion quota.state au changement
+// quota.setFallback {engines:["fournisseur/modèle",…]} -> diffusion quota.state ; diffusion quota.state au changement
 // (30 s au plus entre deux diffusions). REST lecture : GET /api/v1/quota (ctx.apiRoute).
 // Réglages de test (variables d'environnement) : QUOTA_COOLDOWN_SCALE (multiplie les délais de repos),
 // QUOTA_BROADCAST_MIN_MS, QUOTA_OPENROUTER_SETTINGS (autre fichier d'alias), QUOTA_TEST_HOOK=1 (quota.test.fail).
@@ -37,8 +37,6 @@ export const DEFAULT_FALLBACK = [
 export const FREEBUFF_ENGINE = "freebuff/code";
 export const REST_MS = { credit: 30 * 60_000, rate: 2 * 60_000, quota: 60 * 60_000 };
 const FALLBACK_FILE = "engine-fallback";
-const ROLES_FILE = "engine-fallback-roles";
-export const ROLES = ["writer", "reader", "planner"]; // classements propres à chaque rôle de tâche ; un rôle sans liste suit le classement par défaut
 const MAX_FALLBACK = 12;
 const MAX_FAILURES = 20;
 const MAX_REST_MS = 8 * 24 * 3_600_000;
@@ -95,18 +93,6 @@ export function createQuota({
     const clean = Array.isArray(list) ? [...new Set(list.filter(validEngine))] : [];
     return clean.length ? clean : [...DEFAULT_FALLBACK];
   }
-
-  // Classements par rôle de tâche (écriture / lecture / planification) : { writer: [...], … } ; seuls les rôles personnalisés y figurent.
-  function getRoleFallbacks() {
-    const data = store?.read(ROLES_FILE, null);
-    const out = {};
-    for (const role of ROLES) {
-      const list = Array.isArray(data?.[role]) ? [...new Set(data[role].filter(validEngine))] : [];
-      if (list.length) out[role] = list;
-    }
-    return out;
-  }
-  const fallbackFor = (role) => getRoleFallbacks()[role] ?? getFallback();
 
   // ---------- OpenRouter : uniquement des modèles gratuits ----------
   function aliasModels() {
@@ -223,7 +209,7 @@ export function createQuota({
     const why = preferred ? verdict(preferred) : "aucun moteur demandé";
     if (preferred && !why) return { engine: preferred, changed: false, reason: null };
     const tried = [];
-    for (const candidate of fallbackFor(role)) {
+    for (const candidate of getFallback()) {
       if (candidate === preferred) continue;
       const bad = verdict(candidate);
       if (!bad) return { engine: candidate, changed: true, reason: `${why} -> repli sur ${candidate}` };
@@ -287,7 +273,6 @@ export function createQuota({
         until: c.until, remainingMs: c.until - t, reason: c.reason,
       })),
       fallback: getFallback().map(describeEngine),
-      roles: Object.fromEntries(Object.entries(getRoleFallbacks()).map(([role, list]) => [role, list.map(describeEngine)])),
       failures: failures.map((f) => ({ ...f })),
     };
   }
@@ -298,7 +283,7 @@ export function createQuota({
     return JSON.stringify({
       p: s.providers.map((p) => [p.id, p.state, p.windows.map((w) => w.usedPct)]),
       c: s.cooldowns.map((c) => [c.engine, c.kind, c.until]),
-      f: s.fallback, r: s.roles, x: failures[0]?.at ?? 0,
+      f: s.fallback, x: failures[0]?.at ?? 0,
     });
   };
   function emit() {
@@ -323,23 +308,12 @@ export function createQuota({
   lastSig = signature();
 
   return {
-    snapshot, noteFailure, pickEngine, getFallback, getRoleFallbacks, classify, tick, arm,
+    snapshot, noteFailure, pickEngine, getFallback, classify, tick, arm,
     ingest(state) {
       usage = state?.usage && typeof state.usage === "object" ? state.usage : {};
       tick();
     },
-    // `role` (writer | reader | planner) : classement propre à ce rôle ; `engines` vide avec un rôle = retour au classement par défaut.
-    setFallback(engines, role) {
-      if (role === null) role = undefined;
-      if (role !== undefined && !ROLES.includes(role)) throw new Error("rôle inconnu (writer, reader ou planner)");
-      if (role && Array.isArray(engines) && !engines.length) {
-        const all = getRoleFallbacks();
-        delete all[role];
-        store.write(ROLES_FILE, { ...all, updatedAt: new Date(now()).toISOString() });
-        emit();
-        arm();
-        return [];
-      }
+    setFallback(engines) {
       if (!Array.isArray(engines) || !engines.length) throw new Error("la liste de repli est vide");
       if (engines.length > MAX_FALLBACK) throw new Error(`maximum ${MAX_FALLBACK} moteurs de repli`);
       const clean = engines.map((e) => (typeof e === "string" ? e.trim() : e));
@@ -349,8 +323,7 @@ export function createQuota({
         const refused = refusal(engine);
         if (refused) throw new Error(`${engine} : ${refused}`);
       }
-      if (role) store.write(ROLES_FILE, { ...getRoleFallbacks(), [role]: clean, updatedAt: new Date(now()).toISOString() });
-      else store.write(FALLBACK_FILE, { engines: clean, updatedAt: new Date(now()).toISOString() });
+      store.write(FALLBACK_FILE, { engines: clean, updatedAt: new Date(now()).toISOString() });
       emit();
       arm();
       return clean;
@@ -375,7 +348,7 @@ export function register(ctx) {
   onMessage("quota.get", (ws, m) => send(ws, { type: "quota.state", ...quota.snapshot(), ref: m.ref ?? null }));
   onMessage("quota.setFallback", (ws, m) => {
     try {
-      quota.setFallback(m.engines, m.role);
+      quota.setFallback(m.engines);
     } catch (e) {
       sendError(ws, ctx.safeError(e));
     }

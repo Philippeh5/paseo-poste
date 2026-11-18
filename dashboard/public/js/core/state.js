@@ -67,7 +67,7 @@ export function allProjects(state) {
   }
   for (const f of state.followedProjects || []) {
     if (!f.directory) continue;
-    const host = f.host || "local";
+    const host = f.host || defaultHost();
     const key = `${host}|${normDir(f.directory)}`;
     if (byKey.has(key)) {
       // Le nom choisi par Philippe gagne sur celui devine par le daemon.
@@ -125,5 +125,10 @@ export const findAgent = (state, host, agentId) =>
   (state.agents || []).find((a) => a.host === host && a.agentId === agentId);
 export const findTerminal = (state, host, terminalId) =>
   (state.terminals || []).find((t) => t.host === host && t.terminalId === terminalId);
+// Machine par défaut côté interface : la première machine connectée (sinon la première configurée, sinon Oracle).
+export const defaultHost = (state = current) => {
+  const hosts = state?.hosts || [];
+  return (hosts.find((h) => h.status === "connected") || hosts[0])?.label || "oracle";
+};
 export const findHost = (state, label) => (state.hosts || []).find((h) => h.label === label);
 export const pendingAgents = (state) => (state.agents || []).filter((a) => a.status === "waiting-permission");

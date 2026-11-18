@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { hostLabel } from "../public/js/core/names.js";
 import { redact } from "../lib/redact.mjs";
 import { evaluatePermission, POLICY_TEXT } from "../lib/permpolicy.mjs";
+import { SELF_HOST } from "../lib/selfhost.mjs";
 
 const PREFIX = "/api/v1/";
 const MAX_BODY = 64 * 1024;
@@ -393,7 +394,7 @@ export function register(ctx) {
     mustConfirm(confirmed(body, query), `fermer ${list.length} session(s) en masse`);
     const results = [];
     for (const s of list) {
-      try { results.push(await closeSession(String(s.host || "local"), String(need(s.id, "id")))); } catch (e) {
+      try { results.push(await closeSession(String(s.host || SELF_HOST), String(need(s.id, "id")))); } catch (e) {
         results.push({ host: s.host, id: s.id, closed: false, error: strip(e.message) });
       }
     }
@@ -633,14 +634,14 @@ export function register(ctx) {
 
   route("GET", "/projects", async () => ({ projects: await listProjects() }));
   route("POST", "/projects/follow", async ({ body }) => {
-    const r = await call("project.follow", { host: body.host || "local", dir: need(body.dir, "dir"), name: body.name });
+    const r = await call("project.follow", { host: body.host || SELF_HOST, dir: need(body.dir, "dir"), name: body.name });
     const reply = replyOf(r, "project.followed");
     if (reply && reply.ok === false) throw bad(reply.error || "dossier non suivi", reply.code || "refused");
     return { added: reply?.added || [], already: reply?.already || [] };
   });
   route("POST", "/projects/unfollow", async ({ body }) => {
     if (isMandateForbidden("supprimer")) throw mandateRefusal("supprimer");
-    const payload = body.id ? { id: body.id } : { host: body.host || "local", dir: need(body.dir, "dir ou id") };
+    const payload = body.id ? { id: body.id } : { host: body.host || SELF_HOST, dir: need(body.dir, "dir ou id") };
     const reply = replyOf(await call("project.unfollow", payload), "project.unfollowed");
     if (reply && reply.ok === false) throw bad(reply.error || "projet non retiré", reply.code || "refused");
     return { unfollowed: true, id: reply?.id ?? null };

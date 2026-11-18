@@ -7,6 +7,7 @@
 import { randomUUID } from "node:crypto";
 
 import { extractQuestions } from "../lib/questions.mjs";
+import { SELF_HOST, SELF_LABEL } from "../lib/selfhost.mjs";
 const FILE = "inbox";
 export const MAX_ITEMS = 500;
 const MAX_KEYS = 3000;
@@ -134,7 +135,7 @@ export function register(ctx) {
       id: `inb_${Date.now().toString(36)}_${randomUUID().slice(0, 8)}`,
       t: new Date().toISOString(),
       kind: KINDS.has(raw.kind) ? raw.kind : "système",
-      host: clip(raw.host || "local", 60),
+      host: clip(raw.host || SELF_HOST, 60),
       title: clip(raw.title || "Notification", 200),
       body: clip(raw.body, 600),
       status: STATUSES.has(raw.status) ? raw.status : "nouveau",
@@ -223,7 +224,7 @@ export function register(ctx) {
       title,
       body: clip(m.body || `${tasks.length} tâche(s) proposée(s) à valider.`, 600),
       tasks,
-      host: clip(m.host || "local", 60),
+      host: clip(m.host || SELF_HOST, 60),
       project: clip(m.project || (tasks[0]?.project ?? ""), 200),
       source: clip(m.source || "agent", 30),
       action: { type: "plan" },
@@ -287,7 +288,7 @@ export function register(ctx) {
           const res = await ctx.invoke("task.create", {
             title: task.title,
             project: task.project || item.project || "",
-            host: task.host || item.host || "local",
+            host: task.host || item.host || SELF_HOST,
             engine,
             deps: resolvedDeps,
           });
@@ -432,7 +433,7 @@ export function register(ctx) {
 
   // Après une réponse de permission, on revérifie tout de suite plutôt que d'attendre le cycle suivant.
   onMessage("perm.respond", (_ws, m) => {
-    if (typeof m.host === "string" || m.host === undefined) setTimeout(() => pollHost(m.host || "local"), 300);
+    if (typeof m.host === "string" || m.host === undefined) setTimeout(() => pollHost(m.host || SELF_HOST), 300);
   });
 
   // ---------- Machines injoignables / reconnectées (état complet, toutes les 5 s) ----------
@@ -458,7 +459,7 @@ export function register(ctx) {
       entry.stable = h.status;
       entry.count = 0;
       const stamp = Date.now();
-      const nice = h.label === "local" ? "Mini PC" : h.label === "oracle" ? "Oracle" : h.label;
+      const nice = h.label === SELF_HOST ? SELF_LABEL : h.label === "oracle" ? "Oracle" : h.label;
       add({
         kind: "machine", host: h.label, source: "host", action: { type: "machine" },
         key: `machine:${h.label}:${wasUp ? "down" : "up"}:${stamp}`,

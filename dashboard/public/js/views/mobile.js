@@ -311,6 +311,7 @@ const view = {
   short: "Accueil",
   icon: icons.sessions,
   order: 5,
+  rail: "none",
   mount(container, context) {
     ctx = context;
     const saved = readPref(TAB_PREF);

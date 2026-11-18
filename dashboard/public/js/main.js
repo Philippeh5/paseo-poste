@@ -42,6 +42,7 @@ const ctx = {
     openAgent: (host, agentId, opts) => deskstore.openAgentWindow(host, agentId, opts),
     openTerminal: (host, terminalId, opts) => deskstore.openTerminalWindow(host, terminalId, opts),
     openTerminalInFolder: (opts) => deskstore.openTerminalInFolder(opts),
+    openWeb: (host, target, label) => deskstore.openWeb(host, target, label),
   },
   registerView,
   topbar: { addAction: (action) => topbar.addAction(action) },
@@ -50,13 +51,16 @@ const ctx = {
 };
 
 // ---------- Routeur ----------
+const ALIASES = { modeles: "connexions", pilotage: "services", machines: "connexions", cockpit: "reception", journal: "reception", apercu: "bureau", navigateur: "bureau", // anciennes ancres → vue qui les remplace
+  sessions: "agents", projets: "agents", agent: "agents", groupes: "agents", chronologie: "agents", taches: "agents" }; // onglet : views/agents.js ; cockpit, journal → onglets de Réception (views/inbox.js)
 function route() {
   // Téléphone : sans ancre, on arrive sur l'accueil Téléphone plutôt que sur le Bureau à fenêtres flottantes.
   if (!location.hash && window.matchMedia("(max-width: 720px)").matches && getView("mobile")) history.replaceState(null, "", "#mobile");
-  const id = decodeURIComponent(location.hash.slice(1));
+  const raw = decodeURIComponent(location.hash.slice(1));
+  const id = ALIASES[raw] || raw;
   const target = getView(id) || getView("bureau") || getViews()[0];
   if (!target) return;
-  if (!getView(id) && id) history.replaceState(null, "", `#${target.id}`);
+  if ((!getView(id) && id) || ALIASES[location.hash.slice(1)]) history.replaceState({ from: raw }, "", `#${target.id}`);
   if (current?.id === target.id) return;
   try {
     current?.unmount();
@@ -66,6 +70,9 @@ function route() {
   viewRoot.replaceChildren();
   current = target;
   viewRoot.setAttribute("aria-labelledby", `tab-${target.id}`);
+  const wantedRail = target.rail ?? "projects"; // rail contextuel : « projects », « none » ou une fonction de rendu
+  document.body.dataset.rail = typeof wantedRail === "function" ? "custom" : wantedRail;
+  rail?.setContent(typeof wantedRail === "function" ? wantedRail : null);
   document.title = `${target.title} · Poste de commande Paseo`;
   topbar?.setActive(target.id);
   try {

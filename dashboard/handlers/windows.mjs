@@ -3,6 +3,8 @@
 //               windows.send {host, terminalId, text, enter?, confirm: true}.
 // HTTP (lecture seule) : GET /api/windows, GET /api/windows/scrollback?host=&terminal=&lines=
 // Documentation : dashboard/README.md, section « API des fenêtres ».
+import { SELF_HOST } from "../lib/selfhost.mjs";
+
 
 const DEFAULT_LINES = 200;
 const MAX_LINES = 2000;
@@ -18,12 +20,15 @@ function cleanWindowEntry(w) {
   if (!w || typeof w !== "object") return null;
   return {
     id: text(w.id, 80),
-    kind: w.kind === "agent" ? "agent" : "terminal",
-    host: text(w.host, 60) || "local",
+    kind: w.kind === "agent" ? "agent" : w.kind === "web" ? "web" : "terminal",
+    host: text(w.host, 60) || SELF_HOST,
     cwd: text(w.cwd, 1000),
     title: text(w.title, 200),
     terminalId: text(w.terminalId, 200),
     agentId: text(w.agentId, 200),
+    port: Number.isInteger(w.port) ? w.port : null,
+    url: typeof w.url === "string" && /^https?:\/\//i.test(w.url) ? w.url.slice(0, 1000) : null,
+    mode: w.mode === "relay" || w.mode === "chrome" ? w.mode : null,
     minimized: w.minimized === true,
     focused: w.focused === true,
     x: int(w.x, 0),
@@ -85,7 +90,7 @@ export function register(ctx) {
 
   onMessage("windows.scrollback", async (ws, m) => {
     try {
-      const result = await fetchScrollback(m.host || "local", m.terminalId, m.lines);
+      const result = await fetchScrollback(m.host || SELF_HOST, m.terminalId, m.lines);
       send(ws, { type: "windows.scrollback", ...result });
     } catch (e) {
       sendError(ws, `scrollback impossible : ${safeError(e)}`);
@@ -95,7 +100,7 @@ export function register(ctx) {
   // Action sensible : saisie dans un terminal. Exige confirm: true ; le texte n'est jamais journalisé.
   onMessage("windows.send", async (ws, m) => {
     if (m.confirm !== true) return sendError(ws, "action sensible : confirm: true est requis");
-    const { label, entry } = hostOf({ host: m.host || "local" });
+    const { label, entry } = hostOf({ host: m.host || SELF_HOST });
     const terminalId = text(m.terminalId, 200);
     const input = typeof m.text === "string" ? m.text : "";
     if (!entry || !entry.connected()) return sendError(ws, `hôte indisponible : ${label}`);
@@ -119,7 +124,7 @@ export function register(ctx) {
   };
   ctx.onHttp?.("/api/windows", (_req, res) => json(res, 200, { windows: allWindows() }));
   ctx.onHttp?.("/api/windows/scrollback", async (_req, res, url) => {
-    const host = url.searchParams.get("host") || "local";
+    const host = url.searchParams.get("host") || SELF_HOST;
     const terminal = url.searchParams.get("terminal");
     if (!terminal) return json(res, 400, { error: "paramètre terminal requis" });
     try {

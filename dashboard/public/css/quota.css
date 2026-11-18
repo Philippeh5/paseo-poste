@@ -84,8 +84,11 @@
 .qg-unused h4 { margin: 0; font-size: var(--t-13); color: var(--texte-doux); }
 .qg-engine.is-unused { opacity: .85; align-items: center; }
 .qg-move { display: inline-flex; }
-.qg-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
-.qg-tab { min-height: 36px; padding: 0 12px; border: 1px solid var(--trait); border-radius: 999px; background: var(--panneau); color: var(--texte-doux); font: inherit; font-size: var(--t-13); }
-.qg-tab.is-on { background: var(--accent-doux); border-color: var(--accent); color: var(--accent); font-weight: 600; }
-.qg-tab-dot { margin-left: 4px; color: var(--accent); }
-.qg-reset-role { margin-top: 10px; }
+
+/* Quotas sur une ligne de la page Connexions : barres 5 h / 7 j côte à côte, repliées sur téléphone. */
+.qg-inline { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 4px; }
+.qg-inline .qg-window { flex: 1 1 180px; max-width: 280px; min-width: 0; }
+.modeles-advanced { padding: 10px 14px; border-top: 1px solid var(--trait); }
+.modeles-advanced > summary { cursor: pointer; min-height: 36px; display: flex; align-items: center; color: var(--texte-doux); font-size: var(--t-13); }
+.modeles-adv-prov { margin-top: 12px; }
+.modeles-row .pilot-main select { margin-top: 4px; max-width: 100%; }

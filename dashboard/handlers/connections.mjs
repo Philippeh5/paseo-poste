@@ -2,10 +2,16 @@
 // clés d'API (stockées en 600 dans data/connections.env, jamais renvoyées), skills partagés entre agents.
 // Messages : connections.get -> connections.state {groups, items, skills, at}
 //   connections.install {id, confirm:true}   connections.setKey {id, value, confirm:true}   connections.removeKey {id, confirm:true}
+//   connections.login {id, confirm:true} -> ouvre un terminal du Bureau et y saisit la commande de connexion du CATALOGUE
+//   (réponse connections.loginStarted {id, host, terminalId}) ; jamais de commande libre venant du navigateur
 //   connections.skills.link {target?, confirm:true}   connections.skills.import {path, confirm:true}
 // Réponse aux actions : connections.done {action, id, ok, message} puis diffusion connections.state. Test : verify-connections.mjs
+import { homedir } from "node:os";
+import { SELF_HOST } from "../lib/selfhost.mjs";
 import { policyFile, readPolicy, ensurePolicy, listAccounts, summarize, setAgent, removeAgent } from "../lib/composio-admin.mjs";
-import { detectAll, getEntry, install, writeEnvKey, removeEnvKey, skillsStatus, linkSkills, importSkill, SKILL_TARGETS } from "../lib/connections.mjs";
+import { detectAll, detectOne, getEntry, loginCommand, install, writeEnvKey, removeEnvKey, skillsStatus, linkSkills, importSkill, SKILL_TARGETS } from "../lib/connections.mjs";
+
+const HOME = homedir();
 
 export function register(ctx) {
   const { onMessage, send, sendError, broadcast, log } = ctx;
@@ -31,6 +37,24 @@ export function register(ctx) {
       send(ws, { type: "connections.done", action: "install", id: m.id, ok: false, message: ctx.safeError(e) });
     } finally { busy = false; }
     broadcast({ type: "connections.state", ...(await snapshot()) });
+  });
+
+  // Connexion : terminal sur cette machine, commande prise dans le catalogue (liste fermée) ; l'utilisateur termine dans le terminal.
+  onMessage("connections.login", async (ws, m) => {
+    if (!needConfirm(ws, m)) return;
+    const entry = getEntry(m.id);
+    const cmd = loginCommand(entry);
+    if (!entry || entry.kind === "key" || !cmd) return sendError(ws, "Ce connecteur n'a pas de commande de connexion.");
+    if ((await detectOne(entry, { dataDir: ctx.dataDir })).status === "missing") return sendError(ws, `${entry.label} n'est pas installé.`);
+    const host = SELF_HOST;
+    const r = await ctx.invoke("launch.start", { ref: `conn-login-${entry.id}-${Date.now().toString(36)}`, host, cwd: HOME, kind: "terminal" }, { timeoutMs: 30_000 });
+    const started = r.replies?.find((x) => x.type === "launch.started");
+    if (r.error || !started?.terminalId) return sendError(ws, `Le terminal n'a pas démarré : ${r.error || "pas de réponse"}`);
+    await new Promise((res) => setTimeout(res, 1500));
+    const t = await ctx.invoke("term.input", { host, terminalId: started.terminalId, data: `${cmd}\r` }, { timeoutMs: 10_000 });
+    if (t.error) return sendError(ws, `Terminal ouvert mais commande non saisie : ${t.error}`);
+    log("connections", `connexion lancée dans un terminal : ${entry.id}`);
+    send(ws, { type: "connections.loginStarted", id: entry.id, host: started.host ?? host, terminalId: started.terminalId, cwd: HOME });
   });
 
   onMessage("connections.setKey", async (ws, m) => {

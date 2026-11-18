@@ -28,30 +28,32 @@ export const GROUPS = [
 // kind : "bin" (programme sur le PATH), "key" (clé d'API dans l'environnement), "dir" (dossier de config).
 // check  : commande courte (argv) dont le code 0 prouve que le compte est CONNECTÉ (sinon « installé » seulement).
 // install: argv fixe exécutable depuis la page (confirm:true) ; sinon `hint` = commande à copier dans un terminal.
-// login  : commande interactive à copier (ouvre un navigateur ou demande un code) : jamais lancée par la page.
+// authFile: fichiers dont la SEULE PRÉSENCE (statSync, jamais le contenu) prouve la connexion quand `check` est null.
+// login  : commande interactive (ouvre un navigateur ou demande un code), saisie dans un terminal du Bureau par
+//          connections.login ; seule la commande du catalogue est utilisée, jamais un texte venant du navigateur.
 // envVar : variable d'environnement stockée dans connections.env pour les clés d'API.
 export const CATALOG = [
   { id: "tailscale", group: "reseau", label: "Tailscale", desc: "Réseau privé entre vos machines (accès à distance sans ouvrir de port).",
     bin: "tailscale", check: ["tailscale", "status"], install: null,
     hint: "curl -fsSL https://tailscale.com/install.sh | sh", login: "sudo tailscale up" },
   { id: "cloudflared", group: "reseau", label: "Cloudflare Tunnel", desc: "Publier un service local sur un nom de domaine, sans port ouvert.",
-    bin: "cloudflared", check: null, install: null, hint: "Télécharger cloudflared depuis github.com/cloudflare/cloudflared/releases", login: "cloudflared tunnel login" },
+    bin: "cloudflared", check: null, authFile: ["~/.cloudflared/cert.pem"], install: null, hint: "Télécharger cloudflared depuis github.com/cloudflare/cloudflared/releases", login: "cloudflared tunnel login" },
   { id: "claude", group: "agents", label: "Claude Code", desc: "Agent de code d'Anthropic (abonnement Claude).",
-    bin: "claude", check: null, install: ["npm", "install", "-g", "@anthropic-ai/claude-code"], login: "claude   # puis /login" },
+    bin: "claude", check: null, authFile: ["~/.claude/.credentials.json"], install: ["npm", "install", "-g", "@anthropic-ai/claude-code"], login: "claude   # puis /login" },
   { id: "codex", group: "agents", label: "Codex", desc: "Agent de code d'OpenAI (abonnement ChatGPT).",
     bin: "codex", check: ["codex", "login", "status"], install: ["npm", "install", "-g", "@openai/codex"], login: "codex login" },
   { id: "agy", group: "agents", label: "Antigravity (agy / Gemini)", desc: "Agent Gemini de Google : sièges gemini flash pour le travail courant.",
-    bin: "agy", check: null, install: null, hint: "Installer Antigravity depuis antigravity.google puis lancer `agy`", login: "agy" },
+    bin: "agy", check: null, authFile: ["~/.gemini/antigravity-cli/antigravity-oauth-token"], install: null, hint: "Installer Antigravity depuis antigravity.google puis lancer `agy`", login: "agy" },
   { id: "opencode", group: "agents", label: "OpenCode", desc: "Agent de code libre, compatible avec de nombreux fournisseurs.",
-    bin: "opencode", check: null, install: ["npm", "install", "-g", "opencode-ai"], login: "opencode auth login" },
+    bin: "opencode", check: null, authFile: ["~/.local/share/opencode/auth.json"], install: ["npm", "install", "-g", "opencode-ai"], login: "opencode auth login" },
   { id: "pi", group: "agents", label: "Pi", desc: "Agent minimaliste, bon pour les modèles NVIDIA / OpenRouter.",
-    bin: "pi", check: null, install: ["npm", "install", "-g", "@mariozechner/pi-coding-agent"], login: "pi   # puis /login" },
+    bin: "pi", check: null, authFile: ["~/.pi/agent/auth.json"], install: ["npm", "install", "-g", "@mariozechner/pi-coding-agent"], login: "pi   # puis /login" },
   { id: "freebuff", group: "agents", label: "FreeBuff", desc: "Agent de code gratuit (terminal, financé par la publicité).",
-    bin: "freebuff", check: null, install: ["npm", "install", "-g", "freebuff"], login: "freebuff" },
+    bin: "freebuff", check: null, authFile: ["~/.config/manicode/credentials.json"], install: ["npm", "install", "-g", "freebuff"], login: "freebuff" },
   { id: "hermes", group: "agents", label: "Hermes", desc: "Agent assistant personnel (messagerie, outils MCP).",
-    bin: "hermes", check: null, install: null, hint: "Voir la documentation Hermes de votre installation", login: "hermes setup" },
+    bin: "hermes", check: null, authFile: ["~/.hermes/auth.json"], install: null, hint: "Voir la documentation Hermes de votre installation", login: "hermes setup" },
   { id: "gemini", group: "agents", label: "Gemini CLI", desc: "Agent en ligne de commande de Google.",
-    bin: "gemini", check: null, install: ["npm", "install", "-g", "@google/gemini-cli"], login: "gemini" },
+    bin: "gemini", check: null, authFile: ["~/.gemini/oauth_creds.json"], install: ["npm", "install", "-g", "@google/gemini-cli"], login: "gemini" },
   { id: "openrouter", group: "fournisseurs", label: "OpenRouter", desc: "Un seul compte pour des centaines de modèles (dont des gratuits `:free`).",
     kind: "key", envVar: "OPENROUTER_API_KEY", dir: join(HOME, ".claude-openrouter"), keyUrl: "https://openrouter.ai/keys" },
   { id: "nvidia", group: "fournisseurs", label: "NVIDIA (build.nvidia.com)", desc: "Modèles NVIDIA gratuits via API (alias sans `:free`).",
@@ -127,6 +129,18 @@ function runQuick(argv, timeoutMs = 6000) {
   });
 }
 
+// Présence d'un fichier d'identifiants : existence seulement, le contenu n'est jamais lu.
+export function hasAuthFile(entry, home = HOME) {
+  return (entry.authFile || []).some((f) => {
+    try { return statSync(f.startsWith("~/") ? join(home, f.slice(2)) : f).isFile(); } catch { return false; }
+  });
+}
+
+// Commande à saisir dans le terminal : celle du catalogue sans le commentaire d'aide (« claude   # puis /login »).
+export function loginCommand(entry) {
+  return entry?.login ? String(entry.login).replace(/\s+#.*$/, "").trim() : null;
+}
+
 export async function detectOne(entry, { dataDir, env = process.env, run = runQuick } = {}) {
   const base = { id: entry.id, group: entry.group, label: entry.label, desc: entry.desc, installable: !!entry.install,
     hint: entry.hint ?? null, login: entry.login ?? null, keyUrl: entry.keyUrl ?? null, kind: entry.kind ?? "bin", envVar: entry.envVar ?? null };
@@ -138,7 +152,10 @@ export async function detectOne(entry, { dataDir, env = process.env, run = runQu
   }
   const path = findBin(entry.bin);
   if (!path) return { ...base, status: "missing", detail: "Non installé" };
-  if (!entry.check) return { ...base, status: "installed", detail: "Installé (connexion non vérifiable automatiquement)" };
+  if (!entry.check) {
+    if (hasAuthFile(entry)) return { ...base, status: "connected", detail: "Connecté" };
+    return { ...base, status: "installed", detail: entry.authFile ? "Installé, pas connecté" : "Installé (connexion non vérifiable automatiquement)" };
+  }
   const ok = await run(entry.check);
   return { ...base, status: ok ? "connected" : "installed", detail: ok ? "Connecté" : "Installé, pas connecté" };
 }

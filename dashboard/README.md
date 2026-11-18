@@ -50,6 +50,30 @@ Les abonnements d'activité et de terminal sont relâchés à la déconnexion du
 
 **Bureau infini (T30).** Les fenêtres vivent dans un repère sans limite : boutons « − », pourcentage, « + », « 100 % » et « Tout voir » dans la barre du Bureau (zoom 25 à 200 %, Ctrl + molette autour du curseur), glisser le fond vide ou molette sur le fond pour se déplacer dans tous les sens (le glisser/redimensionner d'une fenêtre est corrigé du zoom ; mobile : fenêtres empilées, sans zoom). Zoom et position sont conservés par navigateur (`localStorage`, clé `paseo-desk-view`). « Ranger en grille » et « Grouper par machine » replacent les fenêtres et recadrent la vue (100 %, origine sur la grille). Titres de fenêtres : « Outil · Projet · Machine » (ex. « FreeBuff · sandbox-repo · Mini PC ») ; le champ `tool` d'une fenêtre vient du lanceur rapide, un numéro « (2) » n'apparaît que pour des fenêtres identiques. Vérifications : `scripts/verify-names.mjs` et `scripts/verify-desk-zoom.mjs` (`T30_URL=http://127.0.0.1:<port de test> node dashboard/scripts/verify-desk-zoom.mjs`).
 
+## Page Agents (`#agents`)
+
+« Qui fait quoi, où, est-ce bloqué ? » en une page. Elle remplace Sessions, Projets, Agent, Groupes, Chronologie et Tâches :
+leurs ancres (`#sessions`, `#projets`, `#agent`, `#groupes`, `#chronologie`, `#taches`) mènent à `#agents` (table `ALIASES` de
+`public/js/main.js`) et ouvrent l'onglet correspondant du panneau de droite.
+
+- **Source** : `handlers/agentsoverview.mjs`, message `agents.overview` (et diffusion du même message à chaque changement ; REST
+  `GET /api/v1/agents`). Il fusionne les agents du daemon (`state.agents`) et les **terminaux d'agents** : ceux enregistrés par le poste
+  (`coord.json → terms` : outil, libellé, dossier) et ceux dont le nom désigne un outil connu. Pour chacun : outil, modèle, machine,
+  projet, état, dernière action, dernier signe de vie, fichiers réservés (coordination), tâche liée, quota du moteur.
+- **Dernière action** : statut déclaré (`coord_set_status`) sinon dernière ligne utile de l'écran du terminal (`windows.scrollback`,
+  **échantillonné toutes les 15 s** pour les seuls terminaux d'agents, avec cache ; `AGENTS_SAMPLE_MS` pour changer la période).
+  Devant une invite, on montre « action demandée → question ».
+- **États** : *actif* (écran qui bouge depuis moins de 2 min, agent en cours), *en attente* (permission, invite à l'écran, question
+  ouverte à Philippe, ou écran figé depuis plus de 2 min), *bloqué* (erreur, blocage signalé, quota épuisé, agent « en cours » muet
+  depuis 30 min), *au repos* (figé depuis plus d'1 h). Après un redémarrage du poste, la durée est une borne basse (« au moins »).
+- **Interface** (`public/js/views/agents.js`) : regroupement par projet, machine ou outil ; filtre par état ; boutons Ouvrir sur le
+  Bureau, Lire le terminal, Envoyer un message, Arrêter. Panneau de droite : Conversation et Fiche projet
+  (`components/groupesPanel.js`), Tâches (`components/tasksPanel.js`), Historique (`components/timelinePanel.js`), Orchestrateur
+  (`components/orchestratorPanel.js`) : le code des anciennes vues, réutilisé tel quel. Le rail montre aussi les terminaux d'agents
+  avec leur état. Statuts, libellés et lignes d'écran sont des données non fiables : toujours affichés en texte.
+- La Chronologie enregistre aussi les épisodes des terminaux d'agents (`ctx.agentsOverview.asAgents()`).
+- Test : `node dashboard/scripts/verify-agents-overview.mjs` (hors ligne).
+
 ## API des fenêtres
 
 Pour qu'une IA (Hermes, Claude via un futur serveur MCP…) « voie » le bureau. Le navigateur envoie `desk.state {windows}` (debounce 300 ms) ; le serveur garde le dernier état de chaque navigateur connecté.
@@ -124,7 +148,7 @@ Trois façons d'agir sur le poste **sans ouvrir le navigateur** : l'API HTTP JSO
   À 5 000 lignes, le fichier devient `agent-audit.1.jsonl` (un seul fichier archivé) et un nouveau commence.
 - Actions destructrices : suppression d'une tâche (`DELETE /tasks/:id?confirm=true`), fermeture en masse
   (`POST /sessions/close` avec `confirm:true`) ; permission signalée dangereuse (`approve` avec `confirm:true`). Les
-  gardes de GitHub et du transfert restent celles de leurs handlers. Aucune route n'éteint la machine.
+  gardes de GitHub restent celles de leurs handlers. Aucune route n'éteint la machine.
 
 ### Routes
 
@@ -238,82 +262,6 @@ la session qui le reçoit ne doit pas en exécuter les consignes. Valable pour u
 
 `DASHBOARD_DATA_DIR` remplace le dossier `data/` (utile pour lancer une 2e instance de test sans toucher aux données réelles).
 
-## Transfert et reprise
-
-Deux handlers serveur, sans interface pour l'instant (T10-core). Hypothèse : le dashboard tourne sur la machine
-principale (`local`) ; Oracle est la machine de reprise.
-
-### Transfert vers Oracle (`handlers/transfer.mjs`, `lib/transfer-steps.mjs`)
-
-États : `idle → checking → stopping_agents → committing → cloning → reassigning → shutting_down → done`, plus
-`failed(<étape>)`, `partial(shutdown)` et `abandoned`. Base `data/transfers.sqlite` (tables `transfers` et
-`transfer_events`, écritures en transaction `BEGIN IMMEDIATE`).
-
-| Message envoyé | Réponse / diffusion |
-| --- | --- |
-| `transfer.plan {projects?}` | `transfer.plan {projects, tasks, agents, oracleDiskFree, oracleDiskSource, ghConnected:{local,oracle}, errors, blockers, warnings, forceRequired, ok}` (lecture seule, toujours réel) |
-| `transfer.run {confirm:true, dryRun:boolean, force?, confirmShutdown?, fresh?}` | diffusions `transfer.status {state, step, progress, detail}` à chaque étape, puis `transfer.done {summary}` ou `transfer.error {step, message}` ; réponse `transfer.result {status: done/cancelled}` ou `error {source:"transfer.run"}` |
-| `transfer.status` | `transfer.status {state, step, startedAt, error, dryRun}` |
-| `transfer.events {id?}` | `transfer.events {events:[{step, level, message, details_json, created_at}]}` (journal) |
-| `transfer.cancel` | `transfer.cancelled {stoppedAt, shutdownAborted, rollback}` ou `error {source:"transfer.cancel"}` |
-
-Garde-fous (tous prouvés par `scripts/verify-transfer.mjs`) :
-- `confirm:true` est exigé **même en dryRun** ; `dryRun` doit être un booléen explicite (une chaîne `"true"` est refusée).
-- `dryRun:true` n'appelle jamais un exécuteur réel (seul le contrôle, en lecture seule, est réel) : l'arrêt d'agents, le
-  commit, le push, le clone, la réaffectation et l'extinction sont décrits par la simulation. Il va jusqu'à `done`.
-- L'extinction réelle exige en plus `confirmShutdown:true`. Elle n'est jamais lancée sous `dryRun`, après une étape en
-  échec, ni avec `force` seul. Sans `confirmShutdown`, le transfert se termine `done` avec « extinction non demandée ».
-  Commande annulable : `shutdown /s /t 60 /c "Transfert vers Oracle"`, lancée par le daemon du mini-PC ; le dashboard
-  attend jusqu'à 2 minutes que le mini-PC disparaisse, sinon `partial(shutdown)` (relancer `transfer.run` rejoue
-  seulement cette étape). `transfer.cancel` pendant le délai envoie `shutdown /a`.
-- Commits uniquement sur `transfert/AAAAMMJJ-HHMM` (jamais `main`/`master` : toute autre branche est refusée dans le code
-  du commit et du push), message « Transfert vers Oracle <date> », push de cette seule branche puis vérification du SHA
-  distant. Les fichiers sensibles non ignorés (`.env`, clés, `hosts.json`…) bloquent le transfert.
-- Blocages (jamais contournables par `force`) : Oracle injoignable, GitHub non connecté sur Oracle (détecté à chaque
-  plan), projet sans dépôt distant ou non GitHub, projet qui est un sous-dossier d'un dépôt, fichier sensible, espace
-  restant sur Oracle < 2 Go après le clone, deux projets au même dossier cible. `force` ne passe que les avertissements
-  `forceRequired` (autres agents actifs, HEAD détachée).
-- Un seul transfert actif (verrou SQLite, y compris entre instances). Un `transfer.run` suivant un échec reprend le
-  dernier transfert du même mode (dryRun ou réel) à l'étape échouée, sans rejouer les éléments déjà faits ; `fresh:true`
-  l'abandonne. Au démarrage du serveur, un transfert resté en cours devient `failed(<étape>)` (raison « interrompu »).
-- Aucun secret : tout ce qui entre dans le journal, le plan, les résultats et les messages passe par `redact`.
-- Projets concernés = ceux des tâches `todo`/`doing` de l'hôte `local` (les autres projets suivis sont listés mais
-  non transférés). Seuls les agents liés à ces tâches sont arrêtés. L'espace libre d'Oracle est mesuré par un `df` lancé
-  dans un terminal transitoire d'Oracle (variable `ORACLE_DISK_FREE` en octets pour le forcer ; à défaut, 193 Go
-  signalés comme « estimation »).
-
-### Reprise automatique (`handlers/failover.mjs`)
-
-États : `monitoring → suspect → unreachable → resuming → resumed → reclaim_available` (+ `idle` désarmé, `resume_failed`,
-`reclaiming`). Test de vie toutes les 30 s (`intervalMs`, ≥ 100 ms) : connexion du client + `daemon.ping` avec délai de 4 s.
-Au moins `minPings` (3) échecs consécutifs avant `suspect`, puis `thresholdMinutes` (5) depuis le premier échec avant
-`unreachable`. La fonction pure `nextState(state, event, config, now)` porte toute la logique. État dans
-`data/failover.json` (armé, hôte, seuil, tâches cochées, état, plans) : restauré au redémarrage, sans rejouer une reprise.
-
-| Message | Réponse |
-| --- | --- |
-| `failover.status` | `failover.status {armed, state, host, missedPings, lastPing, resumedTasks, resumePlans, skipped…}` (aussi diffusé à chaque changement) |
-| `failover.arm {host, thresholdMinutes, minPings, intervalMs?}` | `failover.armed {…status}` (hôte inconnu ou valeurs invalides : `error`) |
-| `failover.disarm` | `failover.disarmed {…status}` |
-| `failover.setAutoResume {taskId, on:boolean}` | `failover.autoResumeSet {taskId, on}` |
-| `failover.reclaim {confirm:true}` | diffusions `failover.reclaim.status {step}` puis `failover.reclaim.result` (simulation, seulement depuis `reclaim_available`) |
-
-En `unreachable`, pour chaque tâche `doing` de l'hôte principal cochée « reprise automatique », un plan est enregistré
-(tâche, projet, dossier Oracle, branche `reprise/<date>`, invite de reprise) puis passé à un exécuteur injectable (par
-défaut une simulation qui journalise ; clone et relance réels : ticket suivant). Un seul plan à la fois, jamais deux
-fois la même tâche, et rien si la tâche a déjà un propriétaire actif sur une autre machine (agent trouvé sur Oracle).
-Chaque changement important ajoute un élément à `ctx.inbox` (type « machine », source « failover »). Quand la machine
-revient : aucun retour automatique, état `reclaim_available`.
-
-### Tester sans rien éteindre ni pousser
-
-- `node dashboard/scripts/verify-transfer.mjs` et `node dashboard/scripts/verify-failover.mjs` sont autonomes : ils lancent
-  leur propre serveur (ports 7079 et 7078, données jetables) et n'utilisent pas le serveur 7070.
-- Les ordres d'extinction vont à un faux daemon ; le dépôt jetable (`.foreman/scratch/`) a pour « GitHub » un dépôt nu
-  local (`url.<nu>.insteadOf`, vérifié avant tout push) ; les dépôts de Philippe sont comparés avant/après.
-- Pour essayer à la main : `transfer.plan`, puis `transfer.run {confirm:true, dryRun:true}` (rien n'est modifié).
-  N'envoyez jamais `dryRun:false` avec `confirmShutdown:true` hors d'un vrai transfert voulu.
-
 ## Bouton Telegram (T32)
 
 Le bouton « Telegram » de la barre du haut (pastille verte = le bot répond, grise = arrêté) ouvre un panneau en **lecture seule** :
@@ -328,8 +276,6 @@ pour voir le navigateur).
 ## Scripts
 
 - `node dashboard/scripts/verify-timeline.mjs`, `verify-inbox.mjs`, `verify-widgets-windows.mjs` vérifient la chronologie, la boîte de réception (vrai agent en mode « Always Ask ») et les widgets / l'API des fenêtres.
-- `node dashboard/scripts/verify-transfer.mjs` : sécurité, machine d’états, persistance, crash et reprise, vrai dépôt git jetable, plan réel et messages WebSocket (126 vérifications).
-- `node dashboard/scripts/verify-failover.mjs` : machine d’états pure (31 cas), faux hôte dont on coupe la réponse, reprise sélective, redémarrage, serveur réel (86 vérifications).
 - `node dashboard/scripts/verify-agentapi.mjs` : API de contrôle, `postectl` et serveur MCP (lance ses propres instances sur 7074, 7075 et 7076 avec des données jetables, vrais agents `claude-openrouter/sonnet`, puis lectures sur le serveur 7070).
 - `node dashboard/scripts/verify-agentactivity.mjs` : historique d'activité de l'agent (journal, plafond de 500, secrets, redémarrage, mise à jour en direct dans le navigateur) sur le port 7091 avec des données jetables.
 - `node dashboard/scripts/verify-decide.mjs` : outil décider avec un faux Laya (succès, 400, 503, plafonds, démarrage paresseux, arrêt), `postectl decide`, MCP `post_decide` ; test réel avec le vrai Laya si l'exécutable existe (ports 7092 et 18765-18767).
@@ -491,9 +437,14 @@ Les messages de coordination sont typés et groupés en fils ; le poste en tire 
 ## Vue Téléphone, classement des modèles, rangement (2026-10-27)
 - **Vue « Téléphone »** (`public/js/views/mobile.js`, `css/mobile.css`) : accueil par défaut sous 720 px. Onglets Sessions (carte Jarvis, à traiter / actives / par projet, anciennes repliées, × pour ranger), Crédits (anneaux et courbes d'usage des quotas), Ranger. Serveur : `handlers/mobile.mjs` — `usage.history` (une mesure des quotas toutes les 5 min, 14 jours, `data/usage-history.json`), `tidy.get|set|preview|run` (archive les sessions inactives ou en erreur depuis N heures, jamais une session active, en permission ou avec un sous-agent actif ; rangement automatique **désactivé par défaut**, `data/tidy.json`). Test : `scripts/verify-mobile.mjs`.
 - **Bureau sur téléphone** : une fenêtre en plein écran, bande « Fenêtres » pour changer. Les fenêtres dont la session est fermée ou disparue quittent le Bureau seules après 5 s (réglage `desk.autoTidy` = `0` pour couper ; case dans Téléphone › Ranger). Bouton « Ranger N inactifs » dans le dock.
-- **Classement des modèles** (vue Modèles) : les 8 modèles `claude-openrouter|claude-nvidia / opus|sonnet|haiku|fable` (+ autres moteurs) en un seul classement, avec onglets par rôle de tâche (Écriture / Lecture / Planification). `quota.setFallback {engines, role?}` (liste vide + rôle = retour au défaut) ; `pickEngine(preferred, role)`. Test : `scripts/verify-quota-roles.mjs`.
+- **Classement des modèles** (section « Modèles » de la page Connexions, bloc Avancé) : les 8 modèles `claude-openrouter|claude-nvidia / opus|sonnet|haiku|fable` (+ autres moteurs) en un seul classement. Un seul classement (les rôles de repli ont été supprimés, ils n'avaient jamais servi) : `quota.setFallback {engines}` ; `pickEngine(preferred, role)` ne garde `role` que pour écarter FreeBuff de la lecture / planification.
 - **Moteur « auto »** d'une tâche : `engine: "auto"` = premier moteur disponible du classement du rôle de la tâche (note « Moteur choisi par le classement »). Vérifié en vrai : tâche lecture + classement lecture `claude-nvidia/haiku` → `runEngine claude-nvidia/haiku`.
 - **FreeBuff** : `POST /api/v1/freebuff` lit l'adresse et le mot de passe du daemon local dans la liste des machines (Oracle n'écoute pas sur 127.0.0.1). Aller-retour de coordination vérifié sur Oracle : FreeBuff → orchestrateur (`coord send`) et Philippe → FreeBuff (réveil par phrase fixe) → réponse. Le shell d'un terminal d'outil non détecté vaut bash hors Windows (sinon l'identité n'était jamais injectée).
 - **Délégation à FreeBuff sans attendre** : `POST /api/v1/freebuff {project, prompt, async:true}` répond tout de suite `{jobId, status:"running"}` (les contrôles projet, mandat et « déjà en cours » sont faits avant la réponse) ; `GET /api/v1/freebuff/:jobId` donne `running`, `done` (avec `result`) ou `failed`. Un seul FreeBuff à la fois, 20 lancements gardés en mémoire. Côté agent : outils MCP `post_freebuff` (`async:true`) et `post_freebuff_status` ; côté terminal : `postectl freebuff --async` puis `postectl freebuff-status JOBID` (code 2 tant que ça travaille). Vérifié en réel sur Oracle (réponse PONG relue après coup). **Prévenu à la fin** : si l'appelant est une session identifiée (`postectl` et le MCP envoient `PASEO_SESSION_ID` + `PASEO_COORD_TOKEN`), le poste lui dépose un message de notification (`ctx.coord.notify`, sans réponse attendue) avec le début de la réponse, sans la pub de FreeBuff. **Historique** : `GET /api/v1/freebuff` liste les lancements (30 gardés dans `data/freebuff-jobs.json`, ceux qui tournaient lors d'un redémarrage passent « échec : interrompu ») ; la vue Téléphone en montre les 3 derniers. **Une session à la fois** : FreeBuff refuse une 2e session (« Take over ») ; le poste ferme le terminal que SON lancement précédent a laissé avant d'en ouvrir un nouveau.
-- **FreeBuff dans le classement des modèles** : le moteur `freebuff/code` se classe comme les autres (vue Modèles, en dernier par défaut). Il ne sert qu'aux tâches d'ÉCRITURE sur la machine du poste : `pickEngine(…, role, {agentsOnly})` l'ignore pour la lecture, la planification, « Auto » du lanceur et les tâches d'une autre machine. Une tâche qui tombe sur lui n'a pas de session : elle reste « En cours » (raison = identifiant du lancement), passe « À valider » avec la réponse en résumé ou « Bloquée » en cas d'échec (le moteur est alors mis au repos si c'est un quota). « Arrêter » la passe « Bloquée » (le terminal FreeBuff reste ouvert). Après un redémarrage du poste, une tâche FreeBuff en cours est marquée « interrompue ». Le Bureau affiche une pastille par lancement dont le terminal existe : clic = ouvrir le terminal, × = le fermer.
+- **FreeBuff dans le classement des modèles** : le moteur `freebuff/code` se classe comme les autres (page Connexions, en dernier par défaut). Il ne sert qu'aux tâches d'ÉCRITURE sur la machine du poste : `pickEngine(…, role, {agentsOnly})` l'ignore pour la lecture, la planification, « Auto » du lanceur et les tâches d'une autre machine. Une tâche qui tombe sur lui n'a pas de session : elle reste « En cours » (raison = identifiant du lancement), passe « À valider » avec la réponse en résumé ou « Bloquée » en cas d'échec (le moteur est alors mis au repos si c'est un quota). « Arrêter » la passe « Bloquée » (le terminal FreeBuff reste ouvert). Après un redémarrage du poste, une tâche FreeBuff en cours est marquée « interrompue ». Le Bureau affiche une pastille par lancement dont le terminal existe : clic = ouvrir le terminal, × = le fermer.
 - **Délégation entre agents** (`handlers/delegate.mjs`) : une session identifiée qui crée une tâche (`post_create_task`, `postectl task add`) est prévenue par un message du poste quand la tâche arrive « À valider », « Terminé » ou « Bloquée » après avoir tourné (surveillances dans `data/task-watchers.json`, cycle de 15 s). Avec le moteur `auto`, c'est le classement des modèles qui choisit qui fait le travail. La vue Téléphone (onglet Sessions) liste les tâches déléguées encore suivies (demandeur, moteur, état, bouton Arrêter ; `delegate.list`). **Annuler FreeBuff** : « Arrêter » une tâche FreeBuff, `POST /api/v1/freebuff/:jobId/cancel` ou le × de la carte Téléphone arrête le lanceur puis ferme le terminal `freebuff-run` du dossier (vérifié en réel : le terminal disparaît). Test : `scripts/verify-delegate.mjs`.
+
+### Connexions : se connecter depuis la page
+- Chaque ligne montre « Connecté / Non connecté / Absent » et ses quotas (barres 5 h / 7 j de `components/quota.js`). « Connecté » = `check` (commande) sinon présence d'un `authFile` du catalogue (`statSync`, contenu jamais lu).
+- Une seule action par ligne : Installer (absent), Se connecter (non connecté), Reconnecter (connecté). `connections.login {id, confirm:true}` ouvre un terminal sur le Bureau et y saisit la commande `login` du catalogue (liste fermée côté serveur) ; la page relit l'état toutes les 4 s pendant 3 minutes.
+- Modèles : section repliable de la même page (une ligne par fournisseur, « Avancé » replié). L'ancre `#modeles` redirige vers `#connexions`.

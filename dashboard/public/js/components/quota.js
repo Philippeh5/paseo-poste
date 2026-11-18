@@ -47,7 +47,7 @@ export function providerTitle(p, now = Date.now()) {
 }
 
 
-// Classement des moteurs de repli : réutilisé par la vue Modèles, qui en est désormais le seul endroit.
+// Classement des moteurs de repli : affiché une seule fois, dans la section « Modèles » de la page Connexions (bloc Avancé).
 // Le pool de base = les 8 modèles « fournisseur/alias » (OpenRouter et NVIDIA × opus, sonnet, haiku, fable) ; d'autres moteurs déjà présents
 // dans la liste (p. ex. Pi) restent classables. Les fonctions lisent le dernier quota.state reçu (`snap`).
 const POOL = [["claude-openrouter", "OpenRouter"], ["claude-nvidia", "NVIDIA"]];
@@ -55,7 +55,7 @@ const POOL_ALIASES = ["opus", "sonnet", "haiku", "fable"];
 // FreeBuff (code gratuit) se classe aussi, mais ne sert qu'aux tâches d'écriture : le poste ne l'utilise ni pour « Auto » du lanceur ni pour la lecture / planification.
 export const FREEBUFF_ENGINE = "freebuff/code";
 export const ALIAS_ENGINES = [...POOL.flatMap(([id]) => POOL_ALIASES.map((a) => `${id}/${a}`)), FREEBUFF_ENGINE];
-let aliasModels = {}; // fournisseur -> { alias: modèle réel }, fourni par la vue Modèles
+let aliasModels = {}; // fournisseur -> { alias: modèle réel }, fourni par la section Modèles
 
 function engineName(engine) {
   if (engine === FREEBUFF_ENGINE) return { title: "FreeBuff · code", model: "tâches d'écriture seulement" };
@@ -65,12 +65,9 @@ function engineName(engine) {
   const real = aliasModels[provider]?.[alias];
   return { title: `${pool[1]} · ${alias[0].toUpperCase()}${alias.slice(1)}`, model: real || null };
 }
-// Onglets : classement par défaut, ou propre à un rôle de tâche (écriture / lecture / planification) ; un rôle sans liste suit le défaut.
-const ROLE_TABS = [[null, "Par défaut"], ["writer", "Écriture"], ["reader", "Lecture"], ["planner", "Planification"]];
-let roleTab = null;
 let rerender = () => {};
-const entries = () => (roleTab ? snap.roles?.[roleTab] ?? null : snap.fallback);
-const save = (engines, role = roleTab) => send({ type: "quota.setFallback", engines, ...(role ? { role } : {}) });
+const entries = () => snap.fallback;
+const save = (engines) => send({ type: "quota.setFallback", engines });
 const ranked = () => (entries() || []).map((f) => f.engine);
 
 function move(index, delta) {
@@ -100,25 +97,13 @@ function engineRow(f, i, count, now) {
 }
 
 function fallbackBlock(now) {
-  const tabs = el("div", { class: "qg-tabs", role: "tablist", "aria-label": "Classement par rôle de tâche" },
-    ROLE_TABS.map(([role, label]) => el("button", {
-      type: "button", role: "tab", class: `qg-tab${roleTab === role ? " is-on" : ""}`, "aria-selected": String(roleTab === role),
-      onclick: () => { roleTab = role; rerender(); },
-    }, label, role && snap.roles?.[role] ? el("span", { class: "qg-tab-dot", title: "Classement personnalisé" }, "•") : null)));
-  if (roleTab && !entries()) {
-    return el("section", { class: "qg-fallback" }, el("h3", {}, "Classement des modèles"), tabs,
-      el("p", { class: "qg-hint" }, "Ce rôle suit le classement par défaut. Personnalise-le pour qu'il ait son propre ordre de repli (p. ex. des modèles rapides pour la lecture)."),
-      el("button", { class: "btn btn-sm", type: "button", onclick: () => save(snap.fallback.map((f) => f.engine)) }, "Personnaliser à partir du classement par défaut"));
-  }
   const list_ = entries();
   const list = ranked();
   const unused = ALIAS_ENGINES.filter((e) => !list.includes(e));
   const inPool = list.filter((e) => ALIAS_ENGINES.includes(e)).length;
   return el("section", { class: "qg-fallback" },
-    el("h3", {}, `Classement des modèles (${inPool} / ${ALIAS_ENGINES.length})`), tabs,
-    el("p", { class: "qg-hint" }, roleTab
-      ? "Les tâches de ce rôle passent au premier moteur disponible, dans cet ordre (sinon, le classement par défaut s'applique)."
-      : "Si un moteur est épuisé, la tâche passe au premier moteur disponible, dans cet ordre."),
+    el("h3", {}, `Classement des modèles (${inPool} / ${ALIAS_ENGINES.length})`),
+    el("p", { class: "qg-hint" }, "Si un moteur est épuisé, la tâche passe au premier moteur disponible, dans cet ordre."),
     el("ol", { class: "qg-order", "aria-label": "Classement des moteurs de repli" },
       list_.map((f, i) => engineRow(f, i, list_.length, now))),
     unused.length ? el("div", { class: "qg-unused" },
@@ -129,8 +114,7 @@ function fallbackBlock(now) {
           el("span", { class: "qg-engine-main" }, el("strong", { class: "qg-engine-title" }, name.title), name.model && el("code", {}, name.model)),
           el("button", { class: "btn btn-sm", type: "button", "aria-label": `Ajouter ${engine}`, onclick: () => save([...list, engine]) }, "Ajouter"));
       })),
-      el("button", { class: "btn btn-sm", type: "button", onclick: () => save([...list, ...unused]) }, `Classer les ${unused.length} autres à la suite`)) : null,
-    roleTab ? el("button", { class: "btn btn-sm qg-reset-role", type: "button", onclick: () => save([]) }, "Revenir au classement par défaut") : null);
+      el("button", { class: "btn btn-sm", type: "button", onclick: () => save([...list, ...unused]) }, `Classer les ${unused.length} autres à la suite`)) : null);
 }
 
 export function fallbackSection({ aliases, onTab } = {}) {
@@ -139,6 +123,31 @@ export function fallbackSection({ aliases, onTab } = {}) {
   return snap ? fallbackBlock(Date.now()) : null;
 }
 export const onQuotaChange = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
+
+export function windowRow(w, now) {
+  const pct = w.usedPct ?? 0;
+  const tone = pct >= 100 ? "is-danger" : pct >= 85 ? "is-warn" : "";
+  const reset = w.resetsAt ? Date.parse(w.resetsAt) - now : null;
+  return el("div", { class: "qg-window" },
+    el("div", { class: "qg-window-head" }, el("span", {}, w.label || w.shortLabel || "Fenêtre"),
+      el("span", { class: "qg-num" }, w.usedPct == null ? "—" : `${w.usedPct} %`)),
+    el("div", {
+      class: `qg-bar ${tone}`, role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100",
+      "aria-valuenow": String(Math.min(100, pct)), "aria-label": `${w.label} : ${pct} % utilisé`,
+    }, el("i", { style: `width:${Math.min(100, Math.max(0, pct))}%` })),
+    reset != null && reset > 0 ? el("div", { class: "qg-reset" }, `Remise à zéro dans ${duration(reset)}`) : null);
+}
+
+// Quotas d'un fournisseur sur une ligne de la page Connexions : mêmes barres 5 h / 7 j que le panneau de la barre du haut.
+export function providerWindows(p, now = Date.now()) {
+  if (!p.windows?.length) return p.state === "ok" ? null : el("span", { class: "pilot-detail" }, `Quota : ${plainDetail(p)}`);
+  return el("div", { class: "qg-inline" }, p.windows.map((w) => windowRow(w, now)));
+}
+export function providerSnapshot(ids) {
+  if (!snap) return null;
+  const list = snap.providers.filter((p) => ids.includes(p.id));
+  return list.length ? list : [];
+}
 
 export function createQuotaGauge() {
   const pills = el("span", { class: "qg-pills" });
@@ -155,20 +164,6 @@ export function createQuotaGauge() {
     el("button", { class: "icon-btn", type: "button", id: "quota-close", "aria-label": "Fermer",
       onclick: () => setOpen(false) }, "×")),
   body);
-
-  function windowRow(w, now) {
-    const pct = w.usedPct ?? 0;
-    const tone = pct >= 100 ? "is-danger" : pct >= 85 ? "is-warn" : "";
-    const reset = w.resetsAt ? Date.parse(w.resetsAt) - now : null;
-    return el("div", { class: "qg-window" },
-      el("div", { class: "qg-window-head" }, el("span", {}, w.label || w.shortLabel || "Fenêtre"),
-        el("span", { class: "qg-num" }, w.usedPct == null ? "—" : `${w.usedPct} %`)),
-      el("div", {
-        class: `qg-bar ${tone}`, role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100",
-        "aria-valuenow": String(Math.min(100, pct)), "aria-label": `${w.label} : ${pct} % utilisé`,
-      }, el("i", { style: `width:${Math.min(100, Math.max(0, pct))}%` })),
-      reset != null && reset > 0 ? el("div", { class: "qg-reset" }, `Remise à zéro dans ${duration(reset)}`) : null);
-  }
 
   function providerBlock(p, now) {
     const st = STATE[p.state] ?? STATE.unknown;
@@ -215,7 +210,7 @@ export function createQuotaGauge() {
     button.title = `Quotas : ${summary}`;
     if (!panel.hidden) {
       body.replaceChildren(...snap.providers.map((p) => providerBlock(p, now)),
-        el("a", { class: "qg-link", href: "#modeles", onclick: () => setOpen(false) }, "Ordre de repli des moteurs → vue Modèles"));
+        el("a", { class: "qg-link", href: "#connexions", onclick: () => setOpen(false) }, "Connexions, quotas et ordre de repli →"));
       const failures = failuresBlock(now);
       if (failures) body.append(failures);
     }

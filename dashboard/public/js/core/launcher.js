@@ -26,7 +26,7 @@ const TEMPLATE = `
       <input name="cwd" class="mono" placeholder="Dossier sur la machine" autocomplete="off"></label>
   </div>
   <div class="provider-options">
-    <label class="check auto-label"><input type="checkbox" name="auto"> Auto : suivre le classement des modèles (vue Modèles)</label>
+    <label class="check auto-label"><input type="checkbox" name="auto"> Auto : suivre le classement des modèles (page Connexions)</label>
     <label class="field auto-role" hidden>Rôle du classement
       <select name="autoRole">
         <option value="writer">Écriture</option>

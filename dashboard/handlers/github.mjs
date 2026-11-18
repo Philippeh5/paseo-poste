@@ -4,6 +4,7 @@
 // avec `dryRun: true` elle renvoie le plan d'action sans rien exécuter.
 // Le jeton GitHub n'est jamais lu : `gh` (machine du dashboard) ou le daemon de la machine s'en servent seuls.
 import { execFile } from "node:child_process";
+import { SELF_HOST } from "../lib/selfhost.mjs";
 import { FsError, resolveHost, validatePath, ensureDirectory, withTimeout, baseName } from "./fs.mjs";
 
 const GH_TIMEOUT_MS = 60000;
@@ -241,7 +242,7 @@ export function register(ctx) {
   const { onMessage, send } = ctx;
   const busy = new Set();
   const reply = (ws, type, message, body) =>
-    send(ws, { type, host: message.host || "local", dir: message.dir ?? null, ref: message.ref ?? null, ...body });
+    send(ws, { type, host: message.host || SELF_HOST, dir: message.dir ?? null, ref: message.ref ?? null, ...body });
   const failBody = (error) => {
     const known = error instanceof FsError;
     if (!known) ctx.log("github", `échec : ${ctx.safeError(error)}`);
@@ -290,7 +291,7 @@ export function register(ctx) {
   for (const action of ["create", "sync"]) {
     onMessage(`github.${action}`, async (ws, message) => {
       const type = "github.result";
-      const lock = `${message.host || "local"}|${message.dir}`;
+      const lock = `${message.host || SELF_HOST}|${message.dir}`;
       try {
         if (message.confirm !== true) {
           throw new FsError("confirm_required", "Confirmation requise : cette opération écrit sur GitHub et doit être envoyée avec confirm: true.");

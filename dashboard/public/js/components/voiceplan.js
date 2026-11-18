@@ -1,6 +1,7 @@
 // Fenêtre de dictée ou saisie de plan d'action (Web Speech API fr-FR ou texte).
 // Envoie le message voiceplan.generate et attend voiceplan.created pour relecture.
 import { escapeHtml } from "../core/util.js";
+import { defaultHost } from "../core/state.js";
 
 const SpeechRec = typeof window !== "undefined"
   ? (window.SpeechRecognition || window.webkitSpeechRecognition || null)
@@ -65,7 +66,7 @@ function createDialog() {
   return dlg;
 }
 
-export function openVoicePlanDialog({ ctx, onCreated, project = "", host = "local" } = {}) {
+export function openVoicePlanDialog({ ctx, onCreated, project = "", host = defaultHost() } = {}) {
   if (!dialog) {
     dialog = createDialog();
   }

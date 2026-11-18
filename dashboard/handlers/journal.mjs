@@ -12,6 +12,7 @@
 // rapport.
 import { redact } from "../lib/redact.mjs";
 import { ApiError } from "./agentapi.mjs";
+import { SELF_HOST } from "../lib/selfhost.mjs";
 
 const FILE = "journal";
 const MAX_LOG = 2000;
@@ -94,7 +95,7 @@ export function register(ctx) {
             const at = Number.isNaN(stamp) || stamp > Date.now() ? new Date().toISOString() : t.updatedAt;
             state.events.push({
               at, taskId: t.id, state: t.status, title: clip(t.title, 120), dir: t.project || "",
-              host: t.host || "local",
+              host: t.host || SELF_HOST,
               reason: clip(t.status === "blocked" ? t.reason : "", 80), agent: t.origin === "agent",
             });
           }
@@ -117,7 +118,7 @@ export function register(ctx) {
     const byName = new Map(); // "hôte|nom en minuscules" -> idem
     const add = (host, dir, name) => {
       if (!dir) return;
-      const entry = { host: host || "local", dir, name: name || folderName(dir) };
+      const entry = { host: host || SELF_HOST, dir, name: name || folderName(dir) };
       const dirKey = `${entry.host}|${slashes(dir).replace(/\/+$/, "").toLowerCase()}`;
       if (!byDir.has(dirKey)) byDir.set(dirKey, entry);
       const nameKey = `${entry.host}|${entry.name.toLowerCase()}`;
@@ -133,7 +134,7 @@ export function register(ctx) {
     const { byDir, byName } = projectIndex(tasks);
     const groups = new Map();
     const inDay = (at) => { const t = Date.parse(at); return t >= range.start && t < range.end; };
-    const groupFor = ({ host = "local", dir, name }) => {
+    const groupFor = ({ host = SELF_HOST, dir, name }) => {
       let entry = null;
       if (dir) {
         entry = byDir.get(`${host}|${slashes(dir).replace(/\/+$/, "").toLowerCase()}`) ||
@@ -179,7 +180,7 @@ export function register(ctx) {
     const episodes = store.read("timeline", null)?.episodes;
     for (const ep of Array.isArray(episodes) ? episodes : []) {
       if (!ep || !ep.start) continue;
-      const group = groupFor({ host: ep.host || "local", name: ep.project || "" });
+      const group = groupFor({ host: ep.host || SELF_HOST, name: ep.project || "" });
       const label = clip(ep.title || [ep.provider, ep.model].filter(Boolean).join("/") || "session", 100);
       push(group, { at: ep.start, kind: "session", state: "start", text: `Session lancée : ${label}` });
       if (ep.end) {
@@ -219,7 +220,7 @@ export function register(ctx) {
       if (sentGroups.has(key)) continue;
       sentGroups.add(key);
       const [host, dir] = String(m.project || "").split("|");
-      push(groupFor({ host: host || "local", dir: dir || "" }), {
+      push(groupFor({ host: host || SELF_HOST, dir: dir || "" }), {
         at: m.at, kind: "message", state: m.kind || "fyi",
         text: `${m.fromLabel || m.from || "?"} → équipe : ${clip(m.text, 160)}`,
       });

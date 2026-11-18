@@ -194,7 +194,7 @@ try {
     const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
     let navigations = 0;
     page.on("framenavigated", (f) => { if (f === page.mainFrame()) navigations++; });
-    await page.goto(`${BASE}/#taches`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE}/#agents`, { waitUntil: "domcontentloaded" }); await page.locator('[data-agents-open="taches"]').click();
     const panel = page.locator("#agentactivity-panel");
     await panel.waitFor({ state: "visible", timeout: 8000 });
     expect((await panel.innerText()).includes("Activité de l'agent"), "panneau « Activité de l'agent » visible quand le Mode Agent est actif");

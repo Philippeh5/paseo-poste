@@ -55,7 +55,7 @@ branch="$(git -C "$TARGET" symbolic-ref --short HEAD 2>/dev/null || true)"
 
 # Liste blanche : code + scripts de déploiement. Les docs de vitrine vivent dans le dépôt public.
 PATHS=(
-  "dashboard/.gitignore" "dashboard/DESIGN.md" "dashboard/FAILOVER.md" "dashboard/README.md" "dashboard/REPORT.md"
+  "dashboard/.gitignore" "dashboard/DESIGN.md" "dashboard/README.md" 
   "dashboard/handlers" "dashboard/lib" "dashboard/public" "dashboard/scripts"
   "dashboard/server.mjs" "dashboard/start-dashboard.ps1"
   "deploy/mini-pc" "deploy/oracle" "deploy/join-machine.sh"

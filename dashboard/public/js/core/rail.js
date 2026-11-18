@@ -1,5 +1,7 @@
 // Rail gauche : machines (voyants) puis « Projets suivis » avec leurs agents et terminaux.
 // Chaque élément se glisse sur le Bureau ; le bouton + ouvre un terminal dans le dossier du projet.
+// Les terminaux où tourne un agent (Claude Code, FreeBuff…) s'affichent comme des agents, avec leur état, d'après
+// agents.overview (core/agentsoverview.js) : sans cela, le rail ne montrait que des « terminaux » anonymes.
 import { el, icons, iconEl, agentStatus, hostStatus, led } from "./util.js";
 import { subscribe, getState, followedProjects, agentsOfProject, terminalsOfProject } from "./state.js";
 import { openAgentWindow, openTerminalWindow, openTerminalInFolder, getWindows, closeWindow, subscribeDesk } from "./deskstore.js";
@@ -9,6 +11,7 @@ import { toast } from "./toast.js";
 import { isSelected, selectProject, isCollapsed, toggleCollapsed, onSelectionChange, getSelectedProject } from "./selection.js";
 import { projectExtras, projectMenuButton, projectsToolbar, projectsHint, projectsSignature, isStarred, toggleStar } from "./projects.js";
 import { hostLabel, sessionName, gatewayModelsVersion } from "./names.js";
+import { getOverview, subscribeOverview, overviewOfTerminal, stateUi } from "./agentsoverview.js";
 
 const DROP_TYPE = "application/x-paseo-item";
 const MAX_AGENTS = 8;
@@ -16,6 +19,7 @@ const MAX_TERMINALS = 6;
 const extraSections = [];
 let root;
 let signature = "";
+let customRender = null; // rail d'une vue qui dessine elle-même sa colonne (champ `rail` du registre)
 
 function draggable(node, payload) {
   node.draggable = true;
@@ -41,7 +45,7 @@ function machineRow(host, state) {
     class: "rail-item", type: "button",
     title: `${mLabel} · ${hs.label} — glisser sur le Bureau pour ouvrir un terminal`,
     onclick: () => {
-      location.hash = "#machines";
+      location.hash = `#connexions`;
       closeRail();
     },
   },
@@ -83,6 +87,8 @@ function agentRow(agent) {
 }
 
 function terminalRow(terminal) {
+  const agent = overviewOfTerminal(terminal.host, terminal.terminalId);
+  if (agent) return terminalAgentRow(terminal, agent);
   const name = sessionName({
     project: terminal.cwd || terminal.workspaceId,
     host: terminal.host,
@@ -98,6 +104,29 @@ function terminalRow(terminal) {
     },
   }, iconEl(icons.terminal),
   el("span", { class: "grow" }, name));
+  return draggable(row, {
+    kind: "terminal", host: terminal.host, terminalId: terminal.terminalId, cwd: terminal.cwd,
+    label: name,
+  });
+}
+
+// Terminal d'agent : voyant + état en texte (jamais la couleur seule), dernière action en infobulle (texte brut).
+function terminalAgentRow(terminal, agent) {
+  const ui = stateUi(agent.state);
+  const attention = agent.state === "waiting" || agent.state === "blocked";
+  const name = `${agent.toolName} · ${agent.project.name}`;
+  const row = el("button", {
+    class: `rail-item${attention ? " is-attention" : ""}`, type: "button", dataset: { agentState: agent.state },
+    title: `${name} · ${agent.stateText}${agent.lastAction ? ` — ${agent.lastAction}` : ""}`,
+    onclick: () => {
+      openTerminalWindow(terminal.host, terminal.terminalId, { cwd: terminal.cwd, workspaceId: terminal.workspaceId, tool: agent.tool });
+      goDesk();
+    },
+  },
+    led(ui.tone, { pulse: agent.state === "active" || attention, label: ui.label }),
+    el("span", { class: "grow" }, name),
+    el("small", {}, ui.label.toLowerCase()),
+  );
   return draggable(row, {
     kind: "terminal", host: terminal.host, terminalId: terminal.terminalId, cwd: terminal.cwd,
     label: name,
@@ -159,7 +188,8 @@ function globalCloseBar(state) {
 
 function projectBlock(project, state) {
   const agents = agentsOfProject(state, project).filter((a) => a.status !== "closed");
-  const terminals = terminalsOfProject(state, project);
+  const isAgent = (t) => Number(Boolean(overviewOfTerminal(t.host, t.terminalId)));
+  const terminals = terminalsOfProject(state, project).sort((a, b) => isAgent(b) - isAgent(a)); // terminaux d'agents d'abord
   const mLabel = hostLabel(project.host);
   const add = el("button", {
     class: "icon-btn", type: "button", title: "Ouvrir un terminal dans ce dossier",
@@ -208,7 +238,7 @@ function projectBlock(project, state) {
   const children = [
     ...agents.slice(0, MAX_AGENTS).map(agentRow),
     agents.length > MAX_AGENTS &&
-      el("p", { class: "rail-more" }, `+ ${agents.length - MAX_AGENTS} autres (voir Sessions)`),
+      el("p", { class: "rail-more" }, `+ ${agents.length - MAX_AGENTS} autres (voir Agents)`),
     ...terminals.slice(0, MAX_TERMINALS).map(terminalRow),
     terminals.length > MAX_TERMINALS &&
       el("p", { class: "rail-more" }, `+ ${terminals.length - MAX_TERMINALS} terminaux`),
@@ -232,17 +262,25 @@ function compute(state) {
     state.agents.map((a) => a.model),
     getSelectedProject()?.key ?? null,
     [...getWindows()].filter((w) => w.type === "terminal").map((w) => w.terminalId),
+    getOverview().agents.filter((a) => a.kind === "terminal").map((a) => [a.host, a.terminalId, a.state, a.stateText, a.lastAction, a.tool, a.project.name]),
   ]);
 }
 
 function render() {
   if (!root) return;
   const state = getState();
+  if (customRender) {
+    const body = el("div", {});
+    customRender(body, { state });
+    root.replaceChildren(body);
+    return;
+  }
   const sig = compute(state);
   if (sig === signature) return;
   signature = sig;
   const { projects } = followedProjects(state); // liste commune à toutes les pages (core/state.js)
-  const machines = el("section", { class: "rail-section", "aria-label": "Machines" },
+  // Un seul hôte : la section « Machines » n'apporte rien (l'état des machines est dans Connexions).
+  const machines = state.hosts.length <= 1 ? null : el("section", { class: "rail-section", "aria-label": "Machines" },
     el("h2", { class: "label-caps" }, "Machines"),
     state.hosts.length
       ? state.hosts.map((h) => machineRow(h, state))
@@ -261,7 +299,7 @@ function render() {
     return el("section", { class: "rail-section", "aria-label": section.title },
       el("h2", { class: "label-caps" }, section.title), body);
   });
-  root.replaceChildren(machines, followed, ...extras);
+  root.replaceChildren(...[machines, followed, ...extras].filter(Boolean));
 }
 
 export function initRail(element) {
@@ -271,11 +309,18 @@ export function initRail(element) {
   onSelectionChange(() => { signature = ""; render(); });
   document.addEventListener("gateway-models", () => { signature = ""; render(); });
   subscribeDesk(() => render());
+  subscribeOverview(() => render());
   document.querySelector(".rail-backdrop")?.addEventListener("click", closeRail);
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && document.body.classList.contains("rail-open")) closeRail();
   });
   return {
+    // Contenu propre à la page courante (null : retour au rail projets). Appelé par main.js à chaque changement de page.
+    setContent(fn) {
+      customRender = typeof fn === "function" ? fn : null;
+      signature = "";
+      render();
+    },
     // Ajoute une section sous « Projets suivis » : { id, title, render(container, { state }) }.
     addSection(section) {
       extraSections.push(section);

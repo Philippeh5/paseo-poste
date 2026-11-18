@@ -2,7 +2,7 @@
 // Affiche l'état du mode Agent, le dialogue avec les 3 questions et la pastille topbar.
 import { el, icons, iconEl, escapeHtml } from "../core/util.js";
 import { on, send, onConnection } from "../core/socket.js";
-import { getState, followedProjects } from "../core/state.js";
+import { getState, followedProjects, defaultHost } from "../core/state.js";
 import { policyBox } from "./agentalerts.js";
 
 let currentMode = {
@@ -298,13 +298,13 @@ export function openAgentModeDialog() {
         engineList.replaceChildren(...engineChoices(options).map((value) => el("option", { value })));
       };
       fillEngines(null);
-      const localHost = (getState().hosts || []).find((h) => h.label === "local" && h.status === "connected");
-      if (localHost) {
+      const engineHost = (getState().hosts || []).find((h) => h.status === "connected");
+      if (engineHost) {
         const stop = on("launch.options", (data) => {
-          if (data.host === "local") fillEngines(data);
+          if (data.host === engineHost.label) fillEngines(data);
         });
         dialog.addEventListener("close", stop, { once: true });
-        send({ type: "launch.options", host: "local" });
+        send({ type: "launch.options", host: engineHost.label });
       }
       chkLaunch.addEventListener("change", () => { engineInput.disabled = !chkLaunch.checked; });
       const launchBox = el(

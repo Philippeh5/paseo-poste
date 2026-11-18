@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import { SELF_HOST } from "./lib/selfhost.mjs";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { extname, join, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -182,8 +183,8 @@ const ctx = {
   onHttpPrefix: (prefix, fn) => httpPrefixes.push({ prefix, fn }),
   // Chemin accessible par jeton signé seul (aperçu) : authorize(req, url) doit vérifier le jeton ET limiter le verbe.
   onHttpCapability: (prefix, authorize, fn) => httpCapabilities.push({ prefix, authorize, fn }),
-  // Hôte visé par un message ; "local" par défaut, comme dans les versions précédentes.
-  hostOf: (m) => ({ label: m.host || "local", entry: hosts.publicHosts.get(m.host || "local") }),
+  // Hôte visé par un message ; la machine du poste (SELF_HOST) par défaut.
+  hostOf: (m) => ({ label: m.host || SELF_HOST, entry: hosts.publicHosts.get(m.host || SELF_HOST) }),
 };
 
 // Handlers internes de la flotte : ils passent par ce même registre.

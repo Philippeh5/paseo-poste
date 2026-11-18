@@ -153,7 +153,7 @@ try {
   // 4. Test d'interactivité : changement de vue (onglets désormais dans le menu) et panneau resté ouvert
   console.log("\n5. Test de persistance lors du changement de vue...");
   // Les onglets sont dans le menu déroulant : naviguer via le hash équivaut au clic sur un onglet.
-  await page.evaluate(() => { location.hash = "#taches"; });
+  await page.evaluate(() => { location.hash = "#agents"; });
   await delay(300);
 
   const viewChangeState = await page.evaluate(() => {
@@ -162,7 +162,7 @@ try {
     const bodyClass = document.body.classList.contains("sidechat-open");
     return { hash, hidden: p?.hidden, bodyClass };
   });
-  expect(viewChangeState.hash === "#taches", "le hash a changé pour #taches");
+  expect(viewChangeState.hash === "#agents", "le hash a changé pour #agents");
   expect(viewChangeState.hidden === false, "le panneau latéral reste ouvert après changement de vue");
   expect(viewChangeState.bodyClass === true, "body.sidechat-open conservé");
 

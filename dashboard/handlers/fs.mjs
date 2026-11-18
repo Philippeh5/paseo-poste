@@ -5,6 +5,7 @@
 import { promises as fsp } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { SELF_HOST } from "../lib/selfhost.mjs";
 
 const MAX_PATH = 1024;
 const MAX_ENTRIES = 1000;
@@ -309,7 +310,7 @@ async function rootsFor(host, store) {
 
 export function register(ctx) {
   const { onMessage, send, store } = ctx;
-  const reply = (ws, type, message, body) => send(ws, { type, host: message.host || "local", ref: message.ref ?? null, ...body });
+  const reply = (ws, type, message, body) => send(ws, { type, host: message.host || SELF_HOST, ref: message.ref ?? null, ...body });
   const fail = (ws, type, message, error) => {
     const known = error instanceof FsError;
     if (!known) ctx.log("fs", `${type} : ${ctx.safeError(error)}`);

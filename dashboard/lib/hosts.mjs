@@ -7,6 +7,7 @@ import { createPaseoApi } from "@getpaseo/client";
 import { DaemonClient } from "@getpaseo/client/internal/daemon-client";
 import { readJson, writeJsonAtomic } from "./store.mjs";
 import { extractQuestions } from "./questions.mjs";
+import { SELF_HOST, SELF_LABEL } from "./selfhost.mjs";
 
 // Les passerelles (OpenRouter, API) n'acceptent que les alias de niveau :
 // un identifiant de catalogue demande trop de jetons (erreur 402).
@@ -79,7 +80,7 @@ export function createHosts({ hostsFile, hostNamesFile }) {
   const getDisplayName = (label) => {
     const map = readHostNames();
     if (map && typeof map[label] === "string" && map[label].trim()) return map[label].trim();
-    if (label === "local") return "Mini PC";
+    if (label === SELF_HOST) return SELF_LABEL;
     if (label === "oracle") return "Oracle";
     return label ? label.charAt(0).toUpperCase() + label.slice(1) : "";
   };

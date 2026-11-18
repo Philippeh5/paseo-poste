@@ -2,7 +2,7 @@
 // sous-dossiers, création de dossier. S'appuie sur les messages fs.roots / fs.list / fs.mkdir.
 import { el } from "../core/util.js";
 import { send, on } from "../core/socket.js";
-import { getState } from "../core/state.js";
+import { getState, defaultHost } from "../core/state.js";
 import { hostLabel } from "../core/names.js";
 
 const svg = (parts) =>
@@ -64,7 +64,7 @@ const joinFlavor = (flavor, base, name) =>
   flavor === "win32" ? `${base.replace(/[\\/]+$/, "")}\\${name}` : `${base.replace(/\/+$/, "")}/${name}`;
 
 // openFolderPicker({ host, path, title, actionLabel, onChoose(host, path) -> Promise<{ok,error}|void> })
-export function openFolderPicker({ host = "local", path = null, title = "Ajouter un projet", actionLabel = "Suivre ce dossier", onChoose } = {}) {
+export function openFolderPicker({ host = defaultHost(), path = null, title = "Ajouter un projet", actionLabel = "Suivre ce dossier", onChoose } = {}) {
   const previous = document.activeElement;
   const dialog = el("dialog", { class: "dialog fp-dialog", "aria-label": title });
   const view = { host, path: null, parent: null, flavor: "win32", entries: [], roots: [], recents: [], isGit: false, isProject: false };

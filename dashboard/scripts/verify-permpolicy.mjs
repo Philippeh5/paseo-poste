@@ -1073,7 +1073,7 @@ try {
   page.on("websocket", (w) => w.on("framesent", (f) => frames.push(String(f.payload))));
   const consoleErrors = [];
   page.on("pageerror", (e) => consoleErrors.push(e.message));
-  await page.goto(`${BASE}/#agent`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE}/#agents`, { waitUntil: "domcontentloaded" }); await page.locator('[data-agents-open="orchestrateur"]').click();
   await page.waitForSelector("#agv-mode-state", { timeout: 15000 });
 
   // Vue Agent
@@ -1129,7 +1129,7 @@ try {
   await page.screenshot({ path: join(shotsDir, "t34-inbox.png"), fullPage: true });
 
   // Dialogue du mandat (formulaire) après reprise de la main
-  await page.goto(`${BASE}/#agent`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE}/#agents`, { waitUntil: "domcontentloaded" }); await page.locator('[data-agents-open="orchestrateur"]').click();
   await page.waitForSelector("#agv-takeover", { timeout: 10000 });
   await page.locator("#agentmode-badge").click();
   await page.waitForSelector("#agentmode-active-policy", { timeout: 5000 });
@@ -1167,7 +1167,7 @@ try {
   expect(consoleErrors.length === 0, "aucune erreur JavaScript dans le navigateur", consoleErrors.join(" | "));
   // mobile
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${BASE}/#agent`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE}/#agents`, { waitUntil: "domcontentloaded" }); await page.locator('[data-agents-open="orchestrateur"]').click();
   await page.waitForSelector("#agv-mode-state", { timeout: 10000 });
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   const offenders = overflow <= 1 ? [] : await page.evaluate(() => [...document.querySelectorAll("body *")]

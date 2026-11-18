@@ -72,7 +72,7 @@ export function pauseUntilOf(hour, now = new Date()) {
 }
 
 const cleanMission = (m) => ({
-  id: m.id.slice(0, 40), project: clean(m.project, 200), host: clean(m.host, 100) || "local",
+  id: m.id.slice(0, 40), project: clean(m.project, 200), host: clean(m.host, 100) || SELF_HOST,
   dir: clean(m.dir, MAX.project), mission: cleanBlock(m.mission, MAX.mission),
   chain: clean(m.chain, 40) || DEFAULT_CHAIN,
   status: STATUSES.has(m.status) ? m.status : "queued",
@@ -299,7 +299,7 @@ export function register(ctx) {
       })),
     };
     const body = [...lines, data.halted?.reason ? `Arrêt : ${data.halted.reason}` : ""].filter(Boolean).join("\n");
-    const item = ctx.inbox?.add?.({ kind: "fin", title: `🌙 ${title}`, body, host: "local", source: "night", key });
+    const item = ctx.inbox?.add?.({ kind: "fin", title: `🌙 ${title}`, body, host: SELF_HOST, source: "night", key });
     data.recap.inboxed = Boolean(item);
     log("night", `récapitulatif ${key} : ${title}${item ? "" : " (déjà dans la boîte)"}`);
     save();
@@ -491,7 +491,7 @@ export function register(ctx) {
       waiting = null;
       save();
       ctx.inbox?.add?.({
-        kind: "système", title: `🌙 Nuit lancée : ${plural(missions.length, "mission")}`, host: "local", source: "night",
+        kind: "système", title: `🌙 Nuit lancée : ${plural(missions.length, "mission")}`, host: SELF_HOST, source: "night",
         body: recapLines(missions).join("\n"),
       });
       log("night", `nuit lancée : ${missions.length} mission(s)`);
@@ -671,7 +671,7 @@ export function register(ctx) {
       }
       ctx.inbox?.add?.({
         kind: "système", title: `Reprise : ${results.filter((r) => r.ok).length} relancée(s) sur ${results.length}`,
-        host: "local", source: "night",
+        host: SELF_HOST, source: "night",
         body: results.map((r) => `${r.ok ? "✅" : "⚠️"} ${r.title || r.id} : ${r.message}`).join("\n"),
       });
       send(ws, { type: "resume.done", results });
@@ -707,7 +707,7 @@ export function register(ctx) {
       if (!items.length || !ctx.inbox?.add) return;
       const lines = items.slice(0, 6).map((i) => `• ${i.title} (${i.project || "—"}) — ${i.reason}`);
       const added = ctx.inbox.add({
-        kind: "système", title: `Missions interrompues : ${items.length}`, host: "local", source: "night",
+        kind: "système", title: `Missions interrompues : ${items.length}`, host: SELF_HOST, source: "night",
         key: itemKey(items.map((i) => i.id)),
         body: `${lines.join("\n")}\nDites « reprends les missions interrompues » à Jarvis : ` +
           "rien ne redémarre sans votre accord.",

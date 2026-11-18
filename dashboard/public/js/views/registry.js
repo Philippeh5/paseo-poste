@@ -6,6 +6,8 @@
 //   title  : libellé complet ; short : libellé court pour la barre basse du téléphone
 //   icon   : chaîne SVG (voir core/util.js)
 //   order  : position dans le sélecteur (les vues d'origine utilisent 10, 20… 60)
+//   rail   : colonne de gauche de cette page : "projects" (défaut : projets suivis, agents, terminaux), "none" (masquée)
+//            ou une fonction (container, { state }) qui dessine son propre contenu
 const views = [];
 const listeners = new Set();
 

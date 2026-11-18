@@ -2,7 +2,7 @@
 // Montée par views/desk.js avec le plus petit changement possible. Jamais prompt/confirm/alert.
 import { el, icons, iconEl } from "../core/util.js";
 import { send, on, onConnection } from "../core/socket.js";
-import { getState, allProjects, findHost } from "../core/state.js";
+import { getState, allProjects, findHost, defaultHost } from "../core/state.js";
 import { toast } from "../core/toast.js";
 import { confirmDialog } from "../core/confirm.js";
 import { getWindows, noteLaunchTool } from "../core/deskstore.js";
@@ -10,8 +10,8 @@ import { hostLabel, toolFromCommand } from "../core/names.js";
 import { getSelectedProject } from "../core/selection.js";
 
 const VIEWS = [
-  ["bureau", "Bureau"], ["taches", "Tâches"], ["sessions", "Sessions"], ["chronologie", "Chronologie"],
-  ["machines", "Machines"], ["reception", "Boîte de réception"],
+  ["bureau", "Bureau"], ["agents", "Agents (sessions, tâches, historique)"],
+  ["connexions", "Connexions (machines, modèles)"], ["reception", "Boîte de réception"],
 ];
 const ICON_NAMES = ["terminal", "agent", "desk", "tasks", "sessions", "timeline", "machines", "inbox", "plus", "send",
   "grid", "group", "save", "menu"];
@@ -48,12 +48,12 @@ on("launch.started", (msg) => {
 });
 
 // Dossier qui contient tous les projets, par machine (quand aucun projet n'est sélectionné).
-const PROJECT_ROOTS = { oracle: "/home/USERNAME/Projets", local: "D:\\Projets" };
+const PROJECT_ROOTS = { oracle: "/home/USERNAME/Projets" };
 
 // Machines réellement configurées : sert de valeur par défaut aux nouveaux widgets (avant, « local » était
 // codé en dur et l'enregistrement échouait avec « hôte inconnu : local » quand cette machine n'existait plus).
 const knownHostLabels = () => (getState().hosts || []).map((h) => h.label).filter(Boolean);
-const defaultHostLabel = () => knownHostLabels()[0] || "local";
+const defaultHostLabel = () => knownHostLabels()[0] || defaultHost();
 
 const quote = (arg) => (/\s/.test(arg) ? `"${arg.replace(/"/g, '\\"')}"` : arg);
 
@@ -331,7 +331,7 @@ function widgetForm(w, formBox, rebuild) {
 
   const hostNames = () => {
     const names = knownHostLabels();
-    return names.length ? names : ["local"];
+    return names.length ? names : [defaultHost()];
   };
   function renderDyn() {
     const a = draft.action;

@@ -9,10 +9,11 @@ import { confirmDialog, promptDialog } from "../core/confirm.js";
 import { toast } from "../core/toast.js";
 import {
   GRID, MIN_W, MIN_H, snap, getWindows, getLayouts, setSurface, getSurface, subscribeDesk, changed, raiseWindow,
-  closeWindow, openAgentWindow, openTerminalWindow, openTerminalInFolder, arrangeGrid, groupByMachine,
+  closeWindow, openAgentWindow, openTerminalWindow, openTerminalInFolder, setWebMode, arrangeGrid, groupByMachine,
   saveLayout, loadLayout, deleteLayout,
   getView, setView, subscribeView, zoomAt, zoomStep, resetZoom, toWorld, fitAll, ZOOM_MIN, ZOOM_MAX, getAutoOpen, setAutoOpen,
 } from "../core/deskstore.js";
+import { mountWebWindow, webAddress } from "../core/webwindow.js";
 import { mountWidgetBar } from "../components/widgetBar.js";
 import { hostLabel, windowName, numberDuplicates, isAutoTerminalName, isIdentifier } from "../core/names.js";
 
@@ -47,8 +48,11 @@ function emitDeskState() {
     const top = Math.max(0, ...list.filter((w) => !w.minimized).map((w) => w.z || 0));
     const windows = list.map((w) => ({
       id: w.id,
-      kind: w.type === "agent" ? "agent" : "terminal",
+      kind: w.type === "agent" ? "agent" : w.type === "web" ? "web" : "terminal",
       host: w.host,
+      port: w.port ?? null,
+      url: w.type === "web" ? webAddress(w) : null,
+      mode: w.mode ?? null,
       cwd: w.cwd ?? null,
       title: w.title ?? null,
       terminalId: w.terminalId ?? null,
@@ -100,6 +104,10 @@ function describe(win) {
   const host = findHost(state, win.host);
   const hostTone = host ? hostStatus(host.status) : { label: "Machine inconnue", tone: "danger" };
   const offline = !host || host.status !== "connected";
+  // Fenêtre web : indépendante des machines Paseo (relais du poste ou Chrome distant), jamais rangée automatiquement.
+  if (win.type === "web") {
+    return { mode: "live", tone: "ok", label: win.mode === "chrome" ? "Chrome distant" : "Relais", sub: webAddress(win), folder: "" };
+  }
   if (win.type === "terminal") {
     const info = findTerminal(state, win.host, win.terminalId);
     if (info?.cwd && win.cwd !== info.cwd) win.cwd = info.cwd;
@@ -245,6 +253,7 @@ function iconButton(label, svg, onClick, extra = "") {
 // La croix : après confirmation, ARRÊTE vraiment le terminal ou l'agent sur la machine et retire la fenêtre (rien ne reste ouvert,
 // aucune proposition de rouvrir). Pour seulement ranger la fenêtre, on la réduit.
 async function stopAndClose(win) {
+  if (win.type === "web") { closeWindow(win.id); return; } // rien à arrêter : la page reste servie par la machine
   const isTerm = win.type === "terminal";
   const ok = await confirmDialog({
     title: isTerm ? "Fermer ce terminal ?" : "Arrêter cet agent ?",
@@ -278,7 +287,7 @@ function createNode(win) {
   });
   fitButton.classList.add("win-fit");
   const closeButton = iconButton(
-    win.type === "terminal" ? "Fermer et arrêter le terminal" : "Arrêter l’agent et fermer la fenêtre",
+    win.type === "web" ? "Fermer la fenêtre web" : win.type === "terminal" ? "Fermer et arrêter le terminal" : "Arrêter l’agent et fermer la fenêtre",
     icons.close, () => stopAndClose(win), "win-close",
   );
   const bar = el("header", { class: "win-bar", tabindex: "0",
@@ -286,7 +295,7 @@ function createNode(win) {
     ledSlot, el("span", { class: "win-kind", "aria-hidden": "true" }), title, sub, badge, stateLabel,
     el("span", { class: "win-controls" }, minButton, maxButton, fitButton, closeButton),
   );
-  bar.querySelector(".win-kind").innerHTML = win.type === "terminal" ? icons.terminal : icons.agent;
+  bar.querySelector(".win-kind").innerHTML = win.type === "terminal" ? icons.terminal : win.type === "web" ? icons.web : icons.agent;
   const body = el("div", { class: "win-body" });
   const handles = ["n", "e", "s", "w", "ne", "nw", "se", "sw"].map((dir) => {
     const handle = el("span", { class: `win-handle h-${dir}`, dataset: { dir }, "aria-hidden": "true" });
@@ -330,6 +339,15 @@ function note(text, detail, button) {
 }
 
 function updateBody(win, node, info) {
+  if (win.type === "web") {
+    const webKey = `web:${win.mode}:${win.port ?? win.url}${win.path || ""}`;
+    if (webKey !== node.bodyKey) {
+      node.bodyKey = webKey;
+      node.panel?.destroy();
+      node.panel = mountWebWindow(node.body, win, { onMode: (mode) => setWebMode(win.id, mode) });
+    }
+    return;
+  }
   const key = win.type === "terminal" ? `${info.mode}:${win.terminalId}` : `${info.mode}:${win.agentId}`;
   if (key !== node.bodyKey) {
     node.bodyKey = key;
@@ -359,6 +377,7 @@ function updateBody(win, node, info) {
 function computeTitles() {
   const wins = getWindows();
   const base = wins.map((win) => {
+    if (win.type === "web") return win.title || `Web · ${webAddress(win)}`;
     const info = describe(win);
     return windowName({
       kind: win.type === "agent" ? "agent" : "terminal",
@@ -377,7 +396,7 @@ function updateNode(win, node) {
   const name = titleById.get(win.id) || "";
   node.title.textContent = name;
   node.sub.textContent = info.sub;
-  node.root.setAttribute("aria-label", `${win.type === "terminal" ? "Terminal" : "Agent"} ${name}`);
+  node.root.setAttribute("aria-label", `${win.type === "terminal" ? "Terminal" : win.type === "web" ? "Fenêtre web" : "Agent"} ${name}`);
   node.root.dataset.tone = info.tone;
   node.stateLabel.textContent = info.label;
   node.badge.hidden = !info.attention;
@@ -415,6 +434,7 @@ function renderDock(frontId) {
   // « Ranger » : retire du Bureau les fenêtres réduites dont l'agent est inactif, en erreur ou introuvable (ou dont le terminal est
   // fermé). Seules les fenêtres disparaissent : aucune session n'est arrêtée ni archivée, on les rouvre depuis le rail.
   const stale = minimized.filter((win) => {
+    if (win.type === "web") return false; // une fenêtre web réduite n'est jamais « inactive » : elle reste jusqu'à sa fermeture
     const info = describe(win);
     if (info.mode === "loading" || info.mode === "offline") return false;
     return win.type === "terminal" ? info.mode === "closed" : !info.agent || ["idle", "closed", "error"].includes(info.agent.status);
@@ -649,6 +669,7 @@ const view = {
   short: "Bureau",
   icon: icons.desk,
   order: 10,
+  rail: "projects", // projets suivis : agents et terminaux à glisser sur le Bureau
   mount(container, context) {
     ctx = context;
     surfaceEl = el("div", { class: "desk-surface", tabindex: "-1" });

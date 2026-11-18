@@ -4,7 +4,7 @@
 // projectsToolbar(), projectsHint(), projectsSignature().
 import { el, icons, iconEl, led, readPref, writePref } from "./util.js";
 import { send, on, onConnection } from "./socket.js";
-import { setStateExtra, sameDir, getState, isProjectFolder } from "./state.js";
+import { setStateExtra, sameDir, getState, isProjectFolder, defaultHost } from "./state.js";
 import { toast } from "./toast.js";
 import { openTerminalInFolder } from "./deskstore.js";
 import { openFolderPicker, rpc, FOLDER_ICON } from "../components/folderPicker.js";
@@ -309,7 +309,7 @@ export function projectsToolbar() {
 }
 
 // ---------- Ajouter un projet (navigateur de dossiers) ----------
-export function openAddProject(host = "local") {
+export function openAddProject(host = defaultHost()) {
   openFolderPicker({
     host, title: "Ajouter un projet", actionLabel: "Suivre ce dossier",
     onChoose: (pickedHost, dir) => follow(pickedHost, dir),
@@ -317,7 +317,7 @@ export function openAddProject(host = "local") {
 }
 
 // ---------- Sélection rapide du premier lancement ----------
-export function openQuickStart(host = "local") {
+export function openQuickStart(host = defaultHost()) {
   const previous = document.activeElement;
   const dialog = el("dialog", { class: "dialog fp-dialog", "aria-label": "Choisir vos projets" });
   const list = el("ul", { class: "qs-list" });

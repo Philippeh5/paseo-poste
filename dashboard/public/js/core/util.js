@@ -122,6 +122,7 @@ export const icons = {
   menu: svg(['<path d="M3.5 5.5h13M3.5 10h13M3.5 14.5h13"/>']),
   terminal: svg(['<rect x="2.5" y="3.5" width="15" height="13" rx="1.8"/><path d="M6 8l2.5 2L6 12M10.5 12.5H14"/>']),
   agent: svg(['<circle cx="10" cy="7" r="3"/><path d="M4 16.5c.6-3 3-4.5 6-4.5s5.4 1.5 6 4.5"/>']),
+  web: svg(['<circle cx="10" cy="10" r="7.5"/><path d="M2.5 10h15M10 2.5c2.2 2.2 2.2 12.8 0 15M10 2.5c-2.2 2.2-2.2 12.8 0 15"/>']),
   stop: svg(['<rect x="5" y="5" width="10" height="10" rx="1.5"/>']),
   trash: svg(['<path d="M4 6h12M8 6V4h4v2M6 6l.7 10h6.6L14 6"/>']),
   grid: svg(['<rect x="3" y="3" width="6" height="6" rx="1"/><rect x="11" y="3" width="6" height="6" rx="1"/>',

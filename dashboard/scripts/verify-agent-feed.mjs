@@ -212,7 +212,7 @@ try {
 
   console.log("--- 11. Vérification dans le tiroir de détail ---");
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto((url.replace("ws:", "http:").replace(/\/ui$/, "")) + "/#sessions", { waitUntil: "networkidle" });
+  await page.goto((url.replace("ws:", "http:").replace(/\/ui$/, "")) + "/#agents", { waitUntil: "networkidle" });
   await page.waitForSelector(`.agent-row[data-agent="${agentId}"]`, { timeout: 10000 });
   await page.locator(`.agent-row[data-agent="${agentId}"]`).click();
   await page.waitForSelector(".drawer .thread-reasoning", { timeout: 10000 });

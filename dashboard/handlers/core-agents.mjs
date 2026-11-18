@@ -1,5 +1,6 @@
 
 import { extractQuestions, cleanAnswers } from "../lib/questions.mjs";// Messages de base des agents : fil en direct, envoi, arrêt, permissions. Fournis avec le poste de commande (v2).
+import { SELF_HOST } from "../lib/selfhost.mjs";
 export function register(ctx) {
   const { onMessage, send, sendError, safeError, broadcastState, hostOf } = ctx;
   const streams = new Map();
@@ -97,7 +98,7 @@ export function register(ctx) {
     if (behavior === "allow" && ctx.coordGuard) {
       let coordGuard;
       try {
-        coordGuard = await ctx.coordGuard.beforeAllow({ host: m.host || "local", agentId: m.agentId, requestId: m.requestId });
+        coordGuard = await ctx.coordGuard.beforeAllow({ host: m.host || SELF_HOST, agentId: m.agentId, requestId: m.requestId });
       } catch {
         coordGuard = { ok: true };
       }
@@ -107,7 +108,7 @@ export function register(ctx) {
     if (behavior === "allow" && ctx.permGuard) {
       let guard;
       try {
-        guard = await ctx.permGuard.beforeAllow({ host: m.host || "local", agentId: m.agentId, requestId: m.requestId });
+        guard = await ctx.permGuard.beforeAllow({ host: m.host || SELF_HOST, agentId: m.agentId, requestId: m.requestId });
       } catch {
         guard = { ok: false, error: "vérification impossible" };
       }

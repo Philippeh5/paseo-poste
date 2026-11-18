@@ -97,6 +97,13 @@ select option { background: var(--panneau); color: var(--texte); }
 /* ---------- Coque ---------- */
 .app { display: grid; grid-template-rows: auto minmax(0, 1fr); height: 100dvh; }
 .shell { display: grid; grid-template-columns: var(--larg-rail) minmax(0, 1fr) auto; min-height: 0; }
+/* Rail contextuel : la colonne de gauche n'existe que sur les pages qui la demandent (champ `rail` du registre).
+   Sur téléphone elle reste un tiroir ouvrable depuis la barre du haut, quelle que soit la page. */
+@media (min-width: 721px) {
+  body[data-rail="none"] .rail { display: none; }
+  body[data-rail="none"] { --larg-rail: 0px; }
+  body[data-rail="none"] .shell { grid-template-columns: minmax(0, 1fr) auto; }
+}
 .view { min-width: 0; min-height: 0; overflow: auto; position: relative; background: var(--sol); }
 .view:focus { outline: none; }
 
@@ -105,6 +112,7 @@ select option { background: var(--panneau); color: var(--texte); }
   background: var(--panneau); border-bottom: 1px solid var(--trait);
 }
 .rail-toggle { display: none; }
+.emergency-short { display: none; }
 .brand { display: flex; align-items: center; gap: 8px; color: var(--texte); text-decoration: none; flex: none; }
 .brand-mark { width: 22px; height: 22px; color: var(--accent); }
 .brand-name { font: 600 var(--t-16) / 1 var(--police-titre); white-space: nowrap; }
@@ -531,6 +539,9 @@ select option { background: var(--panneau); color: var(--texte); }
   gap: 16px;
   align-items: start;
 }
+.machines-block { display: grid; gap: 16px; margin-bottom: 16px; }
+.machines-block .add-host { border-radius: 0; border-width: 1px 0 0; }
+.machines-section .machine-grid { padding: 12px 14px; }
 .machine-card {
   display: grid; gap: 10px; padding: 16px; background: var(--panneau); border: 1px solid var(--trait);
   border-radius: var(--rayon-fenetre);
@@ -560,7 +571,6 @@ select option { background: var(--panneau); color: var(--texte); }
 .meter i { display: block; height: 100%; background: var(--ok); }
 .meter-attention i { background: var(--attention); }
 .meter-danger i { background: var(--danger); }
-.machine-foot { padding-top: 6px; border-top: 1px solid var(--trait); }
 .add-host {
   margin-top: 24px;
   padding: 16px;
@@ -586,7 +596,10 @@ select option { background: var(--panneau); color: var(--texte); }
   .agentmode-pill { max-width: 120px; font-size: 11px; padding: 0 6px; }
   .btn-agentmode-takeover { padding: 0 6px; font-size: 11px; }
   .rail-toggle { display: inline-grid; }
-  .brand-name, .topbar .btn-oracle, .viewbar .tab-long { display: none; }
+  #topbar-emergency.btn-danger-ghost { display: none; } /* téléphone : barre pleine ; le bouton n’apparaît que si l’arrêt est actif, sinon voir Réception › Idées et autonomie */
+  .emergency-text { display: none; }
+  .emergency-short { display: inline; }
+  .brand-name, .viewbar .tab-long { display: none; }
   .pending .pending-text { display: none; }
   .shell { grid-template-columns: minmax(0, 1fr); }
   .view { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
@@ -674,7 +687,7 @@ select option { background: var(--panneau); color: var(--texte); }
 .topbar-actions > * { flex: none; }
 @media (max-width: 1750px) {
   .brand-name { display: none; }
-  #topbar-sidechat, #topbar-telegram, .btn-oracle { font-size: 0; padding: 0 8px; gap: 0; }
+  #topbar-sidechat, #topbar-telegram { font-size: 0; padding: 0 8px; gap: 0; }
 }
 body:has(.grp) .agentactivity-panel { display: none; }
 /* Barre du haut compacte sous 1650 px : libellés courts, pastille du mandat tronquée, pour que tous les onglets restent visibles dès 1366 px. */

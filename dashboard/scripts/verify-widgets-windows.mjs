@@ -70,7 +70,7 @@ try {
   const first = await a.ask({ type: "widgets.list" }, "widgets.list");
   const labels = first.all.map((w) => w.label);
   expect(["Terminal Mini PC", "Terminal Oracle", "Agent OpenRouter", "Agent NVIDIA", "FreeBuff", "Hermes (Oracle)",
-    "Tâches"]
+    "Agents"] // ex-« Tâches » : la page Tâches est fusionnée dans « Agents » (widget de type view → #agents)
     .every((l) => labels.includes(l)) && first.all.length >= 7, "liste par défaut : les 7 widgets du ticket (+ ajouts ultérieurs : Hermes et Pi Mini PC)",
       labels.join(" | "));
   const hermes = first.all.find((w) => w.label === "Hermes (Oracle)");

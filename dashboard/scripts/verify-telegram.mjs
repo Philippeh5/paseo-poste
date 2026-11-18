@@ -160,7 +160,7 @@ try {
     page.on("pageerror", (e) => errors.push(e.message));
     let navigations = 0;
     page.on("framenavigated", (f) => { if (f === page.mainFrame()) navigations++; });
-    await page.goto(`${BASE}/#taches`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${BASE}/#agents`, { waitUntil: "domcontentloaded" });
     const button = page.locator("#topbar-telegram");
     await button.waitFor({ state: "visible", timeout: 10_000 });
     expect((await button.innerText()).trim() === "Hermes", "bouton « Hermes » (ex-Telegram) dans la barre du haut");
@@ -191,7 +191,7 @@ try {
 
     // mobile 390 px : le panneau reste dans la vue sans défilement horizontal
     const phone = await (await browser.newContext({ viewport: { width: 390, height: 800 }, isMobile: true })).newPage();
-    await phone.goto(`${BASE}/#taches`, { waitUntil: "domcontentloaded" });
+    await phone.goto(`${BASE}/#agents`, { waitUntil: "domcontentloaded" });
     // Depuis la refonte mobile (css/mobile.css, barre du haut réduite à l'essentiel), le bouton Hermes est masqué sous 720 px :
     // il reste présent dans le DOM mais n'est plus affiché. On vérifie donc ce choix, puis on ouvre le panneau par un clic
     // programmatique pour contrôler que, s'il est ouvert, il tient dans l'écran.

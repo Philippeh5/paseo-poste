@@ -11,6 +11,7 @@
 // resume_interrupted → resume.run, night_stop → night.stop ; le contexte du LLM ajoute les chaînes, la nuit en cours,
 // les missions interrompues et le journal du jour.
 import { randomUUID } from "node:crypto";
+import { SELF_HOST } from "../lib/selfhost.mjs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { redact } from "../lib/redact.mjs";
@@ -203,7 +204,7 @@ export function planAction(decision, { state, tasks, inbox, projects, mandate, c
     const title = str(args.title, 200);
     if (!title) return { error: "Quel titre pour la tâche ?" };
     let project = "";
-    let host = args.host || "local";
+    let host = args.host || SELF_HOST;
     if (args.project) {
       const found = findProject(projects, args.project);
       if (!found) return unknownProject(args.project);
@@ -215,7 +216,7 @@ export function planAction(decision, { state, tasks, inbox, projects, mandate, c
   if (action === "add_project") {
     const dir = str(args.dir, 500);
     if (!dir) return { error: "Quel dossier suivre ?" };
-    const host = args.host || "local";
+    const host = args.host || SELF_HOST;
     return { summary: `Suivre le projet ${dir} (${hostName(host)})`, exec: [{ type: "project.follow", host, dir, ...(args.name ? { name: args.name } : {}) }] };
   }
   if (action === "close_sessions") {
@@ -366,7 +367,7 @@ export function findOrchestrator(mandate, tasks) {
   const task = (tasks || []).find((t) => mandate.orchestratorTaskId && t.id === mandate.orchestratorTaskId);
   if (!task) return { error: "La session de Jarvis est introuvable (pas d'orchestrateur) : rien n'a été envoyé." };
   if (!task.agentId) return { error: "La session de Jarvis n'est pas encore démarrée : rien n'a été envoyé." };
-  return { host: task.host || "local", agentId: task.agentId };
+  return { host: task.host || SELF_HOST, agentId: task.agentId };
 }
 
 // ---------- Fil unique (panneau + Telegram) ----------

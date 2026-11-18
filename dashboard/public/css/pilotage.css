@@ -85,3 +85,4 @@
 .pilot-facet-list li label { display: flex; gap: 4px; align-items: baseline; padding: 3px 2px; cursor: pointer; }
 
 .pilot-session, .pilot-report { color: var(--texte); }
+.pilot-row > .pilot-run-status:first-child { min-width: 76px; }

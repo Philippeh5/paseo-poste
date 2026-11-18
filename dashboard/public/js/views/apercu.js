@@ -9,12 +9,13 @@ import { toast } from "../core/toast.js";
 const ICON = '<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" ' +
   'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4" width="15" height="12" rx="2"/><path d="M2.5 8h15"/></svg>';
 let root; let offs = []; let st = null; let current = null; let manual = "";
+const waiting = { port: null };
 
 function render() {
   if (!root) return;
   const host = root.firstChild;
-  const open = (port) => { current = { port, path: "" }; render(); };
-  const url = current ? `/preview/${current.port}/${current.path}` : null;
+  const open = (port) => { current = { port, url: null }; waiting.port = port; send({ type: "preview.open", port }); render(); };
+  const url = current?.url ?? null;
   const list = st ? st.ports : [];
   host.replaceChildren(
     el("header", { class: "pilot-head" }, el("h1", {}, "Aperçu"),
@@ -30,10 +31,10 @@ function render() {
     current ? el("section", { class: "pilot-group" }, el("header", { class: "pilot-group-head" }, el("h2", {}, `Port ${current.port}`),
       el("div", { class: "pilot-group-actions" },
         el("button", { class: "btn btn-sm", type: "button", onclick: () => { const f = root.querySelector("iframe"); if (f) f.src = url; } }, "Recharger"),
-        el("a", { class: "btn btn-sm", href: url, target: "_blank", rel: "noopener" }, "Ouvrir dans un onglet"),
+        url ? el("a", { class: "btn btn-sm", href: url, target: "_blank", rel: "noopener" }, "Ouvrir dans un onglet") : null,
         el("button", { class: "btn btn-sm", type: "button", onclick: () => { current = null; render(); } }, "Fermer"))),
-      el("iframe", { src: url, title: `Aperçu du port ${current.port}`, sandbox: "allow-scripts allow-forms allow-popups allow-modals",
-        style: "width:100%;height:70vh;border:0;background:#fff" })) : null);
+      url ? el("iframe", { src: url, title: `Aperçu du port ${current.port}`, sandbox: "allow-scripts allow-forms allow-popups allow-modals",
+        style: "width:100%;height:70vh;border:0;background:#fff" }) : el("p", { class: "pilot-empty", style: "padding:10px 14px" }, "Ouverture…")) : null);
 }
 
 const view = {
@@ -43,6 +44,7 @@ const view = {
     root.replaceChildren(el("div", { class: "pilot" }));
     render();
     offs.push(on("preview.state", (m) => { st = m; render(); }));
+    offs.push(on("preview.opened", (m) => { if (current && current.port === m.port) { current.url = m.url; render(); } }));
     offs.push(onConnection((up) => { if (up) send({ type: "preview.ports" }); }));
     send({ type: "preview.ports" });
   },

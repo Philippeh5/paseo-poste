@@ -8,6 +8,7 @@
   "journal.js",
   "machines.js",
   "mobile.js",
+  "navigateur.js",
   "pilotage.js",
   "projects.js",
   "sessions.js",

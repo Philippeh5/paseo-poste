@@ -96,6 +96,8 @@ const stateChangeListeners = new Set();
 const httpRoutes = new Map();
 // Préfixes HTTP tous verbes (API de contrôle) : [{ prefix, fn }] (voir ctx.onHttpPrefix).
 const httpPrefixes = [];
+// Adresses-capacités : [{ prefix, authorize(req, url), fn }] — acceptées SANS authentification du poste quand authorize() est vrai.
+const httpCapabilities = [];
 
 // ---------- Messages vers le navigateur ----------
 function send(ws, message) {
@@ -178,6 +180,8 @@ const ctx = {
   onHttp: (path, fn) => httpRoutes.set(path, fn),
   // Comme onHttp, pour tout chemin commençant par `prefix` et tous verbes : fn(req, res, url) gère méthode et corps.
   onHttpPrefix: (prefix, fn) => httpPrefixes.push({ prefix, fn }),
+  // Chemin accessible par jeton signé seul (aperçu) : authorize(req, url) doit vérifier le jeton ET limiter le verbe.
+  onHttpCapability: (prefix, authorize, fn) => httpCapabilities.push({ prefix, authorize, fn }),
   // Hôte visé par un message ; "local" par défaut, comme dans les versions précédentes.
   hostOf: (m) => ({ label: m.host || "local", entry: hosts.publicHosts.get(m.host || "local") }),
 };
@@ -340,6 +344,16 @@ function handleRequest(listener, req, res) {
     res.writeHead(403);
     res.end("Nom d'hôte non autorisé");
     return;
+  }
+  {
+    const capUrl = new URL(req.url, "http://localhost");
+    const cap = httpCapabilities.find((c) => capUrl.pathname.startsWith(c.prefix));
+    let granted = false;
+    try { granted = !!cap && cap.authorize(req, capUrl) === true; } catch { granted = false; }
+    if (granted) {
+      Promise.resolve(cap.fn(req, res, capUrl)).catch((e) => { if (!res.headersSent) res.writeHead(500); res.end(hosts.safeError(e)); });
+      return;
+    }
   }
   const verdict = listener.check(req);
   if (verdict === "locked") {

@@ -1,6 +1,6 @@
 // Vérification de l'aperçu de ports : analyse de `ss`, réécriture HTML, relais (en-têtes, refus, lecture seule). En processus ; aucun port réel du poste.
 import http from "node:http";
-import { parseSs, rewriteHtml, createProxy, listPorts } from "../lib/preview.mjs";
+import { parseSs, rewriteHtml, createProxy, listPorts, createTokens, prefixOf } from "../lib/preview.mjs";
 let failed = 0; const check = (c, l) => { console.log(`${c ? "OK  " : "FAIL"} ${l}`); if (!c) failed++; };
 
 const ss = `LISTEN 0 4096 127.0.0.53%lo:53 0.0.0.0:*
@@ -39,5 +39,17 @@ r = await get(`/preview/${port}/redir`); check(r.headers.get("location") === `/p
 r = await get(`/preview/${port + 1}/`); check(r.status === 403, "port non autorisé refusé");
 r = await get(`/preview/${port}/`, { method: "POST", body: "x" }); check(r.status === 405, "POST refusé (lecture seule)");
 r = await get(`/preview/${port}`); check(r.status === 302, "sans slash final : redirection");
+// jetons
+let clock = 1_000_000_000_000; const tk = createTokens({ now: () => clock, ttlMs: 1000 });
+const tok = tk.sign(4000);
+check(tk.verify(tok, 4000) && !tk.verify(tok, 4001), "jeton lié à un seul port");
+check(!tk.verify(tok.slice(0, -1) + (tok.endsWith("0") ? "1" : "0"), 4000) && !tk.verify("", 4000) && !tk.verify("abc", 4000), "jeton falsifié ou vide refusé");
+clock += 2000; check(!tk.verify(tok, 4000), "jeton expiré refusé");
+check(createTokens().verify(tok, 4000) === false, "jeton d'un autre processus refusé");
+const proxy2 = createProxy({ allowed: async () => [{ port }], tokens: createTokens() });
+const web2 = http.createServer((req, res) => proxy2(req, res, new URL(req.url, "http://x"))).listen(0, "127.0.0.1"); await new Promise((r) => web2.once("listening", r));
+r = await fetch(`http://127.0.0.1:${web2.address().port}/preview/t/${"1".repeat(13)}.${"a".repeat(64)}/${port}/`); check(r.status === 403, "jeton invalide : 403 côté relais");
+check(prefixOf(4000, "T") === "/preview/t/T/4000/" && rewriteHtml('<a href="/x">', 4000, "T") === '<a href="/preview/t/T/4000/x">', "préfixe et réécriture avec jeton");
+web2.close();
 app.close(); web.close();
 console.log(failed ? `\n${failed} échec(s)` : "\nTout est vert"); process.exit(failed ? 1 : 0);

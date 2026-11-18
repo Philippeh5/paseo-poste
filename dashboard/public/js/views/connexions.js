@@ -68,14 +68,14 @@ function skillsSection() {
 
 function machinesSection() {
   const cmd = "curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up";
-  const daemon = "npm install -g @getpaseo/cli && paseo daemon start && paseo daemon status";
+  const daemon = 'npm install -g @getpaseo/cli && IP=$(tailscale ip -4 | head -1) && paseo daemon config set daemon.listen "$IP:6767" --string && paseo daemon config set daemon.hostnames "[\\"$IP\\"]" && paseo daemon set-password && paseo daemon start && paseo daemon status';
   const step = (title, text, button) => el("div", { class: "pilot-row", style: "grid-template-columns:1fr auto" },
     el("div", { class: "pilot-main" }, el("strong", {}, title), el("span", { class: "pilot-detail" }, text)), button);
   return el("section", { class: "pilot-group" },
     el("header", { class: "pilot-group-head" }, el("h2", {}, "Ajouter une machine")),
     step("1. Réseau privé", "Sur la nouvelle machine : installer Tailscale et se connecter au même compte.",
       el("button", { class: "btn btn-sm", type: "button", onclick: () => copy(cmd) }, "Copier la commande")),
-    step("2. Démon Paseo", "Sur la nouvelle machine : installer et démarrer le démon, puis régler son écoute sur l’adresse Tailscale et son mot de passe (voir ONBOARDING.md).",
+    step("2. Démon Paseo", "Sur la nouvelle machine : installe le démon, le fait écouter sur son adresse Tailscale, demande un mot de passe (à saisir dans le terminal), puis le démarre. Commandes vérifiées sur un démon de test.",
       el("button", { class: "btn btn-sm", type: "button", onclick: () => copy(daemon) }, "Copier la commande")),
     step("3. Brancher au poste", "Ici : saisir le nom, l'adresse Tailscale (ws://100.x.y.z:6767/ws) et le mot de passe dans la vue Machines.",
       el("button", { class: "btn btn-sm btn-primary", type: "button", onclick: () => { window.location.hash = "#machines"; } }, "Ouvrir Machines")));

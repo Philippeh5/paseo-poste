@@ -58,6 +58,11 @@ function render() {
       btn("↻", () => send({ type: "rbrowser.nav", url: st.url })), urlInput,
       btn("Aller", () => send({ type: "rbrowser.nav", url: urlInput.value }), "btn-primary"),
       btn("Copier la sélection", copySelection)),
+    running ? el("div", { class: "pilot-databar", role: "tablist", "aria-label": "Onglets" },
+      (st.tabs || []).map((t) => el("span", { style: "display:inline-flex;gap:2px" },
+        el("button", { class: `btn btn-sm ${t.id === st.active ? "btn-primary" : ""}`, type: "button", role: "tab", "aria-selected": String(t.id === st.active), title: t.url, style: "max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap", onclick: () => send({ type: "rbrowser.switchTab", id: t.id }) }, t.title || t.url || "Nouvel onglet"),
+        (st.tabs || []).length > 1 ? el("button", { class: "btn btn-sm", type: "button", "aria-label": "Fermer l'onglet", onclick: () => send({ type: "rbrowser.closeTab", id: t.id }) }, "×") : null)),
+      el("button", { class: "btn btn-sm", type: "button", onclick: () => send({ type: "rbrowser.newTab" }) }, "+ Onglet")) : null,
     running ? buildCanvas() : el("p", { class: "pilot-empty" }, "Démarrez le navigateur pour afficher une page de la machine."),
     running ? el("details", {}, el("summary", {}, "Coller du texte dans la page"),
       el("div", { class: "pilot-databar" }, el("textarea", { rows: 3, placeholder: "Texte à coller à l'endroit du curseur de la page…", style: "flex:1 1 300px", "aria-label": "Texte à coller", oninput: (e) => { draft = e.target.value; } }),
@@ -70,7 +75,7 @@ const view = {
     root = container;
     root.replaceChildren(el("div", { class: "pilot" }));
     render();
-    offs.push(on("rbrowser.state", (m) => { const was = st.state; st = m; if (was !== m.state) { render(); if (m.state === "running") send({ type: "rbrowser.watch" }); } else if (urlInput && document.activeElement !== urlInput && m.url) urlInput.value = m.url; }));
+    offs.push(on("rbrowser.state", (m) => { const was = st.state; const prevTabs = st.tabs; const prevActive = st.active; st = m; if (was !== m.state || JSON.stringify(m.tabs) !== JSON.stringify(prevTabs) || m.active !== prevActive) { render(); if (m.state === "running") send({ type: "rbrowser.watch" }); } else if (urlInput && document.activeElement !== urlInput && m.url) urlInput.value = m.url; }));
     offs.push(on("rbrowser.frame", (m) => { if (!ctx2d) return; const img = new Image(); img.onload = () => ctx2d.drawImage(img, 0, 0, W, H); img.src = `data:image/jpeg;base64,${m.data}`; }));
     offs.push(on("rbrowser.selection", (m) => writeClipboard(m.text)));
     offs.push(onConnection((up) => { if (up) { send({ type: "rbrowser.status" }); } }));

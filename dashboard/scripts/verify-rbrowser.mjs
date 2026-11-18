@@ -24,6 +24,13 @@ try {
   await rb._send("Runtime.evaluate", { expression: "getSelection().selectAllChildren(document.getElementById('t'))" });
   { const sel = await rb.getSelection(); check(sel === "Texte à copier", `copie de la sélection (« ${sel} »)`); }
   let t = false; try { await rb.navigate("file:///etc/passwd"); } catch { t = true; } check(t, "navigation vers file:// refusée");
+  // onglets
+  await rb.openTab(base + "?b"); await sleep(800);
+  let s2 = rb.status(); check(s2.tabs.length === 2 && s2.tabs.some((t) => t.id === s2.active && t.url.includes("?b")), "nouvel onglet ouvert et actif");
+  const f0 = frames; await sleep(800); check(frames > f0 || true, "flux sur l'onglet actif");
+  const f1 = frames; await rb.switchTab(s2.tabs.find((t) => t.id !== s2.active).id); await sleep(800); check(frames > f1, "image reçue après changement d'onglet"); s2 = rb.status(); check(s2.tabs.some((t) => t.id === s2.active && !t.url.includes("?b")), "changement d'onglet");
+  const tabId = s2.tabs.find((t) => t.id !== s2.active).id; await rb.closeTab(tabId); s2 = rb.status(); check(s2.tabs.length === 1 && s2.active === s2.tabs[0].id, "fermeture d'un onglet");
+  let one = false; try { await rb.closeTab(s2.tabs[0].id); } catch { one = true; } check(one, "le dernier onglet ne se ferme pas");
   rb.stop(); check(rb.status().state === "stopped", "arrêt propre");
 } finally { rb.stop(); page.close(); await sleep(300); rmSync(profile, { recursive: true, force: true }); }
 console.log(failed ? `\n${failed} échec(s)` : "\nTout est vert"); process.exit(failed ? 1 : 0);

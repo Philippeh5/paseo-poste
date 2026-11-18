@@ -28,16 +28,57 @@ export const chromeEnv = (env = process.env) => Object.fromEntries(["PATH", "HOM
 const KEYS = { Enter: [13, "\r"], Backspace: [8], Tab: [9], Escape: [27], Delete: [46], ArrowLeft: [37], ArrowUp: [38], ArrowRight: [39], ArrowDown: [40], Home: [36], End: [35], PageUp: [33], PageDown: [34] };
 const MODS = (m) => (m.alt ? 1 : 0) | (m.ctrl ? 2 : 0) | (m.meta ? 4 : 0) | (m.shift ? 8 : 0);
 
-export function createRemoteBrowser({ onFrame = () => {}, log = () => {}, bin = chromeBin(), profile = PROFILE_DIR, spawnFn = spawn } = {}) {
-  let proc = null; let ws = null; let nextId = 1; let state = "stopped"; let url = "about:blank"; let title = "";
+export function createRemoteBrowser({ onFrame = () => {}, onChange = () => {}, log = () => {}, bin = chromeBin(), profile = PROFILE_DIR, spawnFn = spawn } = {}) {
+  let proc = null; let port = 0; let nextId = 1; let state = "stopped"; let active = null; let poller = null; let tabList = [];
+  const tabs = new Map(); // id -> { id, ws }
   const pending = new Map();
 
-  const send = (method, params = {}) => new Promise((resolve, reject) => {
-    if (!ws || ws.readyState !== WebSocket.OPEN) return reject(new Error("Navigateur non démarré."));
+  const send = (method, params = {}, tabId = active) => new Promise((resolve, reject) => {
+    const tab = tabs.get(tabId);
+    if (!tab || tab.ws.readyState !== WebSocket.OPEN) return reject(new Error("Navigateur non démarré."));
     const id = nextId++; pending.set(id, { resolve, reject });
-    ws.send(JSON.stringify({ id, method, params }));
+    tab.ws.send(JSON.stringify({ id, method, params }));
     setTimeout(() => { if (pending.delete(id)) reject(new Error("Délai dépassé (navigateur).")); }, 15_000).unref?.();
   });
+  const listTargets = async () => (await (await fetch(`http://127.0.0.1:${port}/json`)).json()).filter((t) => t.type === "page");
+
+  async function attach(target) {
+    if (tabs.has(target.id)) return;
+    const ws = new WebSocket(target.webSocketDebuggerUrl, { perMessageDeflate: false });
+    await new Promise((res, rej) => { ws.once("open", res); ws.once("error", rej); });
+    const tab = { id: target.id, ws }; tabs.set(target.id, tab);
+    ws.on("message", (raw) => {
+      let m; try { m = JSON.parse(String(raw)); } catch { return; }
+      if (m.id && pending.has(m.id)) { const p = pending.get(m.id); pending.delete(m.id); m.error ? p.reject(new Error(m.error.message)) : p.resolve(m.result); return; }
+      if (m.method === "Page.screencastFrame") {
+        if (target.id === active) onFrame({ data: m.params.data, width: m.params.metadata?.deviceWidth ?? VIEW.width, height: m.params.metadata?.deviceHeight ?? VIEW.height });
+        send("Page.screencastFrameAck", { sessionId: m.params.sessionId }, target.id).catch(() => {});
+      }
+    });
+    ws.on("close", () => { tabs.delete(target.id); });
+    await send("Page.enable", {}, target.id);
+    await send("Emulation.setDeviceMetricsOverride", { width: VIEW.width, height: VIEW.height, deviceScaleFactor: 1, mobile: false }, target.id);
+  }
+
+  async function refresh() {
+    if (state !== "running") return;
+    const targets = await listTargets();
+    for (const t of targets) await attach(t).catch(() => {});
+    const before = JSON.stringify(tabList);
+    tabList = targets.filter((t) => tabs.has(t.id)).map((t) => ({ id: t.id, title: String(t.title || "").slice(0, 80), url: String(t.url || "") }));
+    if (active && !tabList.some((t) => t.id === active)) { if (tabList[0]) await activate(tabList[0].id, false); else active = null; }
+    if (JSON.stringify(tabList) !== before) onChange();
+  }
+
+  async function activate(id, notify = true) {
+    if (!tabs.has(id)) throw new Error("Onglet inconnu.");
+    if (active && active !== id && tabs.has(active)) await send("Page.stopScreencast", {}, active).catch(() => {});
+    active = id;
+    await send("Page.bringToFront", {}, id).catch(() => {});
+    await send("Page.stopScreencast", {}, id).catch(() => {});
+    await send("Page.startScreencast", { format: "jpeg", quality: 60, maxWidth: VIEW.width, maxHeight: VIEW.height, everyNthFrame: 1 }, id);
+    if (notify) onChange();
+  }
 
   async function start() {
     if (state === "running" || state === "starting") return status();
@@ -45,31 +86,21 @@ export function createRemoteBrowser({ onFrame = () => {}, log = () => {}, bin = 
     state = "starting";
     try {
       mkdirSync(profile, { recursive: true, mode: 0o700 });
-      const port = 9300 + Math.floor(Math.random() * 600);
+      port = 9300 + Math.floor(Math.random() * 600);
       proc = spawnFn(bin, ["--headless=new", "--disable-gpu", `--remote-debugging-port=${port}`, "--remote-debugging-address=127.0.0.1",
         `--user-data-dir=${profile}`, `--window-size=${VIEW.width},${VIEW.height}`, "--no-first-run", ...(process.getuid?.() === 0 ? ["--no-sandbox"] : []), "--no-default-browser-check", "about:blank"], { stdio: "ignore", env: chromeEnv() });
-      proc.on("exit", () => { state = "stopped"; ws = null; proc = null; });
-      let target = null;
-      for (let i = 0; i < 50 && !target; i++) {
+      proc.on("exit", () => { state = "stopped"; proc = null; });
+      let first = null;
+      for (let i = 0; i < 50 && !first; i++) {
         await new Promise((r) => setTimeout(r, 200));
-        try { target = (await (await fetch(`http://127.0.0.1:${port}/json`)).json()).find((t) => t.type === "page"); } catch { /* pas encore prêt */ }
+        try { first = (await listTargets())[0]; } catch { /* pas encore prêt */ }
       }
-      if (!target) throw new Error("Le navigateur n'a pas démarré à temps.");
-      ws = new WebSocket(target.webSocketDebuggerUrl, { perMessageDeflate: false });
-      await new Promise((res, rej) => { ws.once("open", res); ws.once("error", rej); });
-      ws.on("message", (raw) => {
-        let m; try { m = JSON.parse(String(raw)); } catch { return; }
-        if (m.id && pending.has(m.id)) { const p = pending.get(m.id); pending.delete(m.id); m.error ? p.reject(new Error(m.error.message)) : p.resolve(m.result); return; }
-        if (m.method === "Page.screencastFrame") {
-          onFrame({ data: m.params.data, width: m.params.metadata?.deviceWidth ?? VIEW.width, height: m.params.metadata?.deviceHeight ?? VIEW.height });
-          send("Page.screencastFrameAck", { sessionId: m.params.sessionId }).catch(() => {});
-        } else if (m.method === "Page.frameNavigated" && !m.params.frame.parentId) { url = m.params.frame.url; }
-      });
-      ws.on("close", () => { if (state === "running") state = "stopped"; });
-      await send("Page.enable");
-      await send("Emulation.setDeviceMetricsOverride", { width: VIEW.width, height: VIEW.height, deviceScaleFactor: 1, mobile: false });
-      await send("Page.startScreencast", { format: "jpeg", quality: 60, maxWidth: VIEW.width, maxHeight: VIEW.height, everyNthFrame: 1 });
+      if (!first) throw new Error("Le navigateur n'a pas démarré à temps.");
       state = "running";
+      await attach(first);
+      await refresh();
+      await activate(first.id, false);
+      poller = setInterval(() => { refresh().catch(() => {}); }, 2000); poller.unref?.();
       log("rbrowser", "navigateur distant démarré");
     } catch (e) { stop(); throw e; }
     return status();
@@ -77,18 +108,41 @@ export function createRemoteBrowser({ onFrame = () => {}, log = () => {}, bin = 
 
   function stop() {
     state = "stopped";
-    try { ws?.close(); } catch { /* déjà fermé */ }
+    clearInterval(poller); poller = null;
+    for (const [, t] of tabs) { try { t.ws.close(); } catch { /* déjà fermé */ } }
+    tabs.clear(); tabList = []; active = null;
     try { proc?.kill(); } catch { /* déjà arrêté */ }
-    ws = null; proc = null;
+    proc = null;
     for (const [, p] of pending) p.reject(new Error("Navigateur arrêté."));
     pending.clear();
     return status();
   }
 
-  const status = () => ({ state, url, title, view: VIEW, chrome: !!bin });
+  const MAX_TABS = 8;
+  async function openTab(input = "about:blank") {
+    if (state !== "running") throw new Error("Navigateur non démarré.");
+    if (tabList.length >= MAX_TABS) throw new Error(`${MAX_TABS} onglets au plus.`);
+    const target = input === "about:blank" ? "about:blank" : safeUrl(input);
+    const res = await fetch(`http://127.0.0.1:${port}/json/new?${encodeURIComponent(target)}`, { method: "PUT" });
+    const t = await res.json();
+    await attach(t); await refresh(); await activate(t.id);
+    return status();
+  }
+  async function closeTab(id) {
+    if (state !== "running") throw new Error("Navigateur non démarré.");
+    if (!tabs.has(id)) throw new Error("Onglet inconnu.");
+    if (tabList.length <= 1) throw new Error("Gardez au moins un onglet (ou arrêtez le navigateur).");
+    await fetch(`http://127.0.0.1:${port}/json/close/${id}`);
+    tabs.get(id)?.ws.close(); tabs.delete(id);
+    await refresh(); onChange();
+    return status();
+  }
+  const switchTab = (id) => activate(id);
+
+  const status = () => ({ state, url: tabList.find((t) => t.id === active)?.url ?? "", title: tabList.find((t) => t.id === active)?.title ?? "", tabs: tabList, active, view: VIEW, chrome: !!bin });
   const requireRunning = () => { if (state !== "running") throw new Error("Navigateur non démarré."); };
 
-  async function navigate(input) { requireRunning(); const target = safeUrl(input); await send("Page.navigate", { url: target }); url = target; return status(); }
+  async function navigate(input) { requireRunning(); const target = safeUrl(input); await send("Page.navigate", { url: target }); await refresh().catch(() => {}); return status(); }
   async function history(dir) {
     requireRunning();
     const h = await send("Page.getNavigationHistory");
@@ -137,5 +191,5 @@ export function createRemoteBrowser({ onFrame = () => {}, log = () => {}, bin = 
     if (t.length > 20_000) throw new Error("Texte trop long (20 000 caractères au plus).");
     return send("Input.insertText", { text: t });
   }
-  return { start, stop, status, navigate, history, input, getSelection, paste, _send: send };
+  return { start, stop, status, openTab, closeTab, switchTab, navigate, history, input, getSelection, paste, _send: send };
 }

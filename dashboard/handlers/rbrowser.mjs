@@ -8,6 +8,7 @@ export function register(ctx) {
   const watchers = new Set();
   const rb = createRemoteBrowser({
     log: ctx.log,
+    onChange: () => ctx.broadcast({ type: "rbrowser.state", ...rb.status() }),
     onFrame: (frame) => { for (const ws of watchers) ctx.send(ws, { type: "rbrowser.frame", ...frame }); },
   });
   const state = () => ({ type: "rbrowser.state", ...rb.status() });
@@ -22,6 +23,9 @@ export function register(ctx) {
   ctx.onMessage("rbrowser.unwatch", (ws) => { watchers.delete(ws); });
   ctx.onDisconnect?.((ws) => watchers.delete(ws));
   ctx.onMessage("rbrowser.nav", guard(async (ws, m) => { await rb.navigate(m.url); ctx.broadcast(state()); }));
+  ctx.onMessage("rbrowser.newTab", guard(async (ws, m) => { await rb.openTab(m.url || "about:blank"); }));
+  ctx.onMessage("rbrowser.switchTab", guard(async (ws, m) => { await rb.switchTab(String(m.id)); }));
+  ctx.onMessage("rbrowser.closeTab", guard(async (ws, m) => { await rb.closeTab(String(m.id)); }));
   ctx.onMessage("rbrowser.back", guard(() => rb.history("back")));
   ctx.onMessage("rbrowser.forward", guard(() => rb.history("forward")));
   ctx.onMessage("rbrowser.input", guard(async (ws, m) => { await rb.input(m); }));

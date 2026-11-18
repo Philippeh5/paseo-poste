@@ -16,6 +16,12 @@ package-lock.json
 *.env.local
 *.env.*.local
 
+# Composio : session CLI, politique et journal d'audit (jamais publiés)
+.composio/
+*composio*.env
+composio-policy.json
+composio-audit.jsonl
+
 # Logs
 *.log
 logs/

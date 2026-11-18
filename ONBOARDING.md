@@ -123,6 +123,52 @@ node tools/coord-install.mjs --only claude --url http://127.0.0.1:7070
 
 It only **prints** the commands — nothing is applied automatically.
 
+### Composio bridge — which app each agent can use
+
+Composio gives agents authenticated actions on external apps (Gmail, GitHub, Slack, Google Calendar…). The bridge decides **which agent may use which app, with which connected account**, and audits every call. The Composio session stays in `~/.composio` — never in the repo.
+
+```sh
+curl -fsSL https://composio.dev/install | sh
+chmod 700 ~/.composio
+chmod 600 ~/.composio/config.json ~/.composio/user_data.json
+composio whoami          # confirm the CLI is connected
+```
+
+Copy the policy template, then restrict it to what you actually want (the policy is read-only for agents):
+
+```sh
+cp deploy/oracle/composio-policy.example.json ~/paseo-dash-data/composio-policy.json
+chmod 600 ~/paseo-dash-data/composio-policy.json
+```
+
+The policy stores **aliases of connected accounts**, not secrets. Connect each account once as the operator:
+
+```sh
+composio link github --alias work
+composio link gmail --alias lecture
+```
+
+Then grant each agent only what it needs via `agents.<name>.toolkits`, `writes`, `scripts`, `link` and `accounts`. In the example policy: `claude` may read Gmail and GitHub but not write; `codex` may create GitHub issues; `ops` (you) may link accounts and run multi-app scripts. An unknown agent gets nothing.
+
+CLI:
+
+```sh
+node tools/composio.mjs policy                        # what the current agent can do
+node tools/composio.mjs search "read my emails"      # only allowed apps are discoverable
+node tools/composio.mjs schema GMAIL_FETCH_EMAILS     # get the input schema, don't guess
+node tools/composio.mjs dry-run GMAIL_FETCH_EMAILS -d '{}'
+node tools/composio.mjs execute GITHUB_CREATE_AN_ISSUE -d '{"owner":"example","repo":"demo","title":"Bug"}' --confirm
+node tools/composio.mjs audit
+```
+
+MCP server (exposes `app_*` tools):
+
+```sh
+claude mcp add composio -e COMPOSIO_AGENT=claude -- node "$PWD/tools/composio-mcp.mjs"
+```
+
+`COMPOSIO_AGENT` (or `POSTECTL_AGENT`) is injected by the post: **an agent cannot change its identity by passing an argument**. Writes, account linking and scripts additionally require `confirm: true` and the matching policy flag. Denials exit with code `3` (`write_denied`, `toolkit_denied`, `confirm_required`, `forbidden_slug`); code `75` means a transient Composio error — check state before retrying.
+
 ### Remote access (optional)
 
 ```sh

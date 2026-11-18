@@ -1,0 +1,70 @@
+{
+  "_comment": "Exemple de politique Composio — copier vers $DASHBOARD_DATA_DIR/composio-policy.json (ou COMPOSIO_POLICY_FILE) puis chmod 600. L'identité de l'agent vient de COMPOSIO_AGENT / POSTECTL_AGENT injecté par le poste : un agent ne peut pas changer de rôle en modifiant un argument. Ce fichier est la propriété de l'opérateur : les agents ne font que le lire.",
+  "_account_note": "Les valeurs sous `accounts` sont des alias de comptes connectés (composio link <app> --alias work), pas des secrets. Un agent ne choisit jamais son compte : il est imposé ici par l'opérateur.",
+  "defaults": {
+    "toolkits": [],
+    "writes": false,
+    "link": false,
+    "scripts": false
+  },
+  "agents": {
+    "claude": {
+      "_role": "Lectrice — lit les emails et les dépôts, n'écrit nulle part.",
+      "toolkits": ["gmail", "github"],
+      "writes": false,
+      "link": false,
+      "scripts": false,
+      "accounts": {
+        "gmail": "lecture",
+        "github": "work"
+      }
+    },
+    "codex": {
+      "_role": "Développeuse — peut créer des issues GitHub, mais pas toucher à la messagerie.",
+      "toolkits": ["github"],
+      "writes": true,
+      "link": false,
+      "scripts": false,
+      "accounts": {
+        "github": "work"
+      },
+      "deniedSlugs": ["GITHUB_DELETE_REPOSITORY"]
+    },
+    "gemini": {
+      "_role": "Assistante agenda — peut écrire dans le calendrier uniquement.",
+      "toolkits": ["googlecalendar"],
+      "writes": true,
+      "link": false,
+      "scripts": false,
+      "accounts": {
+        "googlecalendar": "work"
+      }
+    },
+    "ops": {
+      "_role": "Opérateur — peut connecter des comptes et lancer des scripts multi-apps. À réserver à toi.",
+      "toolkits": ["*"],
+      "writes": true,
+      "link": true,
+      "scripts": true
+    },
+    "*": {
+      "_role": "Invité — aucune application par défaut ; tout est refusé sauf la recherche (qui ne renverra rien).",
+      "toolkits": [],
+      "writes": false,
+      "link": false,
+      "scripts": false
+    }
+  },
+  "accounts": {
+    "_note": "Raccourci facultatif : compte par agent et par application, utilisé si `accounts` de l'agent ne précise pas l'app.",
+    "claude": {
+      "github": "work"
+    }
+  },
+  "deniedSlugs": [
+    "GMAIL_DELETE_ALL_EMAILS",
+    "GMAIL_TRASH_ALL_EMAILS",
+    "GITHUB_DELETE_REPOSITORY",
+    "SLACK_DELETE_CHANNEL"
+  ]
+}

@@ -123,9 +123,10 @@ paseo-poste/
 │   │   ├── install.sh      # Idempotent installer
 │   │   ├── backup.sh       # Backup script (local + rclone)
 │   │   ├── watchdog.sh     # Health monitor + Telegram alerts
-│   │   └── poste.env.example  # Env template (NO secrets)
+│   │   ├── poste.env.example  # Env template (NO secrets)
+│   │   └── composio-policy.example.json  # Per-agent app permissions (template)
 │   └── mini-pc/            # Windows (PowerShell) deployment
-├── tools/                  # CLI utilities (postectl, etc.)
+├── tools/                  # CLI utilities (postectl, composio, coord…)
 ├── .github/workflows/ci.yml
 ├── .gitignore
 ├── LICENSE
@@ -182,6 +183,18 @@ Followed projects are separate: add them with `node tools/postectl.mjs project f
 
 ---
 
+## 🔌 Composio bridge (optional)
+
+Give agents authenticated actions on external apps without giving them your credentials. A local, operator-owned policy answers **which agent can use which app, with which connected account**:
+
+- `tools/composio.mjs` — CLI: `policy`, `search`, `schema`, `dry-run`, `execute`, `link`, `run`, `audit`
+- `tools/composio-mcp.mjs` — stdio MCP server exposing the same controls as `app_*` tools
+- `deploy/oracle/composio-policy.example.json` — template with per-agent toolkits, write/link/script flags, account aliases and denied slugs
+
+Agent identity comes from `COMPOSIO_AGENT` / `POSTECTL_AGENT` in the environment (injected by the post), never from a tool argument. Writes, account linking and scripts need both the policy flag and `confirm: true`; the Composio session and audit log stay outside the repo. See [ONBOARDING.md](ONBOARDING.md#composio-bridge--which-app-each-agent-can-use) for setup.
+
+---
+
 ## 🔧 Development
 
 ```bash
@@ -197,6 +210,7 @@ npm test
 ## 🛡️ Security
 
 - **No secrets in repo** — all credentials via env files (gitignored)
+- **Least-privilege app access** — Composio policy is operator-owned; agents cannot escalate or spoof identity
 - **Tailscale-only remote access** — never expose to public internet
 - **Basic auth + rate limiting** on Tailscale endpoint
 - **Row-level SQLite** for data isolation
